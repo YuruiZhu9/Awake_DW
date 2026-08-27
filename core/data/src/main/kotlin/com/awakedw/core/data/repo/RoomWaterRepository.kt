@@ -5,6 +5,7 @@ import com.awakedw.core.common.toDayKey
 import com.awakedw.core.data.db.WaterRecordDao
 import com.awakedw.core.data.db.WaterRecordEntity
 import com.awakedw.core.data.db.toDomain
+import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.DailyStats
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar

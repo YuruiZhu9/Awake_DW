@@ -39,6 +39,8 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:model"))
+    // 依赖倒置：本模块为 domain 契约（com.awakedw.core.domain.contracts）提供实现。
+    implementation(project(":core:domain"))
 
     api(libs.room.runtime)
     implementation(libs.room.ktx)

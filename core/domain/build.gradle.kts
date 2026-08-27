@@ -1,37 +1,24 @@
 plugins {
     alias(libs.plugins.ktlint)
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
-// 说明：业务上 :core:domain 仍是「纯 Kotlin」用例层（源码零 Android import，单测跑在纯 JVM）。
-// 采用 android-library 插件仅为本模块能按 ui → domain ← data 方向消费 :core:data 的接口
-// （kotlin-jvm 消费者无法解析 com.android.library 发布的 androidJvm 变体）。
-
-android {
-    namespace = "com.awakedw.core.domain"
-    compileSdk = 35
-
-    defaultConfig {
-        minSdk = 26
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
+
+// 依赖倒置（rules §四.1：ui → domain ← data）：用例与仓储契约都住在纯 JVM 的 :core:domain，
+// 仓储接口在 com.awakedw.core.domain.contracts；:core:data 反向依赖本模块提供实现。
+// 本模块源码零 Android import，单测跑在纯 JVM。
 
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:common"))
-    // 用例层面向 core:data 的仓储接口编程，Room/DataStore 细节不出 :core:data。
-    implementation(project(":core:data"))
     implementation(libs.coroutines.core)
+    // contracts.CopyLibrary 以 @Serializable 描述存储形态，序列化生成器在本模块启用。
+    implementation(libs.serialization.json)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

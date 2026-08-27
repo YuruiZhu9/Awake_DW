@@ -1,7 +1,7 @@
 package com.awakedw.core.domain
 
-import com.awakedw.core.data.prefs.UserPreferencesRepository
-import com.awakedw.core.data.repo.WaterRepository
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.WaterRepository
 import kotlinx.coroutines.flow.first
 
 /**

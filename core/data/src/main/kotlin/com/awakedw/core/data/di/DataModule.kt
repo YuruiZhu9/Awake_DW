@@ -7,14 +7,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.SystemAppClock
-import com.awakedw.core.data.copy.CopyLibraryRepository
 import com.awakedw.core.data.copy.DefaultCopyLibraryRepository
 import com.awakedw.core.data.db.AwakeDb
 import com.awakedw.core.data.db.WaterRecordDao
-import com.awakedw.core.data.prefs.UserPreferencesRepository
 import com.awakedw.core.data.prefs.UserPreferencesRepositoryImpl
 import com.awakedw.core.data.repo.RoomWaterRepository
-import com.awakedw.core.data.repo.WaterRepository
+import com.awakedw.core.domain.contracts.CopyLibraryRepository
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.WaterRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

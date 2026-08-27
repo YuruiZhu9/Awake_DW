@@ -3,9 +3,9 @@ package com.awakedw.core.data
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import com.awakedw.core.data.copy.CopyLibrary
 import com.awakedw.core.data.copy.DefaultCopies
 import com.awakedw.core.data.copy.DefaultCopyLibraryRepository
+import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.model.TimeSlot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

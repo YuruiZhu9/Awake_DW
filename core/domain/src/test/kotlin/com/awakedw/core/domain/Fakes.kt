@@ -2,8 +2,8 @@ package com.awakedw.core.domain
 
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.toDayKey
-import com.awakedw.core.data.prefs.UserPreferencesRepository
-import com.awakedw.core.data.repo.WaterRepository
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.DailyStats
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings

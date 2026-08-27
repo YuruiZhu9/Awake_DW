@@ -2,7 +2,7 @@ package com.awakedw.core.domain
 
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.TimeSlots
-import com.awakedw.core.data.prefs.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.TimeSlot

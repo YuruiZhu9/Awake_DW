@@ -1,4 +1,4 @@
-package com.awakedw.core.data.copy
+package com.awakedw.core.domain.contracts
 
 import com.awakedw.core.model.TimeSlot
 import kotlinx.serialization.Serializable

@@ -7,41 +7,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-
-/** 用户设置仓储：DataStore Preferences 持久化（键名严格按设计 §5.3）。 */
-interface UserPreferencesRepository {
-    val settings: Flow<UserSettings>
-
-    suspend fun setGoalMl(v: Int)
-
-    suspend fun setCupMl(v: Int)
-
-    suspend fun setWindow(
-        startMin: Int,
-        endMin: Int,
-    )
-
-    suspend fun setIntervalMin(v: Int)
-
-    suspend fun setRemindersEnabled(v: Boolean)
-
-    suspend fun setThemeChoice(v: ThemeChoice)
-
-    /** 记录「达成目标的日键」，用于当日只庆祝一次。 */
-    suspend fun markCelebrated(dayKey: String)
-
-    suspend fun celebratedDayKey(): String?
-
-    suspend fun markOnboardingDone()
-
-    suspend fun onboardingDone(): Boolean
-}
 
 /** 键名契约（逐字对应设计文档，改动需同步设计 §5.3）。 */
 internal object PrefKeys {
@@ -76,7 +48,10 @@ class UserPreferencesRepositoryImpl
             it[intPreferencesKey(PrefKeys.WINDOW_END_MIN)] = endMin
         }
 
-        override suspend fun setIntervalMin(v: Int) = edit { it[intPreferencesKey(PrefKeys.INTERVAL_MIN)] = v }
+        override suspend fun setIntervalMin(v: Int) =
+            edit {
+                it[intPreferencesKey(PrefKeys.INTERVAL_MIN)] = v
+            }
 
         override suspend fun setRemindersEnabled(v: Boolean) =
             edit {
