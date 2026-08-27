@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -21,6 +22,17 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests {
+            // Room.inMemoryDatabaseBuilder 需要真实 Context，JVM 单测借助 Robolectric 提供。
+            isIncludeAndroidResources = true
+            all { test ->
+                // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
+                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -31,10 +43,14 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     implementation(libs.datastore.preferences)
     implementation(libs.coroutines.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
 }
