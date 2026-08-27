@@ -1,4 +1,4 @@
-# Awake_DW · 喝水礼物 App 设计文档
+# Awake_DW · 个人定制喝水应用 设计文档
 
 - 日期：2026-08-27
 - 状态：待用户终审
@@ -8,17 +8,17 @@
 
 ### 1.1 一句话定位
 
-Awake_DW 是一份送给朋友的礼物 App：她会收到一个随一天的时间温柔变换颜色、每一次记录喝水都被治愈的私人小应用。
+Awake_DW 是专为某一个人而做的心意之作：一个随一天的时间温柔变换颜色、每一次记录都被治愈的喝水应用。它不是面向大众的产品，也不以"礼物"的姿态存在——它是开发者为一个具体的人定制建造的陪伴工具，提醒喝水只是它此刻具备的功能之一。
 
 ### 1.2 背景（这个项目的灵魂）
 
-- 收礼人经常忘记喝水。现有商店产品要么臃肿带广告，要么毫无个性。
+- 这位特定的使用者经常忘记喝水。现有商店产品要么臃肿带广告，要么毫无个性，更不可能承载属于两个人的语气与细节。
 - 开发者希望在 App 里融入**个人的关心和小考虑**：手写的关心文案库、随作息流转的主题色、有理有据的健康提示。
 - **产品优先级最高的是前端美感与交互丝滑度；功能复杂性是第一阶段明确降级的项。**
 
 ### 1.3 目标用户
 
-单一真实用户：收礼人本人（安卓手机，具体品牌未知）。纯个人使用、侧载 APK 分发，无上架计划。
+单一真实用户：她本人（安卓手机，具体品牌未知）。当前为个人侧载分发；架构上不做短期妥协，保留向应用商店上架演进的完整路径（见 §5.4）。对外的 README 与公开叙述保持含蓄（见 rules.md 叙事纪律）。
 
 ### 1.4 成功标准
 
@@ -145,37 +145,60 @@ Awake_DW 是一份送给朋友的礼物 App：她会收到一个随一天的时�
 
 ### 4.4 心意文案库
 
-- 出厂内置 ~30 条（早/午/晚各一组），开发者可在送出前用设置里的编辑器整库替换。
+- 出厂内置 ~30 条（早/午/晚各一组），开发者可在交付前用设置里的编辑器整库替换成只属于两人的语言。
 - 存储于 DataStore（JSON 序列化）；删除到最后一条时该时段回退到通用组兜底。
 - 抽取消重：记录最近 5 条已用，优先从未用池抽取。
 
 ## 5. 技术架构
 
+### 5.0 架构总原则：不为今天的天花板编码
+
+本应用当前只有一个用户、一个功能面，但**可迭代、可优化、可扩展被定为一等需求**：模块边界从第一天就真实存在，未来加功能（新页面、桌面小组件，乃至上架商店）是"往骨架上长肉"，而不是推倒式重构。宁可初期多一点脚手架成本，换取长期每一轮迭代都在健康的结构上进行。
+
+### 5.1 模块拓扑（Gradle 多模块）
+
 ```
-app/（单模块）
-├── ui/                # Compose
-│   ├── splash/        # 开屏续场动画
-│   ├── home/          # 首页（环/徽章/按钮/背景粒子）
-│   ├── stats/         # 统计页
-│   ├── settings/      # 设置 + 文案编辑器
-│   ├── onboarding/    # 白名单引导
-│   └── components/    # ProgressRing、ParticleField、BottomNav 等共享件
-├── domain/
-│   ├── usecase/       # LogWater、GetTodayStats、GetWeekBars、ResolveTheme、ScheduleReminders…
-│   └── model/         # WaterRecord、DailyStats、TimeSlot、ThemeSpec…
-├── data/
-│   ├── local/room/    # WaterRecordDao + 实体
-│   ├── local/datastore/# Preferences + CopyLibraryRepository(JSON)
-│   └── repository/    # 接口 + 实现
-├── notification/      # ReminderScheduler、ReminderReceiver、BootReceiver、NotifBuilder
-└── theme/             # 三套 ThemeSpec 色板 + 时段映射 + CompositionLocal 下发
+:app                    # 壳工程：单 Activity、导航图、Hilt 装配、Splash 续场动画
+:core:model             # 纯 Kotlin：领域模型与值对象（零 Android 依赖）
+:core:common            # 纯 Kotlin：时钟源、Result 封装、时段判定等纯函数
+:core:domain            # UseCase 层（仅依赖 :core:model / :core:common）
+:core:data              # Repository 实现：Room、DataStore、文案库存储
+:core:notification      # ReminderScheduler / ReminderReceiver / BootReceiver / NotifBuilder
+:core:designsystem      # 三套 ThemeSpec 色板、粒子引擎、ProgressRing、通用组件
+:feature:home           # 首页（治愈打卡）
+:feature:stats          # 统计页
+:feature:settings       # 我的 + 文案编辑器
+:feature:onboarding     # 首启白名单引导
 ```
 
-- 单 Activity + Navigation Compose；MVM 单向数据流：UI 事件 → ViewModel（StateFlow）→ UseCase → Repository → Room/DataStore → StateFlow 回流。
+### 5.2 依赖规则（架构铁律，违者视同 bug）
+
+1. `:core:*` 不知道任何 `:feature:*` 的存在。
+2. `:feature:*` 之间禁止互相依赖；跨页跳转一律经由 `:app` 的导航表解决。
+3. 依赖方向恒定：`ui → domain ← data`；`:core:domain` 不导入任何 Android/UI 类，保证纯 JVM 单测。
+4. 数据访问只经 Repository 接口；Room/DataStore 的存在感不外泄到上层。
+
+### 5.3 工程基线
+
+- Kotlin DSL Gradle + Version Catalog（`libs.versions.toml`）统一依赖版本；Hilt 做装配；kotlinx-coroutines + StateFlow 是唯一异步语言。
+- 单 Activity + Navigation Compose；MVVM 单向数据流：UI 事件 → ViewModel（StateFlow）→ UseCase → Repository → Room/DataStore → StateFlow 回流刷新。
 - 数据库仅一张表 `water_record(id, amount_ml, drank_at_epoch_ms, day_key_local)`；今日合计/杯数/平均间隔/7 天柱状/连续达标天数均为聚合查询或内存推导。
 - DataStore 键：goal_ml、cup_ml、window_start_min、window_end_min、interval_min、reminders_enabled、theme_mode、copy_library_json、recent_copy_ids、onboarding_done。
-- minSdk 26（Android 8.0），targetSdk 采用实现期最新稳定版；依赖 Retrofit/网络类一律不引入。
+- minSdk 26（Android 8.0），targetSdk 采用实现期最新稳定版；不引入任何网络/Retrofit 类依赖。
+- ktlint 随项目模板初始化，格式不合不入库。
 - 时间处理统一以系统本地时区为准；检测到日期跳变（跨天/改时间）时按当前时间重建当日区间与统计缓存。
+
+### 5.4 面向上架的演进预留
+
+一期保持个人侧载分发，但以下事项已被结构预留，需要时只是补配置而非重构：
+
+| 未来需求 | 现在的预留 |
+|---|---|
+| 上架 Google Play | release 签名配置、隐私政策披露（无网络权限天然友好）、通知权限与精确闹钟的合规说明话术 |
+| 新页面 | 新增 `:feature:*` 模块即可，导航在 `:app` 注册 |
+| 桌面小组件 | `:widget:*` 新模块直接复用 `:core:data` 与 `:core:designsystem` |
+| 数据导出/备份 | `:core:data` 暴露接口即得，上层零改动 |
+| 更多主题 | ThemeSpec 本就是数据驱动，加一套色板常量即可 |
 
 ## 6. 边角与错误处理
 
