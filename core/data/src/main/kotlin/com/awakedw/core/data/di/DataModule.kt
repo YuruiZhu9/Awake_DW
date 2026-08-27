@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.SystemAppClock
 import com.awakedw.core.data.db.AwakeDb
+import com.awakedw.core.data.db.WaterRecordDao
 import com.awakedw.core.data.repo.RoomWaterRepository
 import com.awakedw.core.data.repo.WaterRepository
 import dagger.Binds
@@ -24,14 +25,15 @@ abstract class DataModule {
     companion object {
         @Provides
         @Singleton
-        @JvmStatic
         fun provideAppClock(): AppClock = SystemAppClock()
 
         @Provides
         @Singleton
-        @JvmStatic
         fun provideAwakeDb(
             @ApplicationContext context: Context,
         ): AwakeDb = Room.databaseBuilder(context, AwakeDb::class.java, "awake_dw.db").build()
+
+        @Provides
+        fun provideWaterRecordDao(db: AwakeDb): WaterRecordDao = db.waterRecordDao()
     }
 }

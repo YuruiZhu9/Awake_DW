@@ -8,6 +8,7 @@ import com.awakedw.core.data.db.toDomain
 import com.awakedw.core.model.DailyStats
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -32,10 +33,9 @@ class RoomWaterRepository
 
         override suspend fun weekBars(daysBack: Int): List<WeekBar> {
             require(daysBack > 0) { "daysBack 必须为正数" }
-            val zone = clock.zone()
-            val nowMs = clock.nowEpochMs()
-            // 自早到晚回推 daysBack 个本地日键；缺数天由 sum 查不到而补 0。
-            val dayKeys = ((daysBack - 1) downTo 0).map { offset -> (nowMs - offset * DAY_MS).toDayKey(zone) }
+            // 以本地日历自今天回推 daysBack 个日键（DST 安全）；缺数天由 sum 查不到而补 0。
+            val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
+            val dayKeys = ((daysBack - 1) downTo 0).map { offset -> today.minusDays(offset.toLong()).toDayKey() }
             val sumsByDay = dao.sumsBetween(from = dayKeys.first(), to = dayKeys.last()).associate { it.d to it.s }
             return dayKeys.map { key -> WeekBar(dayKey = key, totalMl = sumsByDay[key] ?: 0) }
         }
@@ -49,9 +49,5 @@ class RoomWaterRepository
             if (records.size < 2) return null
             val spanMs = (records.last().drankAtEpochMs - records.first().drankAtEpochMs).toDouble()
             return (spanMs / (records.size - 1) / 60_000.0).roundToInt()
-        }
-
-        private companion object {
-            const val DAY_MS = 24 * 60 * 60 * 1000L
         }
     }
