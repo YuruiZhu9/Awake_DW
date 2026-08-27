@@ -3,9 +3,13 @@ package com.awakedw.core.data.repo
 import com.awakedw.core.model.DailyStats
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import kotlinx.coroutines.flow.Flow
 
 /** 饮水记录仓储：写入杯量并按本地日聚合。 */
 interface WaterRepository {
+    /** 水库变更触发器：任何写入都发射一次 Unit（Room 行数流，首值即当前态）。 */
+    val changes: Flow<Unit>
+
     suspend fun addCup(amountMl: Int): WaterRecord
 
     suspend fun todayStats(): DailyStats

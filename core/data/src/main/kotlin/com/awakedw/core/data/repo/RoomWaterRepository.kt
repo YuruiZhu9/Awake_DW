@@ -8,6 +8,8 @@ import com.awakedw.core.data.db.toDomain
 import com.awakedw.core.model.DailyStats
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -19,6 +21,9 @@ class RoomWaterRepository
         private val dao: WaterRecordDao,
         private val clock: AppClock,
     ) : WaterRepository {
+        /** 行数流映射为 Unit：任何写入都会触发一次发射。 */
+        override val changes: Flow<Unit> = dao.observeRowCount().map { }
+
         override suspend fun addCup(amountMl: Int): WaterRecord {
             val now = clock.nowEpochMs()
             val entity = WaterRecordEntity(amountMl = amountMl, drankAtEpochMs = now, dayKeyLocal = now.toDayKey(clock.zone()))

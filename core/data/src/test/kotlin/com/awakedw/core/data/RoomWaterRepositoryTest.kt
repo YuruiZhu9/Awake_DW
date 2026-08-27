@@ -1,6 +1,7 @@
 package com.awakedw.core.data
 
 import androidx.room.Room
+import app.cash.turbine.test
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.toDayKey
 import com.awakedw.core.data.db.AwakeDb
@@ -93,6 +94,20 @@ class RoomWaterRepositoryTest {
             assertEquals(7, bars.size)
             assertEquals(tenOclock().toDayKey(zone), bars.last().dayKey)
             assertTrue(bars.all { it.totalMl == 0 })
+        }
+    }
+
+    @Test
+    fun `任一写入都令变更流再发射一次`() {
+        runBlocking {
+            repo.changes.test {
+                assertEquals(Unit, awaitItem()) // 订阅首值：当前态
+
+                repo.addCup(250)
+                assertEquals(Unit, awaitItem())
+
+                cancelAndIgnoreRemainingEvents()
+            }
         }
     }
 }

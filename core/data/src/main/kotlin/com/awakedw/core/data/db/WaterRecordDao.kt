@@ -3,6 +3,7 @@ package com.awakedw.core.data.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 /** 区间按天聚合的中间结果：[d] 为 day_key_local，[s] 为该日 amount_ml 之和。 */
 data class DaySum(val d: String, val s: Int)
@@ -28,4 +29,8 @@ interface WaterRecordDao {
         from: String,
         to: String,
     ): List<DaySum>
+
+    /** 表行数流：任一写入都会使其发射新值，用作「水库变更」触发器。 */
+    @Query("SELECT COUNT(*) FROM water_record")
+    fun observeRowCount(): Flow<Int>
 }
