@@ -5,19 +5,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.particles.GRAIN_CELL
+import com.awakedw.core.designsystem.particles.GRAIN_DOT
+import com.awakedw.core.designsystem.particles.buildGrainPath
 
-// 统一质感参数（设计规格 §2.2）
-private val GRAIN_CELL = 4.dp // 噪点网格间距：4px 微点纹理
-private val GRAIN_DOT = 1.dp // 单颗微点直径
+// 统一质感参数（设计规格 §2.2）；噪点网格常量沉淀于 particles 包共用。
 private const val GRAIN_ALPHA = 0.05f // 颗粒不透明度约 4–5%
 private const val HALO_ALPHA = 0.32f // 柔光晕：主色低透明度
 private val HALO_DIAMETER = 170.dp // 光晕团约 170px
@@ -57,24 +55,3 @@ fun GradientBackdrop(
 
     Box(modifier = backdropModifier)
 }
-
-/** 确定性构建 4px 错位网格的微点路径；尺寸变化时随 drawWithCache 重算一次。 */
-private fun buildGrainPath(
-    bounds: Size,
-    cellPx: Float,
-    dotPx: Float,
-): Path =
-    Path().apply {
-        var row = 0
-        var y = cellPx / 2f
-        while (y < bounds.height + dotPx) {
-            val rowOffset = if (row % 2 == 0) 0f else cellPx / 2f
-            var x = cellPx / 2f + rowOffset
-            while (x < bounds.width + dotPx) {
-                addOval(Rect(center = Offset(x, y), radius = dotPx / 2f))
-                x += cellPx
-            }
-            y += cellPx
-            row++
-        }
-    }
