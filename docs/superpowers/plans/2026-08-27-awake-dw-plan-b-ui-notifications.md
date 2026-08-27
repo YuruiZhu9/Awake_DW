@@ -20,6 +20,27 @@
 
 ---
 
+### Task 0: 计划 B 前置 · 地基闭环五连修（终审 Important 清单）
+
+**Files:**
+- Create: `app/src/main/java/com/awakedw/app/AwakeApplication.kt`
+- Modify: `app/src/main/AndroidManifest.xml`(android:name + android:label)、`core/data/build.gradle.kts`(api→implementation)、`core/data/.../RoomWaterRepository.kt`(todayStats 单查询化)、`core/domain/.../ObserveHomeUseCase.kt`(删默认参)、`core/designsystem/.../BurstParticles.kt`(trigger<=0 清场守卫)
+- Test: 注入烟测 `app/src/test/.../HiltGraphSmokeTest.kt`（Robolectric 跑 AwakeApplication 触发全图校验）
+
+**Interfaces:** 产出零新增契约；本任务只收口，所有既有签名不变。唯一行为变更：ObserveHomeUseCase 构造的 theme 参数从带默认值改为必填（调用方尚不存在，无迁移成本）；BurstParticles 增加"trigger<=0 时立即清场(travelState 复位为 idle)且不回调 onFinish"守卫。
+
+**Steps:**
+1. `AwakeApplication : Application()` 标注 `@HiltAndroidApp`，manifest 注册并加 `android:label="Awake_DW"`（后续有中文名资源时再替换）；
+2. 四个 UseCase 构造器补 `@Inject constructor(...)`（domain 是纯 Kotlin 模块——`javax.inject.@Inject` 来自 JSR-330，在 toml 加 `inject = "javax.inject:javax.inject:1"` 纯 Java 依赖即可，不引入 hilt-android 到 domain）；
+3. `:core:data` 的 `api(libs.room.runtime)` 降级 `implementation`（铁律：Room 存在感不出 data 模块）；
+4. todayStats 改单查询：一次 `todayRecords()` 后内存推导 total/cupCount/avgInterval（顺带消除双查询竞态，终审 T4a）；
+5. ObserveHomeUseCase 删除 `theme = ResolveThemeUseCase(prefs, SystemAppClock())` 默认值；
+6. BurstParticles 加 `if (trigger <= 0) { travelState.floatValue = IDLE; return@LaunchedEffect }` 守卫（终审 T8a 定死的契约）;
+7. Room schema 导出开启（ksp arg room.schemaLocation=$projectDir/schemas）并提交 v1 基线 JSON——首改表前必须就位；
+8. 验证：`./gradlew build` 全绿 且 Hilt 烟测通过（图真正闭环的第一个证明）；commit `fix: 地基闭环——Hilt 入口/依赖收口/契约定死（终审任务0）`
+
+---
+
 ### Task 9: `:app` 导航骨架 + 底部栏 + 开屏续场动画
 
 **Files:**
@@ -46,7 +67,8 @@ sealed class AwakeDestination(val route: String) {
   - `MainActivity.installSplashScreen().setKeepOnScreenCondition { !assetsReady }`；
   - `SplashMorph` 编排（Compose 内，总 ~1.2s）：水滴自上而下 spring 落点(y: -80dp→0, 450ms) → 两圈涟漪 radius 扩散 alpha 收敛(各 380ms 相位差 120ms) → 涟漪外圈放大为 ProgressRing 初始态半径并淡入首页（跨页 morph 用共享元素省事方案：直接在同一 Screen 内切换状态+Crossfade 250ms）→ 任何点击中断直达首页；
   - `Scaffold(bottomBar = BottomBar)` 三项：`Icons.Rounded.WaterDrop 首页 / Icons.Rounded.BarChart 统计 / Icons.Rounded.Favorite 我的`（material-icons-extended 加入 app 依赖）；选中色取当前 ThemeSpec.primary；
-  - **主题过渡**：在 `:app` 层包装 `AnimatedAwakeTheme(themeId)`——内部对 ThemeSpec 的每个颜色锚点用 `animateColorAsState(targetValue, tween(500))` 后再写入 `LocalAwakeTheme`，兑现规格 §2.3 的 0.5s 平滑换肤（含背景渐变逐停靠点插值）。
+  - **主题过渡**：在 `:app` 层包装 `AnimatedAwakeTheme(themeId)`——内部对 ThemeSpec 的每个颜色锚点用 `animateColorAsState(targetValue, tween(500))` 后再写入 `LocalAwakeTheme`，兑现规格 §2.3 的 0.5s 平滑换肤（含背景渐变逐停靠点插值）；
+  - **视觉底座真机义务（终审要求）**：本任务是首个可安装包，验收必须包含「GradientBackdrop+ProgressRing+FloatingParticles+BurstParticles 同屏冒烟」的真机过目步骤，并复核 BurstParticles 新守卫无残影、GrainOverlay 与 Backdrop 叠加观感（T8d）。
 - [ ] **Step 4:** PASS 且 `./gradlew :app:assembleDebug` 成功 → **Step 5:** `git commit -m "feat(app): 底部三标签导航与落滴开屏动画"`
 
 ---
