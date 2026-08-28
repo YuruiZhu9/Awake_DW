@@ -1,0 +1,232 @@
+package com.awakedw.feature.onboarding
+
+import android.app.Activity
+import android.content.Context
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.particles.FloatingParticles
+
+/** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
+private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
+
+/**
+ * 白名单引导页（首次启动，无底栏——由导航壳/集成任务接线）：
+ * 当刻主题的渐变底 + 漂浮粒子 + 大水滴插画，温柔地建议开启省电白名单。
+ *
+ * 主按钮「去设置 ♡」：先一并请求通知权限，再依 [BatteryIntentLauncher.bestEffortIntents]
+ * 逐个尝试跳转，首个成功即置位 onboarding_done 并经 [onComplete] 接缝离页；
+ * 次按钮「以后再说」：直接置位完成。跳转全部失败时留在本页，可重试可跳过。
+ *
+ * [onComplete] 为导航接缝（默认空实现），由集成任务接上「返回首页」；本层不感知 NavHost。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+fun OnboardingScreen(
+    viewModel: OnboardingViewModel = viewModel(),
+    onComplete: () -> Unit = {},
+) {
+    val state by viewModel.uiState.collectAsState()
+    val spec = currentThemeSpec()
+    val context = LocalContext.current
+
+    // 完成接缝：VM 置位 completed 后离开本页（导航由集成任务接线）。
+    LaunchedEffect(state.completed) {
+        if (state.completed) onComplete()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.weight(0.8f))
+            DropletIllustration()
+            Spacer(Modifier.height(28.dp))
+            Text(
+                text = "为了让每一次温柔准时抵达",
+                color = spec.greetingColor,
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "建议把 Awake_DW 加入电池优化白名单，提醒会更可靠。也可以先跳过。",
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.weight(1f))
+            PrimaryButton(text = "去设置 ♡", onTap = { onGoToSettings(context, viewModel) })
+            Spacer(Modifier.height(14.dp))
+            SkipButton(onTap = viewModel::complete)
+            Spacer(Modifier.height(40.dp))
+        }
+    }
+}
+
+/** 主按钮点击：一并请求通知权限 → 逐个尝试白名单入口 → 成功回执交给 VM 收口。 */
+private fun onGoToSettings(
+    context: Context,
+    viewModel: OnboardingViewModel,
+) {
+    (context as? Activity)?.let { activity -> BatteryIntentLauncher.requestNotificationPermission(activity) }
+    val success =
+        BatteryIntentLauncher.tryStartInOrder(
+            context,
+            BatteryIntentLauncher.bestEffortIntents(context),
+        )
+    viewModel.onWhitelistJumpResult(success)
+}
+
+/** 大水滴插画：柔光晕 + 主题渐变水滴（尖端向上）+ 一点高光，整滴极缓呼吸。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun DropletIllustration(modifier: Modifier = Modifier) {
+    val spec = currentThemeSpec()
+    val breath by
+        rememberInfiniteTransition(label = "dropletBreath").animateFloat(
+            initialValue = 0.98f,
+            targetValue = 1.02f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+            label = "dropletBreathScale",
+        )
+
+    Canvas(
+        modifier =
+            modifier
+                .size(DROPLET_SIZE)
+                .graphicsLayer {
+                    scaleX = breath
+                    scaleY = breath
+                },
+    ) {
+        drawDroplet(spec)
+    }
+}
+
+/** 水滴绘制：光晕垫底 → 渐变滴身 → 高光椭圆（比例锚定，任意尺寸不变形）。 */
+private fun DrawScope.drawDroplet(spec: ThemeSpec) {
+    val glowRadius = size.minDimension * 0.85f
+    drawCircle(
+        brush = Brush.radialGradient(colors = listOf(spec.haloColor.copy(alpha = 0.32f), Color.Transparent), radius = glowRadius),
+        radius = glowRadius,
+        center = Offset(size.width / 2f, size.height / 2f),
+    )
+    drawPath(path = dropletPath(size), brush = Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
+    drawOval(
+        color = Color.White.copy(alpha = 0.35f),
+        topLeft = Offset(size.width * 0.30f, size.height * 0.60f),
+        size = Size(size.width * 0.16f, size.height * 0.09f),
+    )
+}
+
+/** 大水滴轮廓：顶部尖端 → 两侧三次曲线 → 底部半圆（宽 [size].width，总高 [size].height）。 */
+private fun dropletPath(size: Size): Path {
+    val w = size.width
+    val h = size.height
+    val r = w / 2f
+    val circleCenterY = h - r
+    return Path().apply {
+        moveTo(w / 2f, 0f)
+        cubicTo(w * 0.70f, h * 0.20f, w, circleCenterY - r, w, circleCenterY)
+        arcTo(
+            rect = Rect(left = 0f, top = circleCenterY - r, right = w, bottom = circleCenterY + r),
+            startAngleDegrees = 0f,
+            sweepAngleDegrees = 180f,
+            forceMoveTo = false,
+        )
+        cubicTo(0f, circleCenterY - r, w * 0.30f, h * 0.20f, w / 2f, 0f)
+        close()
+    }
+}
+
+/** 主按钮：主题渐变胶囊，与首页「记一杯」同一观感语言。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun PrimaryButton(
+    text: String,
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    Box(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(percent = 50))
+                .background(Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
+                .clickable(onClick = onTap)
+                .padding(horizontal = 46.dp, vertical = 17.dp),
+    ) {
+        Text(text = text, color = Color.White, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+/** 次按钮：低扰动的文字按钮——「以后再说」同样置位完成，不阻拦任何人。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun SkipButton(
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    Text(
+        text = "以后再说",
+        color = spec.greetingSubColor,
+        style = MaterialTheme.typography.labelLarge,
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(percent = 50))
+                .clickable(onClick = onTap)
+                .padding(horizontal = 24.dp, vertical = 10.dp),
+    )
+}
