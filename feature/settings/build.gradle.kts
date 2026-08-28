@@ -41,9 +41,12 @@ dependencies {
     implementation(libs.compose.tooling.preview)
 
     implementation(libs.lifecycle.viewmodel.compose)
+    // SettingsViewModel 的 StateFlow 合流与 viewModelScope 需要 coroutines 类型（:core:domain 以 implementation 引入，不外泄）。
+    implementation(libs.coroutines.core)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
 }
