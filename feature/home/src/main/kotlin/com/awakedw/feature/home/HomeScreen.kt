@@ -75,7 +75,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
-            Greeting(totalMl = state.totalMl, goalMl = state.goalMl)
+            Greeting(customGreeting = state.greeting, totalMl = state.totalMl, goalMl = state.goalMl)
             Spacer(Modifier.height(20.dp))
             RingBlock(
                 progress = state.progress,

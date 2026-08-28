@@ -183,7 +183,8 @@ class HomeViewModelTest {
             h.viewModel.tapLogButton()
             runCurrent()
 
-            assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedSlots)
+            // 第 1 抽是 init 的顶部问候语，第 2 抽才是本次打卡的夸夸语。
+            assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)
             assertEquals("早安短句", h.viewModel.uiState.value.praiseLine)
         }
 
@@ -210,6 +211,29 @@ class HomeViewModelTest {
             val state = h.viewModel.uiState.value
             assertEquals(750, state.totalMl)
             assertEquals(750f / 1600f, state.progress, 0f)
+        }
+
+    @Test
+    fun `进首页即从文案库当前时段抽问候语_每次新建VM都再抽一次`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+            // 10:00 属 MORNING：init 首抽已完成，问候语即文案库该时段的句子。
+            assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedSlots)
+            assertEquals("早安短句", h.viewModel.uiState.value.greeting)
+
+            // 每次进入首页 = 新建导航条目 = 重建 VM = 再抽一次（设计 §9.2 每次加载有区别）。
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+            val second =
+                HomeViewModel(
+                    clock = h.clock,
+                    observeHome = ObserveHomeUseCase(h.water, h.prefs, ResolveThemeUseCase(h.prefs, h.clock)),
+                    logWater = LogWaterUseCase(h.water, h.prefs, h.clock),
+                    copies = h.copies,
+                )
+            runCurrent()
+            assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)
+            assertEquals("早安短句", second.uiState.value.greeting)
         }
 
     private companion object {

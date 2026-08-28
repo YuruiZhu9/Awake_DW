@@ -41,11 +41,13 @@ internal fun dateSubline(
 
 /**
  * 时段问候 + 日期副行（规格 §3.2 自上而下第 1 条）。
- * 纯展示件：时段/日期读系统本地时间，随一天自然流转。
+ * [customGreeting] 非空时优先展示（文案库抽取，每次进首页都换一句），
+ * null 时回落时段默认句；日期读系统本地时间，随一天自然流转。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun Greeting(
+    customGreeting: String?,
     totalMl: Int,
     goalMl: Int,
     modifier: Modifier = Modifier,
@@ -54,7 +56,7 @@ internal fun Greeting(
     val now = remember { LocalDateTime.now() }
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = greetingFor(TimeSlots.slotOfHour(now.hour)),
+            text = customGreeting ?: greetingFor(TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,

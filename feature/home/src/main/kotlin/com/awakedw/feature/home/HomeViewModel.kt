@@ -33,7 +33,8 @@ const val CELEBRATION_HOLD_MS = 2_500L
 
 /**
  * 首页一屏状态。[progress] 已截断到 0..1（达标即满环，微光呼吸交给表现层）；
- * [praiseLine] 为 null 时隐藏；[celebrating] 仅当日首次达标为 true（规格 §4.2 第 6 步）。
+ * [praiseLine] 为 null 时隐藏；[celebrating] 仅当日首次达标为 true（规格 §4.2 第 6 步）；
+ * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认问候。
  */
 data class HomeUiState(
     val themeId: ThemeId = ThemeId.EMERALD,
@@ -42,6 +43,7 @@ data class HomeUiState(
     val goalMl: Int = 1600,
     val cupCount: Int = 0,
     val avgIntervalLabel: String = "—",
+    val greeting: String? = null,
     val praiseLine: String? = null,
     val celebrating: Boolean = false,
 )
@@ -93,6 +95,13 @@ class HomeViewModel(
     private var feedbackEpoch = 0
 
     init {
+        // 顶部问候语（设计 §9.2）：进首页即从文案库当前时段组抽一句——
+        // 每次新建首页导航条目都会重建 VM，故每次进入都是新的一句（去重池防短期重复）。
+        viewModelScope.launch {
+            val slot = TimeSlots.slotOfHour(currentHour())
+            val greeting = copies.randomFor(slot)
+            _uiState.update { it.copy(greeting = greeting) }
+        }
         viewModelScope.launch {
             observeHome().collect { snapshot ->
                 _uiState.update {
