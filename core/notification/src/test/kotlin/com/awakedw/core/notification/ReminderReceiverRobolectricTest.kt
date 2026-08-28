@@ -25,8 +25,10 @@ import org.robolectric.annotation.Config
 import javax.inject.Inject
 
 /**
- * 场景 2/3：提醒到达发「温柔提醒」通知、动作按钮经 RecordingBroadcast 同步记一杯并把通知换成
- * 「记好啦 ♡」+ 2 秒自清。接收器以 @AndroidEntryPoint 真实注入（验证 Hilt 2.52 + KSP 下可用）。
+ * 场景 2/3：提醒到达发「温柔提醒」通知、动作按钮经 RecordingBroadcast 记一杯并把通知换成
+ * 「记好啦 ♡」+ 2 秒自清。接收器经 EntryPointAccessors 手动注入（本仓 Hilt 2.52 + KSP 下
+ * @AndroidEntryPoint 广播接收器不可用，回退路线在 Robolectric 中实证），测试作用域为
+ * Unconfined，goAsync 协程体在 onReceive 内同步完成后才返回。
  */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)

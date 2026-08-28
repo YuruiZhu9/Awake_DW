@@ -7,15 +7,29 @@ import com.awakedw.core.notification.ReminderScheduler
 import com.awakedw.core.notification.ReminderSchedulerImpl
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class NotificationModule {
     @Binds
     abstract fun bindReminderScheduler(impl: ReminderSchedulerImpl): ReminderScheduler
+}
+
+/** 接收器后台工作域：goAsync 窗口内完成落库/重排，失败互不牵连（Supervisor）。 */
+@Module
+@InstallIn(SingletonComponent::class)
+object ReceiverScopeModule {
+    @Provides
+    @Singleton
+    fun provideReceiverScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 }
 
 /**
@@ -33,4 +47,6 @@ interface ReminderGraphEntryPoint {
     fun logWater(): LogWaterUseCase
 
     fun scheduler(): ReminderScheduler
+
+    fun receiverScope(): CoroutineScope
 }
