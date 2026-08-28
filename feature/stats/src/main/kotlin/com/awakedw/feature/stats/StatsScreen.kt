@@ -10,26 +10,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
-import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.stats.components.TodayTimeline
 import com.awakedw.feature.stats.components.WeekBarsChart
 
-/** 徽章胶囊圆角：全圆。 */
-private val CHIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
+/** 本页漂浮粒子的随机种子：与首页/设置页各不相同，保证各屏粒子排布有别。 */
+private const val STATS_PARTICLE_SEED = 11L
 
 /** 页面左右留白（与首页一致）。 */
 private val PAGE_HORIZONTAL_PADDING = 24.dp
@@ -37,7 +35,7 @@ private val PAGE_HORIZONTAL_PADDING = 24.dp
 /**
  * 统计页（规格 §3.3）：给「坚持的痕迹」一个专属空间——
  * 徽章行（今日杯数 · 平均间隔 · 连续达标）、本周柱状图、今日时间线，三模块纵向排列。
- * 背景沿用全局渐变底座（自带柔光晕与噪点颗粒），与首页同一份主题呼吸。
+ * 背景沿用全局渐变底座（自带柔光晕与噪点颗粒）+ 漂浮粒子，与首页同一份主题呼吸。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -47,6 +45,11 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        FloatingParticles(
+            colors = spec.particleColors,
+            modifier = Modifier.matchParentSize(),
+            seed = STATS_PARTICLE_SEED,
+        )
         Column(
             modifier =
                 Modifier
@@ -83,21 +86,5 @@ private fun StatsBadgesRow(
         } else if (badges.streakDays == 1) {
             BadgeChip(text = "第 1 天 ✨", spec = spec)
         }
-    }
-}
-
-@Suppress("ktlint:standard:function-naming")
-@Composable
-private fun BadgeChip(
-    text: String,
-    spec: ThemeSpec,
-) {
-    Surface(shape = CHIP_SHAPE, color = spec.chipBg) {
-        Text(
-            text = text,
-            color = spec.chipText,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-        )
     }
 }

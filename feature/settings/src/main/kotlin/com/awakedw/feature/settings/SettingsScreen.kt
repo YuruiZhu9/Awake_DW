@@ -1,6 +1,7 @@
 package com.awakedw.feature.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.settings.components.IntervalChipsRow
 import com.awakedw.feature.settings.components.StepperRow
 import com.awakedw.feature.settings.components.ThemeChoiceChips
@@ -36,10 +39,14 @@ private val CARD_SHAPE: Shape = RoundedCornerShape(24.dp)
 /** 分区内元素的统一行间距。 */
 private val SECTION_SPACING = 14.dp
 
+/** 本页漂浮粒子的随机种子：与首页/统计页各不相同，保证各屏粒子排布有别。 */
+private const val SETTINGS_PARTICLE_SEED = 13L
+
 /**
  * 「我的」页（设计规格 §3.4）：四个分区卡 + 白名单引导入口——
  * 目标（± 步进器）、提醒（总开关 / 清醒时段双滑杆 / 间隔档位 chips）、
  * 外观（主题单选 chips）、心意文案库（早/午/晚折叠编辑器）。
+ * 背景为全局渐变底座 + 漂浮粒子（规格 §2.2，与其他各屏同一份主题呼吸）。
  * 所有变更经 [SettingsViewModel] 即时持久化，无保存键。
  *
  * [onOpenWhitelistGuide] 为「省电白名单引导」整行点击的出口：
@@ -53,83 +60,93 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val settings = state.settings
+    val spec = currentThemeSpec()
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Spacer(Modifier.height(24.dp))
-        Text(
-            text = "我的",
-            color = currentThemeSpec().greetingColor,
-            style = MaterialTheme.typography.headlineMedium,
+    Box(modifier = Modifier.fillMaxSize()) {
+        GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        FloatingParticles(
+            colors = spec.particleColors,
+            modifier = Modifier.matchParentSize(),
+            seed = SETTINGS_PARTICLE_SEED,
         )
 
-        SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
-            // §3.4「一行两枚」：目标量与杯容量并排（等分权重），窄屏下各自压缩。
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(SECTION_SPACING),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StepperRow(
-                    label = "每日目标量",
-                    valueText = "${settings.goalMl}ml",
-                    canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
-                    canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
-                    onDecrement = { viewModel.setGoalMl(settings.goalMl - SettingsValidation.ML_STEP) },
-                    onIncrement = { viewModel.setGoalMl(settings.goalMl + SettingsValidation.ML_STEP) },
-                    modifier = Modifier.weight(1f),
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = "我的",
+                color = spec.greetingColor,
+                style = MaterialTheme.typography.headlineMedium,
+            )
+
+            SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
+                // §3.4「一行两枚」：目标量与杯容量并排（等分权重），窄屏下各自压缩。
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(SECTION_SPACING),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    StepperRow(
+                        label = "每日目标量",
+                        valueText = "${settings.goalMl}ml",
+                        canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
+                        canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
+                        onDecrement = { viewModel.setGoalMl(settings.goalMl - SettingsValidation.ML_STEP) },
+                        onIncrement = { viewModel.setGoalMl(settings.goalMl + SettingsValidation.ML_STEP) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    StepperRow(
+                        label = "一杯容量",
+                        valueText = "${settings.cupMl}ml",
+                        canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
+                        canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
+                        onDecrement = { viewModel.setCupMl(settings.cupMl - SettingsValidation.ML_STEP) },
+                        onIncrement = { viewModel.setCupMl(settings.cupMl + SettingsValidation.ML_STEP) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            SettingsCard(title = "提醒", subtitle = "在她清醒的时间里轻轻叫一声") {
+                ToggleRow(
+                    label = "温柔提醒",
+                    checked = settings.remindersEnabled,
+                    onCheckedChange = viewModel::setRemindersEnabled,
                 )
-                StepperRow(
-                    label = "一杯容量",
-                    valueText = "${settings.cupMl}ml",
-                    canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
-                    canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
-                    onDecrement = { viewModel.setCupMl(settings.cupMl - SettingsValidation.ML_STEP) },
-                    onIncrement = { viewModel.setCupMl(settings.cupMl + SettingsValidation.ML_STEP) },
-                    modifier = Modifier.weight(1f),
+                WindowRangeSlider(
+                    startMin = settings.windowStartMin,
+                    endMin = settings.windowEndMin,
+                    onCommit = viewModel::setWindow,
+                )
+                IntervalChipsRow(selectedMin = settings.intervalMin, onSelect = viewModel::setIntervalMin)
+            }
+
+            SettingsCard(title = "外观", subtitle = "跟随时段流转，或停在最喜欢的颜色") {
+                ThemeChoiceChips(
+                    selected = settings.themeChoice,
+                    onSelect = viewModel::setThemeChoice,
                 )
             }
+
+            SettingsCard(title = null, subtitle = null) {
+                CopyLibrarySection(
+                    library = state.library,
+                    onUpsert = viewModel::upsertCopy,
+                    onAdd = viewModel::addCopy,
+                    onDelete = viewModel::deleteCopy,
+                    onReset = viewModel::resetCopyLibrary,
+                )
+            }
+
+            GuideEntryRow(onOpenWhitelistGuide = onOpenWhitelistGuide)
+
+            Spacer(Modifier.height(24.dp))
         }
-
-        SettingsCard(title = "提醒", subtitle = "在她清醒的时间里轻轻叫一声") {
-            ToggleRow(
-                label = "温柔提醒",
-                checked = settings.remindersEnabled,
-                onCheckedChange = viewModel::setRemindersEnabled,
-            )
-            WindowRangeSlider(
-                startMin = settings.windowStartMin,
-                endMin = settings.windowEndMin,
-                onCommit = viewModel::setWindow,
-            )
-            IntervalChipsRow(selectedMin = settings.intervalMin, onSelect = viewModel::setIntervalMin)
-        }
-
-        SettingsCard(title = "外观", subtitle = "跟随时段流转，或停在最喜欢的颜色") {
-            ThemeChoiceChips(
-                selected = settings.themeChoice,
-                onSelect = viewModel::setThemeChoice,
-            )
-        }
-
-        SettingsCard(title = null, subtitle = null) {
-            CopyLibrarySection(
-                library = state.library,
-                onUpsert = viewModel::upsertCopy,
-                onAdd = viewModel::addCopy,
-                onDelete = viewModel::deleteCopy,
-                onReset = viewModel::resetCopyLibrary,
-            )
-        }
-
-        GuideEntryRow(onOpenWhitelistGuide = onOpenWhitelistGuide)
-
-        Spacer(Modifier.height(24.dp))
     }
 }
 

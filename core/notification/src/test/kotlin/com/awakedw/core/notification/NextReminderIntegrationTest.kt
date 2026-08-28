@@ -51,7 +51,6 @@ class NextReminderIntegrationTest {
     private val expectedFireAt = atLocal(11, 30)
 
     @Test
-    @Suppress("DEPRECATION")
     fun `开启提醒重排_队列恰有一条RTC_WAKEUP精确闹钟`() {
         scheduler.rescheduleFromNow(Reason.APP_START)
 

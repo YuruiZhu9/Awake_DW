@@ -27,7 +27,7 @@ class SettingsValidationTest {
 
     // endregion
 
-    // region 提醒间隔：仅接受六档候选集
+    // region 提醒间隔：仅接受七档候选集
 
     @Test
     fun `间隔合法性——候选集30到240七档全部通过`() {

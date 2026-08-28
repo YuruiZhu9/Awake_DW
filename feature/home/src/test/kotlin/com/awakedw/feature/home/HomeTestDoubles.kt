@@ -26,21 +26,6 @@ class FakeClock(
     override fun nowEpochMs(): Long = ms
 
     override fun zone(): ZoneId = ZoneId.of("Asia/Shanghai")
-
-    /** 把时钟拨到今天 [hour]:[minute]（本地时区）。 */
-    fun setAtLocal(
-        hour: Int,
-        minute: Int,
-    ) {
-        val zoned = Instant.ofEpochMilli(ms).atZone(zone())
-        ms =
-            zoned
-                .toLocalDate()
-                .atTime(hour, minute)
-                .atZone(zone())
-                .toInstant()
-                .toEpochMilli()
-    }
 }
 
 /**

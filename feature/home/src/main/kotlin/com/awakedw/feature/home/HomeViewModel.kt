@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.TimeSlots
+import com.awakedw.core.designsystem.components.IntervalLabel
 import com.awakedw.core.domain.LogResult
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
@@ -18,7 +19,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.Locale
 import javax.inject.Inject
 
 /** 打卡防抖窗口（规格 §4.1）：窗口内经任一入口的连续触发只记一杯。 */
@@ -100,7 +100,7 @@ class HomeViewModel(
                         totalMl = snapshot.stats.totalMl,
                         goalMl = snapshot.goalMl,
                         cupCount = snapshot.stats.cupCount,
-                        avgIntervalLabel = avgIntervalLabel(snapshot.stats.avgIntervalMin),
+                        avgIntervalLabel = IntervalLabel.format(snapshot.stats.avgIntervalMin),
                     )
                 }
             }
@@ -153,17 +153,4 @@ class HomeViewModel(
     }
 
     private fun currentHour(): Int = LocalDateTime.ofInstant(Instant.ofEpochMilli(clock.nowEpochMs()), clock.zone()).hour
-
-    /** 平均间隔徽章文案：杯数 <2 为「—」；<90 分钟用分钟文案，否则小时文案（如 1.6h）。 */
-    private fun avgIntervalLabel(avgIntervalMin: Int?): String =
-        when {
-            avgIntervalMin == null -> "—"
-            avgIntervalMin < HOURLY_LABEL_MIN -> "$avgIntervalMin 分钟"
-            else -> String.format(Locale.US, "%.1fh", avgIntervalMin / 60.0)
-        }
-
-    private companion object {
-        /** 低于该分钟数用「X 分钟」文案，否则折叠为小时。 */
-        const val HOURLY_LABEL_MIN = 90
-    }
 }

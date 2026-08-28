@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.toDayKey
+import com.awakedw.core.designsystem.components.IntervalLabel
 import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 /** 徽章缺省文案：无平均间隔可言时显示破折号。 */
@@ -23,9 +23,6 @@ private const val DASH_LABEL = "—"
 
 /** 目标量缺省值：与 UserSettings 默认一致，仅作首帧占位。 */
 private const val DEFAULT_GOAL_ML = 1600
-
-/** 低于该分钟数用「X 分钟」文案，否则折叠为小时（与首页一致）。 */
-private const val HOURLY_LABEL_MIN = 90
 
 /** 周柱状图窗口（天）：含今天。 */
 private const val WEEK_DAYS = 7
@@ -80,7 +77,7 @@ class StatsViewModel
                     badges =
                         StatsBadges(
                             cupCount = stats.cupCount,
-                            avgIntervalLabel = avgIntervalLabel(stats.avgIntervalMin),
+                            avgIntervalLabel = IntervalLabel.format(stats.avgIntervalMin),
                             streakDays = streak(),
                         ),
                     bars = water.weekBars(daysBack = WEEK_DAYS),
@@ -91,15 +88,4 @@ class StatsViewModel
         }
 
         private fun todayKey(): String = clock.nowEpochMs().toDayKey(clock.zone())
-
-        /**
-         * 平均间隔徽章文案：复刻首页语义——杯数 <2 无平均间隔可言显示「—」；
-         * 不足 90 分钟用「X 分钟」，否则折叠为小时（如 1.6h）。
-         */
-        private fun avgIntervalLabel(avgIntervalMin: Int?): String =
-            when {
-                avgIntervalMin == null -> DASH_LABEL
-                avgIntervalMin < HOURLY_LABEL_MIN -> "$avgIntervalMin 分钟"
-                else -> String.format(Locale.US, "%.1fh", avgIntervalMin / 60.0)
-            }
     }

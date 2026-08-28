@@ -18,9 +18,6 @@ interface WaterRecordDao {
     @Insert
     suspend fun insert(entity: WaterRecordEntity): Long
 
-    @Query("SELECT COALESCE(SUM(amount_ml),0) FROM water_record WHERE day_key_local = :day")
-    suspend fun sumFor(day: String): Int
-
     @Query("SELECT * FROM water_record WHERE day_key_local = :day ORDER BY drank_at_epoch_ms ASC")
     suspend fun recordsFor(day: String): List<WaterRecordEntity>
 

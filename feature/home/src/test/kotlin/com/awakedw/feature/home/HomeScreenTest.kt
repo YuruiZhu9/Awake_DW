@@ -35,7 +35,7 @@ class HomeScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    /** 显式走时：先放行主线程 Handler 上的延迟任务（800ms 防抖），再推帧钟渲染新状态。 */
+    /** 显式走时：先放行主线程 Handler 上的延迟任务，再推帧钟渲染新状态。 */
     private fun advanceClock(ms: Long) {
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ms))
         composeRule.mainClock.advanceTimeBy(ms)
