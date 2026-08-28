@@ -89,7 +89,7 @@ class ParticleMathTest {
 
     @Test
     fun `半径与基础不透明度分层落带且辉光标志与大中小一致`() {
-        assertEquals(16, ParticleMath.DOT_COUNT)
+        assertEquals(24, ParticleMath.DOT_COUNT)
         val samples = 33
         val baseAlpha = FloatArray(ParticleMath.DOT_COUNT)
         val radius = FloatArray(ParticleMath.DOT_COUNT)

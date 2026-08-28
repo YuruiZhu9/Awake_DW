@@ -30,17 +30,17 @@ object ParticleMath {
     /** 大粒索引（规格 §2.2：2 颗，带辉光）。 */
     val BIG_INDEX_RANGE = 0..1
 
-    /** 中粒索引（6 颗，微辉）。 */
-    val MEDIUM_INDEX_RANGE = 2..7
+    /** 中粒索引（8 颗，微辉）。 */
+    val MEDIUM_INDEX_RANGE = 2..9
 
-    /** 小粒索引（8 颗，无辉光）。 */
-    val SMALL_INDEX_RANGE = 8..15
+    /** 小粒索引（14 颗，无辉光）。 */
+    val SMALL_INDEX_RANGE = 10..23
 
-    /** 圆点粒子总数：大 2 + 中 6 + 小 8。 */
-    const val DOT_COUNT = 16
+    /** 圆点粒子总数：大 2 + 中 8 + 小 14。 */
+    const val DOT_COUNT = 24
 
     /** 固定相位星芒粒子数（由 Composable 层独立绘制，不经本引擎）。 */
-    const val STAR_COUNT = 2
+    const val STAR_COUNT = 3
 
     /** 大粒不透明度带（规格 §2.2：0.25–0.55）。 */
     val BIG_ALPHA_RANGE = 0.25f..0.55f

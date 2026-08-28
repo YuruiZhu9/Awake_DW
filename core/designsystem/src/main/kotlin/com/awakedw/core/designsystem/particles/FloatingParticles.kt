@@ -28,11 +28,11 @@ private const val LOOP_NANOS = 48_000_000_000L
 /** 「✦」星芒字形。 */
 private const val STAR_GLYPH = "✦"
 
-// 两枚「✦」星芒的固定相位锚点（屏宽比 to 屏高比）与呼吸参数；刻意不含随机数。
-private val STAR_ANCHORS = listOf(0.24f to 0.28f, 0.76f to 0.60f)
-private val STAR_FONT_SIZES = listOf(16.sp, 12.sp)
-private val STAR_TURNS = listOf(2, 3) // 每循环内呼吸次数（整数 ⇒ 循环闭合）
-private val STAR_PHASES = listOf(0f, PI.toFloat() * 2f / 3f)
+// 三枚「✦」星芒的固定相位锚点（屏宽比 to 屏高比）与呼吸参数；刻意不含随机数。
+private val STAR_ANCHORS = listOf(0.24f to 0.28f, 0.76f to 0.60f, 0.38f to 0.74f)
+private val STAR_FONT_SIZES = listOf(16.sp, 12.sp, 14.sp)
+private val STAR_TURNS = listOf(2, 3, 2) // 每循环内呼吸次数（整数 ⇒ 循环闭合）
+private val STAR_PHASES = listOf(0f, PI.toFloat() * 2f / 3f, PI.toFloat() * 4f / 3f)
 private const val STAR_ALPHA_BASE = 0.20f
 private const val STAR_ALPHA_AMPLITUDE = 0.45f
 
@@ -40,8 +40,8 @@ private const val STAR_ALPHA_AMPLITUDE = 0.45f
 private val FALLBACK_COLOR = Color(0xFF10A87C)
 
 /**
- * 分层漂浮粒子场（规格 §2.2）：大 2 / 中 6 / 小 8 共 [ParticleMath.DOT_COUNT]
- * 颗三层圆点 + 2 枚固定相位「✦」星芒，整体极缓上浮、顶部渐隐、底部无缝回卷。
+ * 分层漂浮粒子场（规格 §2.2）：大 2 / 中 8 / 小 14 共 [ParticleMath.DOT_COUNT]
+ * 颗三层圆点 + 3 枚固定相位「✦」星芒，整体极缓上浮、顶部渐隐、底部无缝回卷。
  *
  * 帧驱动契约：
  * - 运动学全部来自 [ParticleMath.floating] 纯函数，`(index, seed)` 确定性推导，
