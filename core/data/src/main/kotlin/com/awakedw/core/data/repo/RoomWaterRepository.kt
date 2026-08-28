@@ -32,9 +32,13 @@ class RoomWaterRepository
         }
 
         override suspend fun todayStats(): DailyStats {
-            val day = currentDayKey()
-            val records = dao.recordsFor(day)
-            return DailyStats(totalMl = dao.sumFor(day), cupCount = records.size, avgIntervalMin = avgIntervalMinOf(records))
+            // 单查询 + 内存推导：total/cupCount 同源，消除双查询间的写入竞态（终审 T4a）。
+            val records = dao.recordsFor(currentDayKey())
+            return DailyStats(
+                totalMl = records.sumOf { it.amountMl },
+                cupCount = records.size,
+                avgIntervalMin = avgIntervalMinOf(records),
+            )
         }
 
         override suspend fun weekBars(daysBack: Int): List<WeekBar> {

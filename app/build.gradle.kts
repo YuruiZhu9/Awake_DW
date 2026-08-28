@@ -31,6 +31,17 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests {
+            // Robolectric 冒烟测试需要应用资源与真实 Application 生命周期。
+            isIncludeAndroidResources = true
+            all { test ->
+                // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
+                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -45,6 +56,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(project(":core:data"))
+    implementation(project(":core:domain"))
     implementation(project(":core:notification"))
     implementation(project(":core:designsystem"))
 
@@ -52,4 +64,10 @@ dependencies {
     implementation(project(":feature:stats"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:onboarding"))
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    // Hilt 官方 Robolectric 路线：测试组件随 kspTest 重新生成（test 源集的注入点不进主图聚合）。
+    testImplementation(libs.hilt.testing)
+    kspTest(libs.hilt.compiler)
 }

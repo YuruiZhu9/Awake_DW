@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
 import java.time.Instant
 import java.time.LocalDateTime
+import javax.inject.Inject
 
 /** 时段 → 主题映射：清晨草莓（轻快起势）、日间翡翠（清爽专注）、夜晚焦糖（温暖收尾）。 */
 private fun themeFor(slot: TimeSlot): ThemeId =
@@ -32,8 +33,19 @@ private fun themeFor(slot: TimeSlot): ThemeId =
 class ResolveThemeUseCase(
     private val prefs: UserPreferencesRepository,
     private val clock: AppClock,
-    private val resamplePeriodMs: Long = RESAMPLE_PERIOD_MS,
+    private val resamplePeriodMs: Long,
 ) {
+    /** Dagger 注入入口：生产以默认重采样周期委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
+    @Inject
+    constructor(
+        prefs: UserPreferencesRepository,
+        clock: AppClock,
+    ) : this(
+        prefs,
+        clock,
+        RESAMPLE_PERIOD_MS,
+    )
+
     operator fun invoke(): Flow<ThemeId> =
         prefs.settings
             .distinctUntilChanged()

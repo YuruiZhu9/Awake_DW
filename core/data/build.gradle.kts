@@ -24,6 +24,11 @@ android {
         jvmTarget = "17"
     }
 
+    // Room schema 导出：首改表（migration）前必须先有 v1 基线 JSON 入库。
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
     testOptions {
         unitTests {
             // Room.inMemoryDatabaseBuilder 需要真实 Context，JVM 单测借助 Robolectric 提供。
@@ -42,7 +47,7 @@ dependencies {
     // 依赖倒置：本模块为 domain 契约（com.awakedw.core.domain.contracts）提供实现。
     implementation(project(":core:domain"))
 
-    api(libs.room.runtime)
+    implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 

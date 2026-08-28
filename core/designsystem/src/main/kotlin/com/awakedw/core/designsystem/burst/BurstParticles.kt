@@ -37,6 +37,9 @@ private const val MAX_ANGLE_JITTER_RAD = 0.18f
 /** 进度值越接近该阈值即视为完成态，停止绘制开销。 */
 private const val IDLE_THRESHOLD = 0.9999f
 
+/** 空闲完成态的路径进度值：==1f 时 drawBehind 完全跳过。 */
+private const val TRAVEL_IDLE = 1f
+
 /** 兜底迸发色。 */
 private val FALLBACK_COLOR = Color(0xFF10A87C)
 
@@ -49,7 +52,7 @@ private const val GLOW_RING_ALPHA = 0.22f
  * 向四周迸出 [BURST_COUNT] 颗彩点——900ms ease-out 沿各自角度飞散、透明度由 1 收至 0。
  *
  * 行为契约：
- * - [trigger] == 0 的初始态完全静默，不绘制、不回调；
+ * - [trigger] <= 0 视为非触发态：立即清场（travelState 复位 idle）且不回调 [onFinish]；
  * - [onFinish] 仅在本次动画自然结束时调用一次；进行中被新一次 [trigger]
  *   打断则旧的静默取消，不误发回调；
  * - 每次迸发的角度抖动 / 距离 / 半径由 `Random(trigger)` 确定性生成，
@@ -66,8 +69,8 @@ fun BurstParticles(
     trigger: Int,
     onFinish: () -> Unit,
 ) {
-    // travel==1f 即空闲完成态；初始 1f 保证 trigger==0 时无绘制。
-    val travelState = remember { mutableFloatStateOf(1f) }
+    // travel 处于空闲完成态即无绘制；初始 idle 保证 trigger<=0 时静默。
+    val travelState = remember { mutableFloatStateOf(TRAVEL_IDLE) }
     val travel by travelState
 
     val anchorPx = with(LocalDensity.current) { DISTANCE_ANCHOR.toPx() }
@@ -77,7 +80,12 @@ fun BurstParticles(
         }
 
     LaunchedEffect(trigger) {
-        if (trigger <= 0) return@LaunchedEffect
+        // 守卫（终审 T8a）：非正触发立即清场复位 idle，且不误发 onFinish——
+        // 防止上次迸发进行中被重置为 0 后残影冻结在半程。
+        if (trigger <= 0) {
+            travelState.floatValue = TRAVEL_IDLE
+            return@LaunchedEffect
+        }
         travelState.floatValue = 0f
         var last = withFrameNanos { it }
         var elapsed = 0L
@@ -89,7 +97,7 @@ fun BurstParticles(
             // 缓动作用于「路径进度」本身；ParticleMath.burst 保持线性纯函数。
             travelState.floatValue = EaseOutCubic.transform(linear)
         }
-        travelState.floatValue = 1f
+        travelState.floatValue = TRAVEL_IDLE
         onFinish()
     }
 

@@ -19,6 +19,8 @@ dependencies {
     implementation(libs.coroutines.core)
     // contracts.CopyLibrary 以 @Serializable 描述存储形态，序列化生成器在本模块启用。
     implementation(libs.serialization.json)
+    // JSR-330 @Inject：纯 Java 依赖，用例构造器标注注入点而不把 hilt-android 引入纯 JVM 域层（rules §5.2）。
+    implementation(libs.inject)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
