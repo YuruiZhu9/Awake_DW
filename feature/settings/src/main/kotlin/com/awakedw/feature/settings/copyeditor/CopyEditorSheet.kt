@@ -138,7 +138,7 @@ private data class EditingTarget(
     val isNew: Boolean,
 )
 
-/** 单个折叠分组：组头（时段名 + 句数 + 箭头）＋ 展开时的句子列表与「＋ 新增一句」。 */
+/** 单个折叠分组：组头（时段名 + 句数 + 箭头）＋ 展开时的「＋ 新增一句」（置顶）与句子列表。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun CopyGroup(
@@ -174,6 +174,17 @@ private fun CopyGroup(
             }
             if (expanded) {
                 Spacer(Modifier.padding(top = 4.dp))
+                // §3.4：「＋ 新增一句」置每组展开区顶部，新增路径永远一步可达。
+                Text(
+                    text = "＋ 新增一句",
+                    color = spec.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onAdd)
+                            .padding(bottom = 6.dp),
+                )
                 if (items.isEmpty()) {
                     Text(
                         text = "这里还空着，加一句吧",
@@ -189,16 +200,6 @@ private fun CopyGroup(
                         )
                     }
                 }
-                Text(
-                    text = "＋ 新增一句",
-                    color = spec.primary,
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onAdd)
-                            .padding(top = 6.dp),
-                )
             }
         }
     }

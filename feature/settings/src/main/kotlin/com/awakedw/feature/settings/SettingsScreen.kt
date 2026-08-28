@@ -70,22 +70,30 @@ fun SettingsScreen(
         )
 
         SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
-            StepperRow(
-                label = "每日目标量",
-                valueText = "${settings.goalMl}ml",
-                canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
-                canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
-                onDecrement = { viewModel.setGoalMl(settings.goalMl - SettingsValidation.ML_STEP) },
-                onIncrement = { viewModel.setGoalMl(settings.goalMl + SettingsValidation.ML_STEP) },
-            )
-            StepperRow(
-                label = "一杯容量",
-                valueText = "${settings.cupMl}ml",
-                canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
-                canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
-                onDecrement = { viewModel.setCupMl(settings.cupMl - SettingsValidation.ML_STEP) },
-                onIncrement = { viewModel.setCupMl(settings.cupMl + SettingsValidation.ML_STEP) },
-            )
+            // §3.4「一行两枚」：目标量与杯容量并排（等分权重），窄屏下各自压缩。
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(SECTION_SPACING),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StepperRow(
+                    label = "每日目标量",
+                    valueText = "${settings.goalMl}ml",
+                    canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
+                    canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
+                    onDecrement = { viewModel.setGoalMl(settings.goalMl - SettingsValidation.ML_STEP) },
+                    onIncrement = { viewModel.setGoalMl(settings.goalMl + SettingsValidation.ML_STEP) },
+                    modifier = Modifier.weight(1f),
+                )
+                StepperRow(
+                    label = "一杯容量",
+                    valueText = "${settings.cupMl}ml",
+                    canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
+                    canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
+                    onDecrement = { viewModel.setCupMl(settings.cupMl - SettingsValidation.ML_STEP) },
+                    onIncrement = { viewModel.setCupMl(settings.cupMl + SettingsValidation.ML_STEP) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         SettingsCard(title = "提醒", subtitle = "在她清醒的时间里轻轻叫一声") {

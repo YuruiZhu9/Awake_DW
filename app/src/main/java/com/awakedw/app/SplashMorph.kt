@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -78,7 +80,9 @@ private const val SKIPPED_HANDOVER_MS = 260L
  * 入首页种子预览 → 交棒导航壳（真首页）。任意点击经 [SplashSequencer.skip] 直达首页。
  *
  * 时序与绘制彻底分离：节奏由纯 JVM 的 [SplashSequencer] 决定，
- * 本组合只逐帧 tick + 渲染；冷启动仅播一次（配置变更不重放，见 AwakeNavHost）。
+ * 本组合只逐帧 tick + 渲染；冷启动仅播一次（配置变更不重放，见 AwakeNavHost）——
+ * 已播毫秒经 rememberSaveable 持久化，旋转重建后 [SplashSequencer.restore]
+ * 按已播时长跳相续播，绝不从水滴重放。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -87,16 +91,21 @@ fun SplashMorph(
     onSplashFinished: () -> Unit,
 ) {
     val spec = currentThemeSpec()
-    val sequencer = remember { SplashSequencer() }
+    var persistedElapsedMs by rememberSaveable { mutableLongStateOf(0L) }
+    val sequencer =
+        remember {
+            SplashSequencer().apply { restore(persistedElapsedMs) }
+        }
     var frame by remember { mutableStateOf(sequencer.snapshot()) }
 
-    // 帧驱动：逐帧推进状态机；DONE（自然/兜底/跳过）后按路径交棒。
+    // 帧驱动：逐帧推进状态机并把已播毫秒写入 saveable；DONE（自然/兜底/跳过）后按路径交棒。
     LaunchedEffect(sequencer) {
         var lastNanos = withFrameNanos { it }
         while (sequencer.phase != SplashPhase.DONE) {
             val nowNanos = withFrameNanos { it }
             sequencer.tick((nowNanos - lastNanos) / 1_000_000L)
             lastNanos = nowNanos
+            persistedElapsedMs = sequencer.elapsedMs
             frame = sequencer.snapshot()
         }
         frame = sequencer.snapshot()

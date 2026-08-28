@@ -61,6 +61,16 @@ class SplashSequencer(
     val canSkip: Boolean
         get() = phase != SplashPhase.DONE
 
+    /**
+     * 重建恢复（旋转等配置变更后不重放开屏）：
+     * 新状态机一次性跳相到 [restoredElapsedMs]（语义等同把该值当作已播时长），
+     * 超过形序收束即立即放行；非正数与已放行后的恢复一律忽略。
+     */
+    fun restore(restoredElapsedMs: Long) {
+        if (restoredElapsedMs <= 0L || phase == SplashPhase.DONE) return
+        tick(restoredElapsedMs)
+    }
+
     /** 推进一帧（虚拟时钟推帧即可测）；时间倒退与已放行后的帧一律忽略。 */
     fun tick(deltaMs: Long) {
         if (phase == SplashPhase.DONE || deltaMs <= 0L) return

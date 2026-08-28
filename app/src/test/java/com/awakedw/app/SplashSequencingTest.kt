@@ -115,10 +115,58 @@ class SplashSequencingTest {
         assertEquals(SplashPhase.DROPLET, sequencer.phase)
     }
 
+    @Test
+    fun `重建后按已播毫秒跳相_不重放开屏`() {
+        // 旋转前的播放进度：水滴已收束，处于涟漪段中段。
+        val beforeRotation = SplashSequencer()
+        beforeRotation.tick(600)
+
+        // 旋转重建：新状态机一次性恢复已播毫秒。
+        val restored = SplashSequencer()
+        restored.restore(beforeRotation.elapsedMs)
+
+        assertEquals(SplashPhase.RIPPLE, restored.phase)
+        assertEquals(beforeRotation.elapsedMs, restored.elapsedMs)
+
+        // 恢复后剩余时序继续走完并自然放行：观察窗 < 全程 1200ms，证明没有从水滴重放。
+        var elapsedMs = 0L
+        while (restored.phase != SplashPhase.DONE && elapsedMs <= MAX_OBSERVE_MS) {
+            restored.tick(FRAME_MS)
+            elapsedMs += FRAME_MS
+        }
+        assertEquals(SplashPhase.DONE, restored.phase)
+        assertFalse(restored.skipped)
+        assertTrue("恢复后续播应小于全程重放（实际 ${elapsedMs}ms）", elapsedMs < SPLASH_TOTAL_MS)
+    }
+
+    @Test
+    fun `恢复至已过形序收束的时刻_立即放行`() {
+        val restored = SplashSequencer()
+        restored.restore(2_000)
+
+        assertEquals(SplashPhase.DONE, restored.phase)
+        assertFalse(restored.skipped)
+    }
+
+    @Test
+    fun `restore负值与已放行状态被忽略`() {
+        val fresh = SplashSequencer()
+        fresh.restore(-5)
+        assertEquals(0L, fresh.elapsedMs)
+        assertEquals(SplashPhase.DROPLET, fresh.phase)
+
+        val done = SplashSequencer()
+        done.tick(2_000)
+        done.restore(100)
+        assertEquals(2_000L, done.elapsedMs)
+        assertEquals(SplashPhase.DONE, done.phase)
+    }
+
     private companion object {
         const val FRAME_MS = 16L
         const val SPLASH_DROPLET_MS = 450L
         const val SPLASH_MORPH_MS = 250L
+        const val SPLASH_TOTAL_MS = 1_200L
         const val MAX_DWELL_MS = 1_400L
         const val MAX_OBSERVE_MS = 5_000L
         const val DROPLET_OVERSHOOT_MAX = 1.2f

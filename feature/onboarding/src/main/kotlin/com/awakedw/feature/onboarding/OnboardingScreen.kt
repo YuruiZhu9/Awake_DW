@@ -1,7 +1,9 @@
 package com.awakedw.feature.onboarding
 
-import android.app.Activity
+import android.Manifest
 import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -53,9 +55,12 @@ private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
  * 白名单引导页（首次启动，无底栏——由导航壳/集成任务接线）：
  * 当刻主题的渐变底 + 漂浮粒子 + 大水滴插画，温柔地建议开启省电白名单。
  *
- * 主按钮「去设置 ♡」：先一并请求通知权限，再依 [BatteryIntentLauncher.bestEffortIntents]
- * 逐个尝试跳转，首个成功即置位 onboarding_done 并经 [onComplete] 接缝离页；
+ * 主按钮「去设置 ♡」权限时序化（T13 minor 收口，杜绝对话框与跳转 Activity 竞态）：
+ * Android 13+ 且未授予通知权限时先弹系统权限对话框，**拿到 result 后（无论授权与否）
+ * 再**进入 [BatteryIntentLauncher.bestEffortIntents] 逐个跳转序列，首个成功即置位
+ * onboarding_done 并经 [onComplete] 接缝离页；已授予或低版本则直接进入跳转序列。
  * 次按钮「以后再说」：直接置位完成。跳转全部失败时留在本页，可重试可跳过。
+ * 授权被拒不阻拦：通知权限是锦上添花，白名单引导照常走完。
  *
  * [onComplete] 为导航接缝（默认空实现），由集成任务接上「返回首页」；本层不感知 NavHost。
  */
@@ -68,6 +73,12 @@ fun OnboardingScreen(
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
     val context = LocalContext.current
+
+    // 通知权限 result 落点：授权与否都放行进入白名单跳转序列。
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+            startWhitelistJump(context, viewModel)
+        }
 
     // 完成接缝：VM 置位 completed 后离开本页（导航由集成任务接线）。
     LaunchedEffect(state.completed) {
@@ -102,7 +113,16 @@ fun OnboardingScreen(
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.weight(1f))
-            PrimaryButton(text = "去设置 ♡", onTap = { onGoToSettings(context, viewModel) })
+            PrimaryButton(
+                text = "去设置 ♡",
+                onTap = {
+                    if (needsNotificationPermission(context)) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        startWhitelistJump(context, viewModel)
+                    }
+                },
+            )
             Spacer(Modifier.height(14.dp))
             SkipButton(onTap = viewModel::complete)
             Spacer(Modifier.height(40.dp))
@@ -110,12 +130,15 @@ fun OnboardingScreen(
     }
 }
 
-/** 主按钮点击：一并请求通知权限 → 逐个尝试白名单入口 → 成功回执交给 VM 收口。 */
-private fun onGoToSettings(
+/** 33+ 且未授予通知权限时需先弹系统对话框；其余版本/已授予直接进入跳转序列。 */
+private fun needsNotificationPermission(context: Context): Boolean =
+    BatteryIntentLauncher.neededNotificationPermissions(context).isNotEmpty()
+
+/** 白名单跳转序列：逐个尝试入口 → 首个成功交 VM 收口完成引导；失败留在本页可重试。 */
+private fun startWhitelistJump(
     context: Context,
     viewModel: OnboardingViewModel,
 ) {
-    (context as? Activity)?.let { activity -> BatteryIntentLauncher.requestNotificationPermission(activity) }
     val success =
         BatteryIntentLauncher.tryStartInOrder(
             context,
