@@ -9,6 +9,13 @@
         <item name="postSplashScreenTheme">@style/Theme.AwakeDW.Main</item>
     </style>
 
-    <style name="Theme.AwakeDW.Main" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- 主主题：系统栏与启动窗口统一为日间底色，消除深色状态栏与启动白闪；
+         Android 15+ 强制 edge-to-edge 时状态栏透明，Scaffold 的 contentWindowInsets 兜底内容避让。 -->
+    <style name="Theme.AwakeDW.Main" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/awake_window_background</item>
+        <item name="android:statusBarColor">@color/awake_window_background</item>
+        <item name="android:navigationBarColor">@color/awake_window_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 
 </resources>

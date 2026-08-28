@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 与三主题日间底色一致：启动器图标背景 / 系统栏配色 / 启动窗口背景共用。 -->
+    <color name="ic_launcher_background">#F3FBF7</color>
+    <color name="awake_window_background">#F3FBF7</color>
+</resources>

@@ -23,7 +23,10 @@
 
     <application
         android:name=".AwakeApplication"
-        android:label="Awake_DW">
+        android:label="Awake_DW"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
