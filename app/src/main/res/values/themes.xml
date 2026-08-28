@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.AwakeDW" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- 系统闪屏（core-splashscreen 兼容层，minSdk 26 生效）：
+         驻留条件由 MainActivity.setKeepOnScreenCondition 控制，退出后切主主题。 -->
+    <style name="Theme.AwakeDW" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#F3FBF7</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.AwakeDW.Main</item>
+    </style>
+
+    <style name="Theme.AwakeDW.Main" parent="android:Theme.Material.Light.NoActionBar" />
 
 </resources>

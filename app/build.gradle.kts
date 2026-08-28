@@ -48,13 +48,18 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    // 底部栏三枚 Rounded 图标（WaterDrop/BarChart）在扩展图标包内；版本由 compose-bom 统一管理。
+    implementation(libs.compose.material.icons.extended)
 
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.navigation.compose)
+    implementation(libs.splashscreen)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    implementation(project(":core:model"))
     implementation(project(":core:data"))
     implementation(project(":core:domain"))
     implementation(project(":core:notification"))
