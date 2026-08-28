@@ -27,6 +27,17 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests {
+            // BatteryIntentLauncherTest 走 Robolectric：需要应用资源与真实 PackageManager 行为。
+            isIncludeAndroidResources = true
+            all { test ->
+                // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
+                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -40,10 +51,13 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.tooling.preview)
 
+    implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.robolectric)
 }
