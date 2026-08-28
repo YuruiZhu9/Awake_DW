@@ -32,6 +32,36 @@ android {
         compose = true
     }
 
+    signingConfigs {
+        create("release") {
+            // 发布签名只经环境变量注入，不落库；未注入时保持 null，由 buildType 回退 debug 签名。
+            val storeFilePath = System.getenv("AWAKE_STORE_FILE")
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = System.getenv("AWAKE_STORE_PASSWORD")
+                keyAlias = System.getenv("AWAKE_KEY_ALIAS")
+                keyPassword = System.getenv("AWAKE_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            signingConfig =
+                if (signingConfigs.getByName("release").storeFile != null) {
+                    signingConfigs.getByName("release")
+                } else {
+                    // 个人分发阶段：无发布签名时回退 debug 签名，保证随时可出未发布包。
+                    signingConfigs.getByName("debug")
+                }
+        }
+    }
+
     testOptions {
         unitTests {
             // Robolectric 冒烟测试需要应用资源与真实 Application 生命周期。
