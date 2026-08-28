@@ -46,6 +46,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 与 release 包共存便于对照观察（同机可同时装两个变体）。
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(
