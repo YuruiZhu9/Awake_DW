@@ -77,6 +77,26 @@ class SettingsViewModel(
     /** 一杯容量；非法回落原值。 */
     fun setCupMl(ml: Int) = persistIf({ SettingsValidation.isValidMl(ml) }) { prefs.setCupMl(ml) }
 
+    /**
+     * 步进每日目标量（± [SettingsValidation.ML_STEP] 的调用入口）：
+     * 以本地状态即时换算并**乐观更新**后再落库——快速连点时每次都基于最新值，
+     * 不受 DataStore 异步写回时延影响，一按一步绝不丢步；非法步进（触界）静默忽略。
+     */
+    fun stepGoalMl(delta: Int) {
+        val next = _uiState.value.settings.goalMl + delta
+        if (!SettingsValidation.isValidMl(next)) return
+        _uiState.update { it.copy(settings = it.settings.copy(goalMl = next)) }
+        viewModelScope.launch { prefs.setGoalMl(next) }
+    }
+
+    /** 步进一杯容量：语义同 [stepGoalMl]。 */
+    fun stepCupMl(delta: Int) {
+        val next = _uiState.value.settings.cupMl + delta
+        if (!SettingsValidation.isValidMl(next)) return
+        _uiState.update { it.copy(settings = it.settings.copy(cupMl = next)) }
+        viewModelScope.launch { prefs.setCupMl(next) }
+    }
+
     /** 清醒时段起止；越界 / 非 15min 粒度 / 间隔不足一律回落原窗。 */
     fun setWindow(
         startMin: Int,

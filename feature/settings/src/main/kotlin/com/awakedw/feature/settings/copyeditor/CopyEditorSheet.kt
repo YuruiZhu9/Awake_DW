@@ -79,7 +79,7 @@ internal fun CopyLibrarySection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "心意文案库", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
-                Text(text = "只属于你们俩的句子", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+                Text(text = "每一句都写给自己", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
             }
             Text(
                 text = "恢复默认文案",
@@ -119,7 +119,7 @@ internal fun CopyLibrarySection(
     if (resetConfirming) {
         ConfirmDialog(
             title = "恢复默认文案",
-            body = "会把现在所有句子换回出厂的 30 句，确定吗？",
+            body = "会把所有句子换回出厂默认，现在改过的就不留了，确定吗？",
             confirmLabel = "恢复默认",
             onConfirm = {
                 onReset()

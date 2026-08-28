@@ -86,33 +86,28 @@ fun SettingsScreen(
             )
 
             SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
-                // §3.4「一行两枚」：目标量与杯容量并排（等分权重），窄屏下各自压缩。
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(SECTION_SPACING),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    StepperRow(
-                        label = "每日目标量",
-                        valueText = "${settings.goalMl}ml",
-                        canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
-                        canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
-                        onDecrement = { viewModel.setGoalMl(settings.goalMl - SettingsValidation.ML_STEP) },
-                        onIncrement = { viewModel.setGoalMl(settings.goalMl + SettingsValidation.ML_STEP) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    StepperRow(
-                        label = "一杯容量",
-                        valueText = "${settings.cupMl}ml",
-                        canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
-                        canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
-                        onDecrement = { viewModel.setCupMl(settings.cupMl - SettingsValidation.ML_STEP) },
-                        onIncrement = { viewModel.setCupMl(settings.cupMl + SettingsValidation.ML_STEP) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
+                StepperRow(
+                    label = "每日目标量",
+                    valueText = "${settings.goalMl}ml",
+                    canDecrement = SettingsValidation.isValidMl(settings.goalMl - SettingsValidation.ML_STEP),
+                    canIncrement = SettingsValidation.isValidMl(settings.goalMl + SettingsValidation.ML_STEP),
+                    onDecrement = { viewModel.stepGoalMl(-SettingsValidation.ML_STEP) },
+                    onIncrement = { viewModel.stepGoalMl(+SettingsValidation.ML_STEP) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                StepperRow(
+                    label = "一杯容量",
+                    valueText = "${settings.cupMl}ml",
+                    canDecrement = SettingsValidation.isValidMl(settings.cupMl - SettingsValidation.ML_STEP),
+                    canIncrement = SettingsValidation.isValidMl(settings.cupMl + SettingsValidation.ML_STEP),
+                    onDecrement = { viewModel.stepCupMl(-SettingsValidation.ML_STEP) },
+                    onIncrement = { viewModel.stepCupMl(+SettingsValidation.ML_STEP) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
 
-            SettingsCard(title = "提醒", subtitle = "在她清醒的时间里轻轻叫一声") {
+            SettingsCard(title = "提醒", subtitle = "在我清醒的时间里轻轻叫一声") {
                 ToggleRow(
                     label = "温柔提醒",
                     checked = settings.remindersEnabled,

@@ -123,6 +123,33 @@ class SettingsViewModelTest {
         assertEquals(300, h.viewModel.uiState.value.settings.cupMl)
     }
 
+    @Test
+    fun `步进目标量乐观更新即生效_连点每次都基于最新值不丢步`() {
+        val h = harness()
+
+        // 快速连点：两次步进之间仓储尚未回灌，乐观更新保证第二次基于 1550 而非 1600。
+        h.viewModel.stepGoalMl(-50)
+        h.viewModel.stepGoalMl(-50)
+
+        assertEquals(1500, h.viewModel.uiState.value.settings.goalMl)
+        assertEquals(listOf("goal=1550", "goal=1500"), h.prefs.calls)
+    }
+
+    @Test
+    fun `步进一杯容量同理且触界静默忽略`() {
+        val h = harness()
+        h.viewModel.stepCupMl(50)
+        assertEquals(300, h.viewModel.uiState.value.settings.cupMl)
+        assertEquals(listOf("cup=300"), h.prefs.calls)
+
+        // 触下界：200 已是合法下限，再步进 50 直接忽略，不落库不吸附。
+        val bottom = harness()
+        bottom.viewModel.stepCupMl(-50) // 250 → 200
+        bottom.viewModel.stepCupMl(-50) // 触界忽略
+        assertEquals(200, bottom.viewModel.uiState.value.settings.cupMl)
+        assertEquals(listOf("cup=200"), bottom.prefs.calls)
+    }
+
     // endregion
 
     // region 提醒：间隔候选集 / 时段窗 / 总开关
