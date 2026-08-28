@@ -11,6 +11,7 @@ import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.model.ThemeId
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,6 +59,7 @@ data class HomeUiState(
  * 防抖窗由 [logDebounceMs] 注入（生产 800ms，测试可缩窗），窗口按 [clock] 计量；
  * 成笔后反馈序列不取消，仅以 feedbackEpoch 防串场。
  */
+@HiltViewModel
 class HomeViewModel(
     private val clock: AppClock,
     observeHome: ObserveHomeUseCase,

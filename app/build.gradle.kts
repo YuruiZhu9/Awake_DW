@@ -102,6 +102,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    // Robolectric 路线启动真实 MainActivity（compose 规则驱动首帧）。
+    testImplementation(libs.compose.ui.test)
     // Hilt 官方 Robolectric 路线：测试组件随 kspTest 重新生成（test 源集的注入点不进主图聚合）。
     testImplementation(libs.hilt.testing)
     kspTest(libs.hilt.compiler)

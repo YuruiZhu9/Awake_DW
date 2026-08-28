@@ -18,7 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -39,7 +39,7 @@ private val PAGE_HORIZONTAL_PADDING = 24.dp
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
+fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
 

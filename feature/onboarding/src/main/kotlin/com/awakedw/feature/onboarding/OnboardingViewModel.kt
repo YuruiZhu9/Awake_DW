@@ -3,6 +3,7 @@ package com.awakedw.feature.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,7 @@ data class OnboardingUiState(
  * [onComplete] 是完成接缝（默认空实现），对齐 feature/settings 的 onRemindersChanged 模式：
  * 集成任务可经主构造器接上导航回调；生产默认走 @Inject 次构造器（JSR-330 不识别缺省参数）。
  */
+@HiltViewModel
 class OnboardingViewModel(
     private val prefs: UserPreferencesRepository,
     private val onComplete: () -> Unit = {},

@@ -56,6 +56,8 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    // @HiltViewModel 在导航目的地内的标准取用（NavBackStackEntry 作用域）。
+    implementation(libs.hilt.navigation.compose)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

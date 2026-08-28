@@ -42,7 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -67,7 +67,7 @@ private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun OnboardingScreen(
-    viewModel: OnboardingViewModel = viewModel(),
+    viewModel: OnboardingViewModel = hiltViewModel(),
     onComplete: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()

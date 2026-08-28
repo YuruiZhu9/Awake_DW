@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -59,7 +59,7 @@ private const val GLOW_BREATH_MS = 1600
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
 

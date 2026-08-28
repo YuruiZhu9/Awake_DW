@@ -10,6 +10,7 @@ import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +52,7 @@ data class StatsUiState(
  * 以水库变更流与设置流任一触发即整屏重算——首页打卡、设置页改目标，回到统计页都是最新值；
  * 连胜徽章经真实 [GetStreakUseCase] 穿透，尾端随今日实时达标翻转。
  */
+@HiltViewModel
 class StatsViewModel
     @Inject
     constructor(
