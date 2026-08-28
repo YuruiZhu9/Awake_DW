@@ -10,7 +10,6 @@ import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.model.ThemeId
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,12 +49,14 @@ data class HomeUiState(
  * 治愈打卡首页 ViewModel。
  *
  * - 快照流（统计/目标/主题）单向灌入 [HomeUiState] 的持久字段；
- * - 打卡两入口（按钮/环区）共用同一 800ms 防抖闸门：窗口内后到的点击取消尚未成笔的那笔；
+ * - 打卡两入口（按钮/环区）共用同一 800ms 前沿闸门（规格 §4.1「按钮=立即记录」）：
+ *   首触立即成笔，环推进/数字滚动/夸夸语随即重叠展开（§4.2）；
+ *   距上次成笔不足 800ms 的连点合并忽略；
  * - 打卡成功后按当前时段抽一句夸夸语，1.4s 后收起；celebrated=true 时庆祝态撑满 2.5s，
  *   同日后续打卡（use case 返回 false）即时回到普通反馈。
  *
- * 防抖窗由 [logDebounceMs] 注入（生产 800ms，测试可缩窗）；
- * 成笔之后反馈序列不再受后续点击取消，只以 feedbackEpoch 防串场。
+ * 防抖窗由 [logDebounceMs] 注入（生产 800ms，测试可缩窗），窗口按 [clock] 计量；
+ * 成笔后反馈序列不取消，仅以 feedbackEpoch 防串场。
  */
 class HomeViewModel(
     private val clock: AppClock,
@@ -83,7 +84,8 @@ class HomeViewModel(
 
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private var pendingLog: Job? = null
+    /** 最近一次成笔时刻（epoch ms）：初值取负窗，保证第一次点击立即成笔且不溢出。 */
+    private var lastAcceptedAt: Long = -logDebounceMs
 
     /** 反馈序列代次：新一轮打卡使旧序列的收场动作失效，避免新旧夸夸语互踩。 */
     private var feedbackEpoch = 0
@@ -105,25 +107,22 @@ class HomeViewModel(
         }
     }
 
-    /** 「记一杯」大按钮：立即记录（进防抖闸门）。 */
+    /** 「记一杯」大按钮：立即记录（规格 §4.1「按钮=立即记录」）。 */
     fun tapLogButton() {
         scheduleLog()
     }
 
-    /** 环区点按记录；[offsetPx] 为环心在环区内的坐标（备用锚点），与按钮共用防抖。 */
+    /** 环区点按记录；[offsetPx] 为环心在环区内的坐标（备用锚点），与按钮共用闸门。 */
     fun tapRing(offsetPx: Offset?) {
         scheduleLog()
     }
 
+    /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；距上次成笔不足 [logDebounceMs] 的触发合并忽略。 */
     private fun scheduleLog() {
-        pendingLog?.cancel()
-        pendingLog =
-            viewModelScope.launch {
-                delay(logDebounceMs)
-                // 已成笔：置空后后续点击不再能取消这笔的反馈序列。
-                pendingLog = null
-                logAndPraise()
-            }
+        val now = clock.nowEpochMs()
+        if (now - lastAcceptedAt < logDebounceMs) return
+        lastAcceptedAt = now
+        viewModelScope.launch { logAndPraise() }
     }
 
     private suspend fun logAndPraise() {

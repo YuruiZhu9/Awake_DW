@@ -23,11 +23,11 @@ import java.time.Duration
 
 /**
  * 首页打卡交互（Robolectric compose）：
- * 点击「记一杯」→ 环心总数更新为新一杯；防抖窗口内连点合并，只记一杯。
+ * 点击「记一杯」→ 环心总数立即更新为新一杯（前沿闸门，规格 §4.1「按钮=立即记录」）；
+ * 假钟未动的连点落在防抖窗内合并，只记一杯；假钟跨窗后可再成一笔。
  *
  * 首页的漂浮粒子是永不停止的帧循环，故关闭 mainClock 自动推进、由测试显式走时：
- * advanceTimeBy 推进 Compose 帧钟（Robolectric 下与主线程调度器联动），
- * idleFor 兜底放行主线程 Handler 上挂着的 800ms 防抖延迟。
+ * advanceTimeBy 推进 Compose 帧钟渲染新状态，idleFor 放行主线程上挂着的反馈时延。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")
@@ -66,17 +66,18 @@ class HomeScreenTest {
         composeRule.onNodeWithText("0ml").assertIsDisplayed()
         composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
 
-        // 防抖窗口内连点两下（两下之间不走时，同窗合并）。
+        // 假钟未动的同刻连点：前沿闸门合并，只记一杯。
         composeRule.onNodeWithText("干杯一下 💧").performClick()
         composeRule.onNodeWithText("干杯一下 💧").performClick()
-        advanceClock(DEBOUNCE_AND_SETTLE_MS)
+        advanceClock(RENDER_SETTLE_MS)
 
         composeRule.onNodeWithText("250ml").assertIsDisplayed()
         assertEquals(1, water.addCount)
 
-        // 窗口外再点一杯：正常成笔。
+        // 假钟拨过 800ms 防抖窗后再点一杯：正常成笔。
+        clock.ms += WINDOW_GAP_MS
         composeRule.onNodeWithText("干杯一下 💧").performClick()
-        advanceClock(DEBOUNCE_AND_SETTLE_MS)
+        advanceClock(RENDER_SETTLE_MS)
 
         composeRule.onNodeWithText("500ml").assertIsDisplayed()
         assertEquals(2, water.addCount)
@@ -84,8 +85,7 @@ class HomeScreenTest {
 
     private companion object {
         const val FIRST_FRAME_MS = 100L
-
-        /** 防抖 800ms + 环推进 600ms + 数字滚动 500ms 全部走完的余量。 */
-        const val DEBOUNCE_AND_SETTLE_MS = 1_500L
+        const val RENDER_SETTLE_MS = 1_500L
+        const val WINDOW_GAP_MS = 2_000L
     }
 }

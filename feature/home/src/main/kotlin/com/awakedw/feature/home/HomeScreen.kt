@@ -52,7 +52,8 @@ private const val GLOW_ALPHA_MAX = 0.26f
 private const val GLOW_BREATH_MS = 1600
 
 /**
- * 治愈打卡首页（规格 §3.2）：时段问候 + 统计徽章 + 健康贴士 + 可点按进度环 + 「记一杯」按钮，
+ * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
+ * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
  * 底座为渐变背景 + 漂浮粒子（GradientBackdrop 自带柔光晕与噪点颗粒）。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
  */
@@ -76,18 +77,18 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
             Spacer(Modifier.height(44.dp))
             Greeting(totalMl = state.totalMl, goalMl = state.goalMl)
             Spacer(Modifier.height(20.dp))
-            BadgesRow(cupCount = state.cupCount, avgIntervalLabel = state.avgIntervalLabel)
-            Spacer(Modifier.height(12.dp))
-            HealthTipLine()
-            Spacer(Modifier.weight(1f))
             RingBlock(
                 progress = state.progress,
                 totalMl = state.totalMl,
                 onRingTap = viewModel::tapRing,
             )
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(12.dp))
             PraiseLine(text = state.praiseLine)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(20.dp))
+            BadgesRow(cupCount = state.cupCount, avgIntervalLabel = state.avgIntervalLabel)
+            Spacer(Modifier.height(12.dp))
+            HealthTipLine()
+            Spacer(Modifier.weight(1f))
             LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
             Spacer(Modifier.height(36.dp))
         }

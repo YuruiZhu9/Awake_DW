@@ -61,19 +61,20 @@ class HomeViewModelTest {
     )
 
     @Test
-    fun `防抖窗口内的连续两次点击只记一杯`() =
+    fun `首触立即成笔且窗口内的连续点击只记一杯`() =
         runTest {
             val h = harness(testScheduler)
 
+            // 立即性：不做任何时间推进，第一笔当场已成（规格 §4.1「按钮=立即记录」）。
             h.viewModel.tapLogButton()
-            advanceTimeBy(DEBOUNCE_MIDWAY_MS)
             runCurrent()
-            h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 500)
-            runCurrent()
-
             assertEquals(1, h.water.addCount)
             assertEquals(250, h.viewModel.uiState.value.totalMl)
+
+            // 假钟未动——同刻连点落在 800ms 窗口内，合并忽略。
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(1, h.water.addCount)
         }
 
     @Test
@@ -84,7 +85,6 @@ class HomeViewModelTest {
             h.viewModel.tapLogButton()
             h.viewModel.tapRing(null)
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 500)
             runCurrent()
 
             assertEquals(1, h.water.addCount)
@@ -96,10 +96,8 @@ class HomeViewModelTest {
             val h = harness(testScheduler)
 
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 500)
-            runCurrent()
+            h.clock.ms += WINDOW_GAP_MS
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 500)
             runCurrent()
 
             assertEquals(2, h.water.addCount)
@@ -145,16 +143,16 @@ class HomeViewModelTest {
         runTest {
             val h = harness(testScheduler)
 
-            // 目标 1600ml ÷ 一杯 250ml：第 7 杯首次越过目标线。
+            // 目标 1600ml ÷ 一杯 250ml：第 7 杯首次越过目标线（每杯拨钟跨出防抖窗）。
             repeat(6) {
+                h.clock.ms += CUP_SPACING_MS
                 h.viewModel.tapLogButton()
-                advanceTimeBy(LOG_DEBOUNCE_MS + 100)
                 runCurrent()
             }
             assertEquals(false, h.viewModel.uiState.value.celebrating)
 
+            h.clock.ms += CUP_SPACING_MS
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 100)
             runCurrent()
             assertEquals(true, h.viewModel.uiState.value.celebrating)
             assertEquals(BASE_DAY_KEY, h.prefs.celebratedKeyValue)
@@ -170,8 +168,8 @@ class HomeViewModelTest {
             assertEquals(false, h.viewModel.uiState.value.celebrating)
 
             // 同日再打卡：celebrated_day_key 已记录，不再触发庆祝。
+            h.clock.ms += CUP_SPACING_MS
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 100)
             runCurrent()
             assertEquals(false, h.viewModel.uiState.value.celebrating)
             assertEquals(8, h.water.addCount)
@@ -183,7 +181,6 @@ class HomeViewModelTest {
             val h = harness(testScheduler)
 
             h.viewModel.tapLogButton()
-            advanceTimeBy(LOG_DEBOUNCE_MS + 100)
             runCurrent()
 
             assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedSlots)
@@ -216,9 +213,13 @@ class HomeViewModelTest {
         }
 
     private companion object {
-        const val DEBOUNCE_MIDWAY_MS = 300L
+        /** 夸夸语停留 1.4s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
         const val PRAISE_HOLD_MS = 1_400L
         const val CELEBRATION_HOLD_MS = 2_500L
+
+        /** 相邻两杯的假钟间隔：跨出 800ms 防抖窗。 */
+        const val CUP_SPACING_MS = 900L
+        const val WINDOW_GAP_MS = 1_300L
         val BASE_DAY_KEY = "2026-08-27"
     }
 }
