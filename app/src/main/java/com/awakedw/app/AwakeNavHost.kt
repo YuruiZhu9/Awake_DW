@@ -230,13 +230,19 @@ private fun AwakeBottomBar(
     }
 }
 
-/** 单顶层页签导航：不堆栈、保存/恢复各页状态。 */
+/** 单顶层页签导航：不堆栈、保存/恢复各页状态。
+ *
+ * popUpTo 必须指向首页路由而非 `graph.findStartDestination()`：
+ * 引导完成后图上的 startDestination 仍是已被弹出的 onboarding 条目，
+ * 指向它时 popUpTo 是空操作——页签切换会不断往栈里压重复条目，
+ * 系统返回键要按很多下才退得出去（表现为「返回键退不出应用」）。
+ */
 private fun navigateToTab(
     navController: NavController,
     destination: AwakeDestination,
 ) {
     navController.navigate(destination.route) {
-        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+        popUpTo(AwakeDestination.Home.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }

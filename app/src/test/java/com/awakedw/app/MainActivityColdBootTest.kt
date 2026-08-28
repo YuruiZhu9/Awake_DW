@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,6 +57,41 @@ class MainActivityColdBootTest {
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
 
         composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+    }
+
+    @Test
+    fun `页签切换后系统返回键在首页直接退出应用`() {
+        composeRule.mainClock.autoAdvance = false
+        composeRule.mainClock.advanceTimeBy(SPLASH_TOTAL_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SPLASH_TOTAL_MS))
+        composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+        composeRule.onNodeWithText("以后再说").performClick()
+        composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+        composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+
+        // 统计 → 首页一轮页签切换：栈应始终保持在 [首页] 一层
+        // （回归：popUpTo 若指向已被弹出的 onboarding startDestination 会变成空操作，
+        //  每次切页签都往栈里压重复条目，返回键要按很多下才退得出去）。
+        composeRule.onNodeWithText("统计").performClick()
+        composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+        composeRule.onNodeWithText("首页").performClick()
+        composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+
+        // 系统返回键：栈里只剩首页一条 → 返回直达 Activity.finish（应用退出）。
+        // 断言 isFinishing：返回未被任何 BackHandler 吞掉、Activity 走到退出。
+        // （不追 ON_DESTROY——Robolectric 的 ActivityScenario 在普通 looper 空转里
+        //   不传播销毁回调，isFinishing 即「返回键退出应用」的可靠证据。）
+        var finishingAfterBack = false
+        composeRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+            finishingAfterBack = activity.isFinishing
+        }
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+        assertTrue("首页返回键应直接退出应用", finishingAfterBack)
     }
 
     private companion object {
