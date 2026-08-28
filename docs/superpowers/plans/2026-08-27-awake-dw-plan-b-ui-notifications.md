@@ -217,6 +217,20 @@ else am.setExactAndAllowWhileIdle(RTC_WAKEUP, fireAt, pi)
 
 ---
 
+### Task 16: 集成接线（并行车道合并后的收口）
+
+**Files:**
+- Modify: `app/.../AwakeNavHost.kt`（Stats/Settings 占位替换为真页；新增 Onboarding 路由；启动分支 onboardingDone()==false 时先入引导且隐藏底栏；SplashMorph 旋转修复——elapsed 毫秒 rememberSaveable 持久化，重建后跳相）
+- Modify: `app/.../AwakeApplication.kt` 或 MainViewModel（APP_START 调 `ReminderScheduler.rescheduleFromNow(Reason.APP_START)` 恰一次）
+- Modify: `app/src/main/AndroidManifest.xml`（补 `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` 权限 + Android11+ `<queries>` 厂商包可见性声明）
+- Modify: `feature/settings/.../SettingsScreen.kt` 调用点（:app 侧构造 VM 时以 factory 注入 `onRemindersChanged = { scheduler.rescheduleFromNow(Reason.SETTINGS_CHANGED) }`，经 EntryPoint 获取 scheduler；双完成缝禁令见下）
+- Modify: `feature/onboarding/.../OnboardingScreen.kt`（权限时序化：POST_NOTIFICATIONS request→拿到 result→再跳转，用预留 NOTIFICATION_PERMISSION_REQUEST_CODE；修复 T13 Minor 权限竞态）
+- Modify: `feature/settings/.../SettingsScreen.kt:72-88`（步进器合并为「一行两枚」）与 `CopyEditorSheet.kt:112-121`（「＋ 新增一句」移至每组展开区顶部）——对齐 §3.4 文字
+**Wiring 决议（防双跳/双触发）：** Onboarding 只接 Screen 级 `onComplete` 参数驱动导航，VM 构造器的 onComplete 保持默认 no-op；Settings 的 reminders 开关只经 VM seam 触发 scheduler，禁止别处重复调用。
+**Steps:** NavHost 接线与启动分支（RED：路由枚举+分支判定 JVM 测试）→ scheduler 双点接线（APP_START/SETTINGS_CHANGED，Robolectric 验证恰好一次）→ manifest 补齐 → 权限时序化 → §3.4 两处布局微调 → 全仓 `./gradlew build` + assembleDebug 绿 → commit `feat: 集成接线——导航/引导分支/调度器挂接/splash 旋转修复`
+
+---
+
 ### Task 15: 发布准备与真机验收清单
 
 **Files:**
