@@ -4,8 +4,12 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -28,6 +33,9 @@ import androidx.compose.ui.util.lerp
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.feature.home.HOME_RING_DIAMETER
 import kotlinx.coroutines.delay
 
 /** 水滴直径。 */
@@ -41,6 +49,9 @@ private val RIPPLE_START_RADIUS = 14.dp
 
 /** 形序段笔触占环半径比例（与 ProgressRing 的 0.085×最短边观感一致）。 */
 private const val RING_STROKE_FRACTION = 0.085f
+
+/** 首页进度环的初始观感（35%）：形序段涟漪外圈定格为该进度，与首页真实环观感衔接。 */
+private const val INITIAL_RING_PROGRESS = 0.35f
 
 /** 涟漪段笔触宽度。 */
 private val RIPPLE_STROKE = 3.dp
@@ -64,7 +75,7 @@ private const val SKIPPED_HANDOVER_MS = 260L
  * 开屏续场（规格 §2.3，Compose 内总 ~1.2s）：
  * 水滴自上而下 spring 落点（450ms，过冲回弹）→ 两圈涟漪扩散+透明度收敛
  * （各 380ms，相位差 120ms）→ 涟漪外圈放大为进度环初始态并 Crossfade(250ms)
- * 入首页占位 → 交棒导航壳。任意点击经 [SplashSequencer.skip] 直达首页。
+ * 入首页种子预览 → 交棒导航壳（真首页）。任意点击经 [SplashSequencer.skip] 直达首页。
  *
  * 时序与绘制彻底分离：节奏由纯 JVM 的 [SplashSequencer] 决定，
  * 本组合只逐帧 tick + 渲染；冷启动仅播一次（配置变更不重放，见 AwakeNavHost）。
@@ -105,9 +116,41 @@ fun SplashMorph(
         label = "splashToHome",
     ) { showHome ->
         if (showHome) {
-            HomePlaceholder()
+            HomeSeedPreview(modifier = Modifier.fillMaxSize())
         } else {
             SplashVisuals(frame = frame, spec = spec, modifier = Modifier.fillMaxSize())
+        }
+    }
+}
+
+/**
+ * 形序段终态的首页种子预览：真实首页（Task 10）交棒前的一瞬静态观感——
+ * 渐变底座 + 漂浮粒子 + 初始进度环（[INITIAL_RING_PROGRESS]），不挂 ViewModel，
+ * 交棒后由导航壳挂载真首页，Crossfade 全程无跳切。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun HomeSeedPreview(modifier: Modifier = Modifier) {
+    val spec = currentThemeSpec()
+    Box(modifier) {
+        GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
+        ProgressRing(
+            progress = INITIAL_RING_PROGRESS,
+            modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .size(HOME_RING_DIAMETER),
+            onRingTap = null,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "0ml", color = spec.ringValueText, style = MaterialTheme.typography.headlineLarge)
+                Text(
+                    text = "今日已喝",
+                    color = spec.ringValueText.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
     }
 }
@@ -224,7 +267,7 @@ private fun DrawScope.drawRingSeed(
     drawArc(
         color = spec.primary.copy(alpha = alpha),
         startAngle = -90f,
-        sweepAngle = HOME_PLACEHOLDER_PROGRESS * 360f * progress,
+        sweepAngle = INITIAL_RING_PROGRESS * 360f * progress,
         useCenter = false,
         topLeft = Offset(center.x - inset, center.y - inset),
         size = Size(inset * 2f, inset * 2f),
