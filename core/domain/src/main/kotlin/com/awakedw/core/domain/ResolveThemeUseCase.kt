@@ -33,7 +33,7 @@ private fun themeFor(slot: TimeSlot): ThemeId =
 class ResolveThemeUseCase(
     private val prefs: UserPreferencesRepository,
     private val clock: AppClock,
-    private val resamplePeriodMs: Long,
+    private val resamplePeriodMs: Long = RESAMPLE_PERIOD_MS,
 ) {
     /** Dagger 注入入口：生产以默认重采样周期委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
     @Inject
