@@ -1,5 +1,9 @@
 package com.awakedw.app
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,6 +79,13 @@ private val MAIN_TAB_ROUTES: List<String> =
 
 /** 底部栏选中指示器的低透明度。 */
 private const val TAB_INDICATOR_ALPHA = 0.14f
+
+/** 页签转场上移幅度（§10.2：位移 ≤12dp）。 */
+private val TAB_TRANSITION_RISE_DP = 8.dp
+
+/** 页签转场时长：淡入/上移 200ms，淡出稍快。 */
+private const val TAB_TRANSITION_MS = 200
+private const val TAB_TRANSITION_FADE_OUT_MS = 160
 
 /**
  * 导航壳：冷启动先进 [SplashMorph] 续场（点击或 ~1.2s 后放行），随后挂载导航图。
@@ -126,6 +138,8 @@ private fun AwakeShell(onboardingDone: Boolean) {
             }
         },
     ) { contentPadding ->
+        // 页签转场（§10.2，克制基调）：淡入 + 8dp 轻上移，替代默认生硬淡入。
+        val risePx = with(LocalDensity.current) { TAB_TRANSITION_RISE_DP.toPx().toInt() }
         NavHost(
             navController = navController,
             startDestination = startDestinationFor(onboardingDone = onboardingDone),
@@ -133,6 +147,16 @@ private fun AwakeShell(onboardingDone: Boolean) {
                 Modifier
                     .fillMaxSize()
                     .padding(contentPadding),
+            enterTransition = {
+                fadeIn(animationSpec = tween(TAB_TRANSITION_MS)) +
+                    slideInVertically(animationSpec = tween(TAB_TRANSITION_MS)) { risePx }
+            },
+            exitTransition = { fadeOut(animationSpec = tween(TAB_TRANSITION_FADE_OUT_MS)) },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(TAB_TRANSITION_MS)) +
+                    slideInVertically(animationSpec = tween(TAB_TRANSITION_MS)) { risePx }
+            },
+            popExitTransition = { fadeOut(animationSpec = tween(TAB_TRANSITION_FADE_OUT_MS)) },
         ) {
             composable(AwakeDestination.Onboarding.route) {
                 OnboardingScreen(onComplete = { navigateHomeAfterOnboarding(navController) })
