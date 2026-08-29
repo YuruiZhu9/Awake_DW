@@ -1,5 +1,6 @@
 package com.awakedw.feature.home
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,9 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
@@ -62,6 +68,12 @@ private const val GLOW_BREATH_MS = 1600
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
+    val view = LocalView.current
+
+    // 达标庆祝瞬间的一次轻震（§10.3）：与横幅浮现同拍，克制不喧哗。
+    LaunchedEffect(state.celebrating) {
+        if (state.celebrating) view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
@@ -75,7 +87,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
-            Greeting(customGreeting = state.greeting, totalMl = state.totalMl, goalMl = state.goalMl)
+            FadeUpOnce { Greeting(customGreeting = state.greeting, totalMl = state.totalMl, goalMl = state.goalMl) }
             Spacer(Modifier.height(20.dp))
             RingBlock(
                 progress = state.progress,
@@ -85,9 +97,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             Spacer(Modifier.height(12.dp))
             PraiseLine(text = state.praiseLine)
             Spacer(Modifier.height(20.dp))
-            BadgesRow(cupCount = state.cupCount, avgIntervalLabel = state.avgIntervalLabel)
+            FadeUpOnce(delayMillis = 80) { BadgesRow(cupCount = state.cupCount, avgIntervalLabel = state.avgIntervalLabel) }
             Spacer(Modifier.height(12.dp))
-            HealthTipLine()
+            FadeUpOnce(delayMillis = 120) { HealthTipLine() }
             Spacer(Modifier.weight(1f))
             LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
             Spacer(Modifier.height(36.dp))
@@ -140,12 +152,13 @@ private fun RingCenterContent(totalMl: Int) {
         Text(
             text = "${rolledTotal}ml",
             color = spec.ringValueText,
-            style = MaterialTheme.typography.headlineLarge,
+            // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
+            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
         )
         Text(
             text = "今日已喝",
-            color = spec.ringValueText.copy(alpha = 0.7f),
-            style = MaterialTheme.typography.labelMedium,
+            color = spec.ringValueText.copy(alpha = 0.6f),
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
         )
     }
 }

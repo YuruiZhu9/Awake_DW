@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.model.WaterRecord
 import java.time.Instant
@@ -33,6 +34,12 @@ private val DROP_DOT_SIZE = 8.dp
 /** 行与行之间的呼吸间距。 */
 private val ROW_SPACING = 12.dp
 
+/** 逐条入场的错峰步长（§10.3）：前若干行依次晚 40ms，长列表不再累积等待。 */
+private const val ROW_ENTRANCE_STAGGER_MS = 40
+
+/** 参与错峰的最大行数：其后的行同刻入场。 */
+private const val ROW_ENTRANCE_MAX_STAGGERED = 6
+
 /** HH:mm 展示格式（显示层专用，随系统时区）。 */
 private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -47,21 +54,25 @@ internal fun TodayTimeline(
     modifier: Modifier = Modifier,
 ) {
     if (records.isEmpty()) {
-        Box(
-            modifier = modifier.fillMaxWidth().height(EMPTY_TIMELINE_HEIGHT),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "今天的第一杯还没出现哦 💧",
-                color = currentThemeSpec().greetingSubColor,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+        FadeUpOnce(delayMillis = 120, modifier = modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(EMPTY_TIMELINE_HEIGHT),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "今天的第一杯还没出现哦 💧",
+                    color = currentThemeSpec().greetingSubColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
     } else {
         val spec = currentThemeSpec()
         Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ROW_SPACING)) {
-            records.forEach { record ->
-                TimelineRow(record = record, spec = spec)
+            records.forEachIndexed { index, record ->
+                FadeUpOnce(delayMillis = minOf(index, ROW_ENTRANCE_MAX_STAGGERED) * ROW_ENTRANCE_STAGGER_MS) {
+                    TimelineRow(record = record, spec = spec)
+                }
             }
         }
     }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -58,9 +59,9 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                     .padding(horizontal = PAGE_HORIZONTAL_PADDING),
         ) {
             Spacer(Modifier.height(44.dp))
-            Text(text = "统计", color = spec.greetingColor, style = MaterialTheme.typography.headlineMedium)
+            FadeUpOnce { Text(text = "统计", color = spec.greetingColor, style = MaterialTheme.typography.headlineMedium) }
             Spacer(Modifier.height(20.dp))
-            StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth())
+            FadeUpOnce(delayMillis = 60) { StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth()) }
             Spacer(Modifier.height(28.dp))
             WeekBarsChart(bars = state.bars, goalMl = state.goalMl, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(32.dp))

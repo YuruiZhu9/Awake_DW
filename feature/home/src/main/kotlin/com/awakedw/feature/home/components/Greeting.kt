@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.awakedw.core.common.TimeSlots
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.model.TimeSlot
@@ -65,7 +66,8 @@ internal fun Greeting(
         Text(
             text = dateSubline(now, totalMl, goalMl),
             color = spec.greetingSubColor,
-            style = MaterialTheme.typography.bodySmall,
+            // 日期副行（§10.4）：小字距让信息行更安静，与上方问候语拉开层次。
+            style = MaterialTheme.typography.bodySmall.copy(letterSpacing = 0.3.sp),
             textAlign = TextAlign.Center,
         )
     }

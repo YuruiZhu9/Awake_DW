@@ -1,5 +1,6 @@
 package com.awakedw.core.designsystem.ring
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import com.awakedw.core.designsystem.currentThemeSpec
 
@@ -71,11 +73,15 @@ fun ProgressRing(
 
     val tapModifier =
         if (onRingTap != null) {
+            val view = LocalView.current
             Modifier.clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 role = Role.Button,
-            ) { onRingTap() }
+            ) {
+                view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                onRingTap()
+            }
         } else {
             Modifier
         }

@@ -1,5 +1,6 @@
 package com.awakedw.feature.home.components
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -67,6 +69,7 @@ internal fun LogButton(
 
     var size by remember { mutableStateOf(IntSize.Zero) }
     var burstTrigger by remember { mutableIntStateOf(0) }
+    val view = LocalView.current
 
     // 外层 Box 既是迸发粒子的坐标空间（origin=按钮中心），也保证粒子可飞出按钮边界。
     Box(
@@ -89,6 +92,7 @@ internal fun LogButton(
                         indication = null,
                         role = Role.Button,
                     ) {
+                        view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                         burstTrigger += 1
                         onTap()
                     }
