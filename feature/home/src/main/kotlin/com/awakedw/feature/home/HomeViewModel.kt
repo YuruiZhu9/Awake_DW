@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /** 打卡防抖窗口（规格 §4.1）：窗口内经任一入口的连续触发只记一杯。 */
@@ -34,15 +35,19 @@ const val CELEBRATION_HOLD_MS = 2_500L
 /**
  * 首页一屏状态。[progress] 已截断到 0..1（达标即满环，微光呼吸交给表现层）；
  * [praiseLine] 为 null 时隐藏；[celebrating] 仅当日首次达标为 true（规格 §4.2 第 6 步）；
- * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认问候。
+ * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认句；
+ * [cupMl]/[streakDays]/[lastDrinkLabel] 供快捷量 chips 与徽章行展示（§11.1/11.2）。
  */
 data class HomeUiState(
     val themeId: ThemeId = ThemeId.EMERALD,
     val progress: Float = 0f,
     val totalMl: Int = 0,
     val goalMl: Int = 1600,
+    val cupMl: Int = 250,
     val cupCount: Int = 0,
     val avgIntervalLabel: String = "—",
+    val streakDays: Int = 0,
+    val lastDrinkLabel: String? = null,
     val greeting: String? = null,
     val praiseLine: String? = null,
     val celebrating: Boolean = false,
@@ -110,8 +115,11 @@ class HomeViewModel(
                         progress = (snapshot.stats.totalMl.toFloat() / snapshot.goalMl).coerceIn(0f, 1f),
                         totalMl = snapshot.stats.totalMl,
                         goalMl = snapshot.goalMl,
+                        cupMl = snapshot.cupMl,
                         cupCount = snapshot.stats.cupCount,
                         avgIntervalLabel = IntervalLabel.format(snapshot.stats.avgIntervalMin),
+                        streakDays = snapshot.streakDays,
+                        lastDrinkLabel = snapshot.stats.lastDrankAtEpochMs?.let(::formatTimeOfDay),
                     )
                 }
             }
@@ -123,21 +131,26 @@ class HomeViewModel(
         scheduleLog()
     }
 
+    /** 快捷量入口（§11.1：小口/满杯）：与主按钮共用同一防抖闸门与反馈编排。 */
+    fun quickLog(amountMl: Int) {
+        scheduleLog(amountMl)
+    }
+
     /** 环区点按记录；[offsetPx] 为环心在环区内的坐标（备用锚点），与按钮共用闸门。 */
     fun tapRing(offsetPx: Offset?) {
         scheduleLog()
     }
 
     /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；距上次成笔不足 [logDebounceMs] 的触发合并忽略。 */
-    private fun scheduleLog() {
+    private fun scheduleLog(amountMl: Int? = null) {
         val now = clock.nowEpochMs()
         if (now - lastAcceptedAt < logDebounceMs) return
         lastAcceptedAt = now
-        viewModelScope.launch { logAndPraise() }
+        viewModelScope.launch { logAndPraise(amountMl) }
     }
 
-    private suspend fun logAndPraise() {
-        val result = logWater() as? LogResult.Logged
+    private suspend fun logAndPraise(amountMl: Int?) {
+        val result = logWater(amountMl) as? LogResult.Logged
         feedbackEpoch += 1
         val epoch = feedbackEpoch
 
@@ -164,4 +177,11 @@ class HomeViewModel(
     }
 
     private fun currentHour(): Int = LocalDateTime.ofInstant(Instant.ofEpochMilli(clock.nowEpochMs()), clock.zone()).hour
+
+    /** 「最近一杯」时刻展示（§11.2）：按注入时钟时区格式化为 HH:mm。 */
+    private fun formatTimeOfDay(epochMs: Long): String = TIME_OF_DAY.format(Instant.ofEpochMilli(epochMs).atZone(clock.zone()))
+
+    private companion object {
+        val TIME_OF_DAY: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    }
 }

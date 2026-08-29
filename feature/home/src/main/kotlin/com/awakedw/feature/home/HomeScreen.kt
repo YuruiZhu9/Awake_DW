@@ -45,6 +45,7 @@ import com.awakedw.feature.home.components.Greeting
 import com.awakedw.feature.home.components.HealthTipLine
 import com.awakedw.feature.home.components.LogButton
 import com.awakedw.feature.home.components.PraiseLine
+import com.awakedw.feature.home.components.QuickSipsRow
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 220.dp
@@ -97,10 +98,19 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             Spacer(Modifier.height(12.dp))
             PraiseLine(text = state.praiseLine)
             Spacer(Modifier.height(20.dp))
-            FadeUpOnce(delayMillis = 80) { BadgesRow(cupCount = state.cupCount, avgIntervalLabel = state.avgIntervalLabel) }
+            FadeUpOnce(delayMillis = 80) {
+                BadgesRow(
+                    cupCount = state.cupCount,
+                    avgIntervalLabel = state.avgIntervalLabel,
+                    lastDrinkLabel = state.lastDrinkLabel,
+                    streakDays = state.streakDays,
+                )
+            }
             Spacer(Modifier.height(12.dp))
             FadeUpOnce(delayMillis = 120) { HealthTipLine() }
             Spacer(Modifier.weight(1f))
+            QuickSipsRow(cupMl = state.cupMl, onQuickLog = viewModel::quickLog)
+            Spacer(Modifier.height(12.dp))
             LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
             Spacer(Modifier.height(36.dp))
         }

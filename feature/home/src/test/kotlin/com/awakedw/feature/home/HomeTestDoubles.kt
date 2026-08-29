@@ -83,6 +83,7 @@ class FakeWaterRepository(
             totalMl = today.sumOf { it.amountMl },
             cupCount = today.size,
             avgIntervalMin = avgIntervalMinOf(today),
+            lastDrankAtEpochMs = today.maxOfOrNull { it.drankAtEpochMs },
         )
     }
 

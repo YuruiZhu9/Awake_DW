@@ -236,6 +236,40 @@ class HomeViewModelTest {
             assertEquals("早安短句", second.uiState.value.greeting)
         }
 
+    @Test
+    fun `快捷量走同一闸门并写入自定义量`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            // 小口 125ml：立即成笔，总量即该量。
+            h.viewModel.quickLog(125)
+            runCurrent()
+            assertEquals(125, h.viewModel.uiState.value.totalMl)
+
+            // 窗内连点（主按钮/快捷量任意混用）合并为一笔。
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(1, h.water.addCount)
+
+            // 跨出防抖窗后标准杯正常成笔，总量 125 + 250。
+            h.clock.ms += WINDOW_GAP_MS
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(2, h.water.addCount)
+            assertEquals(375, h.viewModel.uiState.value.totalMl)
+        }
+
+    @Test
+    fun `最近一杯时刻浮出徽章数据`() =
+        runTest {
+            val h = harness(testScheduler)
+            h.water.seedToday(30) // 10:00 与 10:30 两杯
+            runCurrent()
+
+            assertEquals(2, h.viewModel.uiState.value.cupCount)
+            assertEquals("10:30", h.viewModel.uiState.value.lastDrinkLabel)
+        }
+
     private companion object {
         /** 夸夸语停留 1.4s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
         const val PRAISE_HOLD_MS = 1_400L
