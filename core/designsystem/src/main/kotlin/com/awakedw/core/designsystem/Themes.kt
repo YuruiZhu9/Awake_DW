@@ -31,6 +31,7 @@ val EmeraldThemeSpec: ThemeSpec =
             ),
         // 柔光晕取主题主色低透明度（§2.2），绘制时由 GradientBackdrop 施加透明度
         haloColor = Color(ThemePalette.EMERALD_PRIMARY),
+        laceColor = Color(ThemePalette.EMERALD_LACE),
     )
 
 /** B · 草莓雾光（早晨），色值对照规格 §2.1。 */
@@ -62,6 +63,7 @@ val StrawberryThemeSpec: ThemeSpec =
                 Color(ThemePalette.STRAWBERRY_PARTICLE_5),
             ),
         haloColor = Color(ThemePalette.STRAWBERRY_PRIMARY),
+        laceColor = Color(ThemePalette.STRAWBERRY_LACE),
     )
 
 /** C · 焦糖奶茶（夜晚），色值对照规格 §2.1。 */
@@ -91,6 +93,7 @@ val CaramelThemeSpec: ThemeSpec =
                 Color(ThemePalette.CARAMEL_PARTICLE_4),
             ),
         haloColor = Color(ThemePalette.CARAMEL_PRIMARY),
+        laceColor = Color(ThemePalette.CARAMEL_LACE),
     )
 
 /** D · 深夜墨青（深夜），色值对照规格 §2.1；墨青底 + 薄荷强调，柔光晕与粒子在暗底上成为主角。 */
@@ -121,6 +124,7 @@ val NightThemeSpec: ThemeSpec =
             ),
         haloColor = Color(ThemePalette.NIGHT_PRIMARY),
         isDark = true,
+        laceColor = Color(ThemePalette.NIGHT_LACE),
     )
 
 /** ThemeId → 主题规格 的全覆盖查找表。 */

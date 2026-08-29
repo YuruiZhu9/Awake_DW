@@ -17,6 +17,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 
 /** 半径锚点：各层半径因子（ParticleMath 半径带）× 该值的像素换算。 */
@@ -28,13 +29,19 @@ private const val LOOP_NANOS = 48_000_000_000L
 /** 「✦」星芒字形。 */
 private const val STAR_GLYPH = "✦"
 
-// 三枚「✦」星芒的固定相位锚点（屏宽比 to 屏高比）与呼吸参数；刻意不含随机数。
+// 两枚「✦」星芒的固定相位锚点（屏宽比 to 屏高比）与呼吸参数；刻意不含随机数。
 private val STAR_ANCHORS = listOf(0.24f to 0.28f, 0.76f to 0.60f, 0.38f to 0.74f)
 private val STAR_FONT_SIZES = listOf(16.sp, 12.sp, 14.sp)
 private val STAR_TURNS = listOf(2, 3, 2) // 每循环内呼吸次数（整数 ⇒ 循环闭合）
 private val STAR_PHASES = listOf(0f, PI.toFloat() * 2f / 3f, PI.toFloat() * 4f / 3f)
 private const val STAR_ALPHA_BASE = 0.20f
 private const val STAR_ALPHA_AMPLITUDE = 0.45f
+
+// 两朵「甜系小花」（§12 L2）：固定锚点五瓣花，整循环慢转一圈（整数转 ⇒ 闭合）。
+private val FLOWER_ANCHORS = listOf(0.14f to 0.52f, 0.86f to 0.80f)
+private const val FLOWER_ALPHA_BASE = 0.14f
+private const val FLOWER_ALPHA_AMPLITUDE = 0.10f
+private const val FLOWER_TURNS = 1
 
 /** 兜底粒子色：colors 为空时避免取越界（正常主题均提供非空 particleColors）。 */
 private val FALLBACK_COLOR = Color(0xFF10A87C)
@@ -95,6 +102,12 @@ fun FloatingParticles(
                             )
                         }
                         drawCircle(color.copy(alpha = frame.alpha), radius = frame.radiusPx, center = frame.center)
+                        // 珍珠高光（§12）：左上一点白，圆点即成光珠。
+                        drawCircle(
+                            color = Color.White.copy(alpha = frame.alpha * 0.6f),
+                            radius = frame.radiusPx * 0.28f,
+                            center = frame.center - Offset(frame.radiusPx * 0.32f, frame.radiusPx * 0.32f),
+                        )
                     }
                     for ((index, layout) in starLayouts.withIndex()) {
                         val twinkle =
@@ -114,6 +127,20 @@ fun FloatingParticles(
                                 ),
                         )
                     }
+                    FLOWER_ANCHORS.forEachIndexed { fi, anchor ->
+                        val flowerAlpha =
+                            FLOWER_ALPHA_BASE +
+                                FLOWER_ALPHA_AMPLITUDE * (0.5f + 0.5f * sin(2f * PI.toFloat() * p + fi * PI.toFloat() * 2f / 3f))
+                        val center = Offset(anchor.first * area.width, anchor.second * area.height)
+                        drawFlower(
+                            center = center,
+                            orbit = anchorPx * 0.5f,
+                            petalRadius = anchorPx * 0.2f,
+                            rotation = p,
+                            color = colorAt(colors, ParticleMath.DOT_COUNT + ParticleMath.STAR_COUNT + fi),
+                            alpha = flowerAlpha,
+                        )
+                    }
                 }
             },
     )
@@ -131,3 +158,27 @@ private fun colorAt(
     colors: List<Color>,
     index: Int,
 ): Color = if (colors.isEmpty()) FALLBACK_COLOR else colors[((index % colors.size) + colors.size) % colors.size]
+
+/**
+ * 五瓣小花（§12 L2）：[orbit] 花心到瓣心的轨道半径，整循环慢转 [FLOWER_TURNS] 圈。
+ * 只在 onDrawBehind 内调用（DrawScope 扩展，不进语义树）。
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawFlower(
+    center: Offset,
+    orbit: Float,
+    petalRadius: Float,
+    rotation: Float,
+    color: Color,
+    alpha: Float,
+) {
+    val baseAngle = 2f * PI.toFloat() * FLOWER_TURNS * rotation
+    repeat(5) { petal ->
+        val angle = baseAngle + petal * (2f * PI.toFloat() / 5f)
+        drawCircle(
+            color = color.copy(alpha = alpha),
+            radius = petalRadius,
+            center = center + Offset(orbit * cos(angle), orbit * sin(angle)),
+        )
+    }
+    drawCircle(color = Color.White.copy(alpha = alpha * 0.8f), radius = petalRadius * 0.55f, center = center)
+}

@@ -25,4 +25,6 @@ data class ThemeSpec(
     val particleColors: List<Color>,
     val haloColor: Color,
     val isDark: Boolean = false,
+    /** 洛丽塔配饰层（§12）：蕾丝线颜色（卡片描边/装饰线），按主题派生。 */
+    val laceColor: Color = Color.White,
 )

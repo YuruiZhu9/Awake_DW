@@ -126,4 +126,14 @@ class ThemePaletteTest {
         assertEquals(0xFF8AE8CE, ThemePalette.NIGHT_PARTICLE_3)
         assertEquals(0xFF2A6B58, ThemePalette.NIGHT_PARTICLE_4)
     }
+
+    @Test
+    fun `四主题蕾丝线与描金锚点`() {
+        // 洛丽塔配饰层（§12）：蕾丝线按主题派生，描金共享软香槟金。
+        assertEquals(0xFFFFD9E4, ThemePalette.STRAWBERRY_LACE)
+        assertEquals(0xFFCFEADF, ThemePalette.EMERALD_LACE)
+        assertEquals(0xFFFFEFD2, ThemePalette.CARAMEL_LACE)
+        assertEquals(0xFF2A4A40, ThemePalette.NIGHT_LACE)
+        assertEquals(0xFFD9B98A, ThemePalette.GOLD_TRIM)
+    }
 }
