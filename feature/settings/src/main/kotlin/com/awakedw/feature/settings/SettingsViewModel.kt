@@ -2,27 +2,42 @@ package com.awakedw.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.awakedw.core.common.AppClock
+import com.awakedw.core.domain.NextReminderCalculator
 import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /** 心意文案单句的最大字数（编辑对话框 TextField 同步限长）。 */
 const val COPY_MAX_CHARS = 40
 
-/** 「我的」页一屏状态：设置快照 + 文案库快照 + 引导完成标记。 */
+/** 「试一试」发送回显的停留时长。 */
+const val TEST_SENT_HOLD_MS = 2_500L
+
+/** 「我的」页一屏状态：设置快照 + 文案库快照 + 引导完成标记 + 提醒透明化状态（§11.3）。 */
 data class SettingsUiState(
     val settings: UserSettings = UserSettings(),
     val library: CopyLibrary = CopyLibrary(morning = emptyList(), day = emptyList(), evening = emptyList()),
     val onboardingDone: Boolean = false,
+    /** 提醒状态行文案：下一次时刻 / 已关闭 / 今日已达标 / 今日窗口已过。 */
+    val reminderStatusLabel: String = "",
+    /** 当前是否有有效排程（状态行圆点取色用）。 */
+    val reminderArmed: Boolean = false,
+    /** 「试一试」刚发送的短暂回显窗口。 */
+    val testReminderSent: Boolean = false,
 )
 
 /**
@@ -32,21 +47,31 @@ data class SettingsUiState(
  * - 所有 setter 走「校验 → 直通仓储」：非法输入静默回落原值（规则见 [SettingsValidation]），
  *   调用方不需要也不允许自行夹紧；
  * - [onRemindersChanged] 是提醒总开关的副作用接缝（默认空实现）——
- *   ReminderScheduler 落地后由集成任务在此接上「开/关即重排或取消全部闹钟」。
+ *   ReminderScheduler 落地后由集成任务在此接上「开/关即重排或取消全部闹钟」；
+ * - 提醒状态行（§11.3）由 [NextReminderCalculator] 纯计算——不经调度器写闹钟，
+ *   设置每次变化即重算「下一次/已关闭/达标/过窗」；[onPostTestReminder] 为试发通知接缝。
  */
 class SettingsViewModel(
     private val prefs: UserPreferencesRepository,
     private val copies: CopyLibraryRepository,
+    private val water: WaterRepository,
+    private val clock: AppClock,
     private val onRemindersChanged: (Boolean) -> Unit = {},
+    private val onPostTestReminder: () -> Unit = {},
 ) : ViewModel() {
     /** Dagger 注入入口：生产以空副作用回调委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
     @Inject
     constructor(
         prefs: UserPreferencesRepository,
         copies: CopyLibraryRepository,
+        water: WaterRepository,
+        clock: AppClock,
     ) : this(
         prefs,
         copies,
+        water,
+        clock,
+        {},
         {},
     )
 
@@ -58,6 +83,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             prefs.settings.collect { s ->
                 _uiState.update { it.copy(settings = s) }
+                refreshReminderStatus(s)
             }
         }
         viewModelScope.launch {
@@ -154,7 +180,38 @@ class SettingsViewModel(
         viewModelScope.launch { copies.resetToDefaults() }
     }
 
+    /** 「试一试」（§11.4）：立即发一条真实样子的提醒通知；发送后短暂回显确认。 */
+    fun testReminder() {
+        onPostTestReminder()
+        _uiState.update { it.copy(testReminderSent = true) }
+        viewModelScope.launch {
+            delay(TEST_SENT_HOLD_MS)
+            _uiState.update { it.copy(testReminderSent = false) }
+        }
+    }
+
+    /** 提醒状态行重算（§11.3）：与调度器同一纯函数，不写闹钟。 */
+    private suspend fun refreshReminderStatus(settings: UserSettings) {
+        if (!settings.remindersEnabled) {
+            _uiState.update { it.copy(reminderStatusLabel = "提醒已关闭 · 到点不会打扰", reminderArmed = false) }
+            return
+        }
+        val achieved = water.todayStats().totalMl >= settings.goalMl
+        val fire = NextReminderCalculator.nextFire(settings, clock, achieved)
+        val label =
+            when {
+                fire != null -> "下一次 · 今天 " + TIME_OF_DAY.format(Instant.ofEpochMilli(fire).atZone(clock.zone()))
+                achieved -> "今日已达标 · 明天继续"
+                else -> "今日窗口已过 · 明天继续"
+            }
+        _uiState.update { it.copy(reminderStatusLabel = label, reminderArmed = fire != null) }
+    }
+
     private fun isValidCopyText(text: String): Boolean = text.isNotEmpty() && text.length <= COPY_MAX_CHARS
+
+    private companion object {
+        val TIME_OF_DAY: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    }
 
     private inline fun persistIf(
         isValid: () -> Boolean,

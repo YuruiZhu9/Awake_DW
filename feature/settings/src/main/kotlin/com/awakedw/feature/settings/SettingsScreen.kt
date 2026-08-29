@@ -1,6 +1,14 @@
 package com.awakedw.feature.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.view.HapticFeedbackConstants
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -62,6 +76,24 @@ fun SettingsScreen(
     val state by viewModel.uiState.collectAsState()
     val settings = state.settings
     val spec = currentThemeSpec()
+    val context = LocalContext.current
+
+    // 「试一试」的通知权限引导（§11.4）：Android 13+ 未授权先弹系统请求，授权后立即试发。
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) viewModel.testReminder()
+        }
+
+    fun tryTestReminder(viewModel: SettingsViewModel) {
+        val granted =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            viewModel.testReminder()
+        } else {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
@@ -109,6 +141,12 @@ fun SettingsScreen(
             }
 
             SettingsCard(title = "提醒", subtitle = "在我清醒的时间里轻轻叫一声") {
+                ReminderStatusRow(
+                    statusLabel = state.reminderStatusLabel,
+                    armed = state.reminderArmed,
+                    testSent = state.testReminderSent,
+                    onTest = { tryTestReminder(viewModel) },
+                )
                 ToggleRow(
                     label = "温柔提醒",
                     checked = settings.remindersEnabled,
@@ -175,6 +213,59 @@ private fun SettingsCard(
                 }
             }
             content()
+        }
+    }
+}
+
+/** 提醒透明化状态行（§11.3/11.4）：状态圆点 + 文案 + 「试一试」即时验证入口。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun ReminderStatusRow(
+    statusLabel: String,
+    armed: Boolean,
+    testSent: Boolean,
+    onTest: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    val view = LocalView.current
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(8.dp)
+                    .background(
+                        color = if (armed) spec.primary else spec.chipText.copy(alpha = 0.4f),
+                        shape = CircleShape,
+                    ),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = statusLabel,
+            color = if (armed) spec.greetingColor else spec.greetingSubColor,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.weight(1f),
+        )
+        if (testSent) {
+            Text(
+                text = "已发送，看看通知栏 ♪",
+                color = spec.primary,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        } else {
+            Text(
+                text = "试一试",
+                color = spec.primary,
+                style = MaterialTheme.typography.labelLarge,
+                modifier =
+                    Modifier.clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                        onTest()
+                    }.padding(start = 12.dp),
+            )
         }
     }
 }

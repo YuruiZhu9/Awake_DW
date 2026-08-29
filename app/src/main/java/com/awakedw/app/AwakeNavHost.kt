@@ -40,10 +40,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.awakedw.core.common.AppClock
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
+import com.awakedw.core.domain.contracts.WaterRepository
+import com.awakedw.core.notification.NotifBuilder
 import com.awakedw.core.notification.Reason
 import com.awakedw.core.notification.ReminderScheduler
 import com.awakedw.feature.home.HomeScreen
@@ -190,7 +193,8 @@ private fun navigateHomeAfterOnboarding(navController: NavController) {
  * 「我的」页 VM 工厂（SETTINGS_CHANGED 恰此一处触发重排）：
  * 经 EntryPoint 取真实图依赖，以主构造器装配 [SettingsViewModel]，
  * 把提醒总开关的副作用接缝接到 `scheduler.rescheduleFromNow(SETTINGS_CHANGED)`；
- * 双完成缝禁令：调度触发只此一处，别处不得重复调用。
+ * 「试一试」接缝（§11.4）发一条真实样子的提醒通知——NotifBuilder 不出 core:notification，
+ * 经 lambda 注入保持 feature 模块边界。双完成缝禁令：调度触发只此一处，别处不得重复调用。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -203,7 +207,13 @@ private fun rememberSettingsViewModelFactory(): ViewModelProvider.Factory {
                 SettingsViewModel(
                     prefs = graph.prefs(),
                     copies = graph.copies(),
+                    water = graph.water(),
+                    clock = graph.clock(),
                     onRemindersChanged = { graph.scheduler().rescheduleFromNow(Reason.SETTINGS_CHANGED) },
+                    onPostTestReminder = {
+                        val notif = graph.notifBuilder()
+                        notif.post(notif.reminder(notif.currentSlot(), "试一试：到点的温柔提醒长这个样子 ♡"))
+                    },
                 )
             }
         }
@@ -222,6 +232,12 @@ interface AwakeNavGraphEntryPoint {
     fun prefs(): UserPreferencesRepository
 
     fun copies(): CopyLibraryRepository
+
+    fun water(): WaterRepository
+
+    fun clock(): AppClock
+
+    fun notifBuilder(): NotifBuilder
 
     fun scheduler(): ReminderScheduler
 }

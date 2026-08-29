@@ -48,7 +48,13 @@ class SettingsScreenTest {
 
     @Test
     fun `点目标量步进按钮数值即时更新且一杯容量不受影响`() {
-        val viewModel = SettingsViewModel(prefs = FakePrefsRepository(), copies = FakeCopyLibraryRepository())
+        val viewModel =
+            SettingsViewModel(
+                prefs = FakePrefsRepository(),
+                copies = FakeCopyLibraryRepository(),
+                water = FakeWaterRepository(),
+                clock = FakeClock(0L),
+            )
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             AwakeTheme(themeId = ThemeId.EMERALD) {

@@ -94,6 +94,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(project(":core:model"))
+    implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:domain"))
     implementation(project(":core:notification"))

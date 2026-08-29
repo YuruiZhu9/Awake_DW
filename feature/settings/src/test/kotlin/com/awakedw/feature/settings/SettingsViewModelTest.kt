@@ -40,20 +40,29 @@ class SettingsViewModelTest {
     ): Harness {
         val prefs = FakePrefsRepository(settings, onboardingDone)
         val copies = FakeCopyLibraryRepository(library)
+        val water = FakeWaterRepository()
+        val clock = FakeClock(REMINDER_TEST_TIME)
         val reminderCalls = mutableListOf<Boolean>()
+        val testCalls = mutableListOf<Int>()
         val viewModel =
             SettingsViewModel(
                 prefs = prefs,
                 copies = copies,
+                water = water,
+                clock = clock,
                 onRemindersChanged = { reminderCalls += it },
+                onPostTestReminder = { testCalls += 1 },
             )
-        return Harness(prefs, copies, reminderCalls, viewModel)
+        return Harness(prefs, copies, water, clock, reminderCalls, testCalls, viewModel)
     }
 
     private class Harness(
         val prefs: FakePrefsRepository,
         val copies: FakeCopyLibraryRepository,
+        val water: FakeWaterRepository,
+        val clock: FakeClock,
         val reminderCalls: MutableList<Boolean>,
+        val testCalls: MutableList<Int>,
         val viewModel: SettingsViewModel,
     )
 
@@ -288,4 +297,62 @@ class SettingsViewModelTest {
     }
 
     // endregion
+
+    // region 提醒透明化（§11.3/11.4）：状态行计算与试一发接缝
+
+    @Test
+    fun `窗口内有排程时状态行显示下一次时刻`() {
+        val h = harness()
+
+        // 默认设置：12:00 在 08:00–22:30 窗内、间隔 90 分钟 → 下一次 13:30。
+        assertEquals("下一次 · 今天 13:30", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals(true, h.viewModel.uiState.value.reminderArmed)
+    }
+
+    @Test
+    fun `关闭提醒后状态行为已关闭且不设排程`() {
+        val h = harness()
+
+        h.viewModel.setRemindersEnabled(false)
+
+        assertEquals("提醒已关闭 · 到点不会打扰", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals(false, h.viewModel.uiState.value.reminderArmed)
+    }
+
+    @Test
+    fun `今日已达标时状态行提示明天继续`() {
+        val h = harness()
+        h.water.stats = com.awakedw.core.model.DailyStats(totalMl = 1600, cupCount = 8, avgIntervalMin = null)
+
+        // 设置流再发一次（任意合法变更）触发状态重算。
+        h.viewModel.setIntervalMin(60)
+
+        assertEquals("今日已达标 · 明天继续", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals(false, h.viewModel.uiState.value.reminderArmed)
+    }
+
+    @Test
+    fun `试一试调用接缝并短暂回显`() =
+        kotlinx.coroutines.test.runTest {
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+            try {
+                val h = harness()
+                h.viewModel.testReminder()
+
+                assertEquals(1, h.testCalls.size)
+                assertEquals(true, h.viewModel.uiState.value.testReminderSent)
+
+                testScheduler.advanceTimeBy(TEST_SENT_HOLD_MS + 1)
+                assertEquals(false, h.viewModel.uiState.value.testReminderSent)
+            } finally {
+                Dispatchers.resetMain()
+            }
+        }
+
+    private companion object {
+        /** 提醒状态行测试锚点：2026-08-29 12:00（Asia/Shanghai，默认窗口内）。 */
+        val REMINDER_TEST_TIME: Long =
+            java.time.ZonedDateTime.of(2026, 8, 29, 12, 0, 0, 0, java.time.ZoneId.of("Asia/Shanghai"))
+                .toInstant().toEpochMilli()
+    }
 }
