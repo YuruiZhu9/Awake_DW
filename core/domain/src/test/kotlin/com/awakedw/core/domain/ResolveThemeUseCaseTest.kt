@@ -64,7 +64,10 @@ class ResolveThemeUseCaseTest {
     @Test
     fun `FOLLOW_TIME_深夜边界_22点切墨青_06点回草莓_傍晚保持焦糖`() =
         runTest {
-            suspend fun themeAt(hour: Int, minute: Int = 0): ThemeId {
+            suspend fun themeAt(
+                hour: Int,
+                minute: Int = 0,
+            ): ThemeId {
                 clock.setAtLocal(hour, minute)
                 return useCase().first()
             }

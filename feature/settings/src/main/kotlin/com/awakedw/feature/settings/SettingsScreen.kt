@@ -1,5 +1,6 @@
 package com.awakedw.feature.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -145,7 +146,9 @@ fun SettingsScreen(
     }
 }
 
-/** 分区卡容器：chipBg 圆角面板 + 标题/副标题（[title] 为 null 时仅作容器，如文案库分区自带头部）。 */
+/** 分区卡容器：chipBg 圆角面板 + 标题/副标题（[title] 为 null 时仅作容器，如文案库分区自带头部）。
+ * 质感（§10.4）：2dp 柔阴影 + 主题色 8% 细描边，替纯平面色块。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun SettingsCard(
@@ -155,7 +158,13 @@ private fun SettingsCard(
     content: @Composable () -> Unit,
 ) {
     val spec = currentThemeSpec()
-    Surface(shape = CARD_SHAPE, color = spec.chipBg, modifier = modifier.fillMaxWidth()) {
+    Surface(
+        shape = CARD_SHAPE,
+        color = spec.chipBg,
+        modifier = modifier.fillMaxWidth(),
+        shadowElevation = 2.dp,
+        border = BorderStroke(width = 1.dp, color = spec.primary.copy(alpha = 0.08f)),
+    ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(SECTION_SPACING)) {
             if (title != null) {
                 Column {
@@ -183,6 +192,8 @@ private fun GuideEntryRow(
         color = spec.chipBg,
         onClick = onOpenWhitelistGuide,
         modifier = modifier.fillMaxWidth(),
+        shadowElevation = 2.dp,
+        border = BorderStroke(width = 1.dp, color = spec.primary.copy(alpha = 0.08f)),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
