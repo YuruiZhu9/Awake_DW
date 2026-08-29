@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -52,6 +53,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.GOLD_TRIM
+import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
 
 /** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
@@ -108,7 +111,7 @@ fun OnboardingScreen(
             Text(
                 text = "为了让每一次温柔准时抵达",
                 color = spec.greetingColor,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(12.dp))
@@ -180,6 +183,13 @@ private fun DropletIllustration(modifier: Modifier = Modifier) {
                 },
     ) {
         drawDroplet(spec)
+        // 水滴系蝴蝶结（§12 L2）：系在滴肩一侧，温柔但不抢主标识。
+        drawBow(
+            center = Offset(size.width * 0.68f, size.height * 0.22f),
+            width = size.width * 0.34f,
+            color = spec.primary,
+            knotColor = GOLD_TRIM,
+        )
     }
 }
 

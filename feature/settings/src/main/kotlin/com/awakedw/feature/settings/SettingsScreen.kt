@@ -7,6 +7,7 @@ import android.view.HapticFeedbackConstants
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,13 +33,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.settings.components.IntervalChipsRow
@@ -47,8 +51,10 @@ import com.awakedw.feature.settings.components.ThemeChoiceChips
 import com.awakedw.feature.settings.components.ToggleRow
 import com.awakedw.feature.settings.components.WindowRangeSlider
 import com.awakedw.feature.settings.copyeditor.CopyLibrarySection
+import kotlin.math.roundToInt
 
-/** 分区卡圆角。 */
+// 卡形保持圆角矩形：自定义 Shape 的 outline 会干扰触摸注入的命中路径（Robolectric 实测，
+// 语义动作正常而位置点击失效）——蕾丝扇贝改为卡顶饰带绘制层实现（见 LaceTrim），观感等价且零交互风险。
 private val CARD_SHAPE: Shape = RoundedCornerShape(24.dp)
 
 /** 分区内元素的统一行间距。 */
@@ -115,7 +121,7 @@ fun SettingsScreen(
             Text(
                 text = "我的",
                 color = spec.greetingColor,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
             )
 
             SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
@@ -201,9 +207,13 @@ private fun SettingsCard(
         color = spec.chipBg,
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 2.dp,
-        border = BorderStroke(width = 1.dp, color = spec.primary.copy(alpha = 0.08f)),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor),
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(SECTION_SPACING)) {
+        Column(
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(SECTION_SPACING),
+        ) {
+            LaceTrim(spec = spec)
             if (title != null) {
                 Column {
                     Text(text = title, color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
@@ -213,6 +223,27 @@ private fun SettingsCard(
                 }
             }
             content()
+        }
+    }
+}
+
+/**
+ * 蕾丝饰带（§12 L1）：卡顶一排相切的圆弧点带，主题蕾丝线着色。
+ * 绘制层实现而非卡片 Shape——自定义 outline 会干扰触摸注入的命中路径（Robolectric 实测：
+ * 语义动作正常而位置点击失效），饰带观感等价且零交互风险。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun LaceTrim(
+    spec: ThemeSpec,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier.fillMaxWidth().height(8.dp)) {
+        val radius = 4.dp.toPx()
+        val count = (size.width / (radius * 2f)).roundToInt().coerceAtLeast(2)
+        val step = size.width / count
+        repeat(count) { i ->
+            drawCircle(color = spec.laceColor, radius = radius, center = Offset(step * (i + 0.5f), radius))
         }
     }
 }
@@ -284,7 +315,7 @@ private fun GuideEntryRow(
         onClick = onOpenWhitelistGuide,
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 2.dp,
-        border = BorderStroke(width = 1.dp, color = spec.primary.copy(alpha = 0.08f)),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

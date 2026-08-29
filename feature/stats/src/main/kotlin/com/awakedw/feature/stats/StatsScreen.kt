@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
@@ -59,7 +60,13 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                     .padding(horizontal = PAGE_HORIZONTAL_PADDING),
         ) {
             Spacer(Modifier.height(44.dp))
-            FadeUpOnce { Text(text = "统计", color = spec.greetingColor, style = MaterialTheme.typography.headlineMedium) }
+            FadeUpOnce {
+                Text(
+                    text = "统计",
+                    color = spec.greetingColor,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
+                )
+            }
             Spacer(Modifier.height(20.dp))
             FadeUpOnce(delayMillis = 60) { StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth()) }
             Spacer(Modifier.height(28.dp))

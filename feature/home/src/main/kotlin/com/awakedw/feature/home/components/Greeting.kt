@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +60,8 @@ internal fun Greeting(
         Text(
             text = customGreeting ?: greetingFor(TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
-            style = MaterialTheme.typography.headlineSmall,
+            // 问候语用系统衬线（§12 L2）：古典洛丽塔的书卷气，随 ROM 落到宋体/思源宋。
+            style = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Serif),
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(6.dp))

@@ -49,6 +49,7 @@ fun AnimatedAwakeTheme(
             chipBg = target.chipBg.animateAnchor("awakeChipBg"),
             chipText = target.chipText.animateAnchor("awakeChipText"),
             haloColor = target.haloColor.animateAnchor("awakeHalo"),
+            laceColor = target.laceColor.animateAnchor("awakeLace"),
         )
     CompositionLocalProvider(LocalAwakeTheme provides spec) {
         content()

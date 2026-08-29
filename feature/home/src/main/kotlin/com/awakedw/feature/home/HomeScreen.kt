@@ -8,13 +8,19 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,15 +34,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.GOLD_TRIM
+import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.feature.home.components.BadgesRow
@@ -57,6 +68,11 @@ private const val NUMBER_ROLL_MS = 500
 private const val GLOW_ALPHA_MIN = 0.10f
 private const val GLOW_ALPHA_MAX = 0.26f
 private const val GLOW_BREATH_MS = 1600
+
+/** 环顶蝴蝶结尺寸与上移量（§12）：结饰骑在环 stroke 上。 */
+private val BOW_WIDTH = 46.dp
+private val BOW_HEIGHT = 28.dp
+private val BOW_LIFT = 2.dp
 
 /**
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
@@ -119,7 +135,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     }
 }
 
-/** 进度环区块：达标后满环微光呼吸 + 可点按环体 + 环心数字滚动。 */
+/** 进度环区块：达标后满环微光呼吸 + 可点按环体 + 环心数字滚动 + 12 点方向蝴蝶结（§12）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun RingBlock(
@@ -145,6 +161,47 @@ private fun RingBlock(
         ) {
             RingCenterContent(totalMl = totalMl)
         }
+        Box(Modifier.matchParentSize()) {
+            RingBow(goalMet = progress >= 1f, modifier = Modifier.align(Alignment.TopCenter).offset(y = -BOW_LIFT))
+        }
+    }
+}
+
+/**
+ * 环顶蝴蝶结（§12 L1）：系在 12 点方向值弧起点——「今日从蝴蝶结开始」。
+ * 平时静止；达标呼吸期间随微光同步轻摆（±6°，与 BreathingGlow 同拍），并垂下双尾飘带。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun RingBow(
+    goalMet: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    val transition = rememberInfiniteTransition(label = "bowSway")
+    val sway by transition.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = GLOW_BREATH_MS, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "bowSwayAngle",
+    )
+    Canvas(
+        modifier =
+            modifier
+                .size(BOW_WIDTH, BOW_HEIGHT)
+                .graphicsLayer { rotationZ = if (goalMet) sway else 0f },
+    ) {
+        drawBow(
+            center = Offset(size.width / 2f, size.height / 2f),
+            width = size.width * 0.72f,
+            color = spec.primary,
+            knotColor = GOLD_TRIM,
+            withTails = goalMet,
+        )
     }
 }
 
@@ -165,12 +222,35 @@ private fun RingCenterContent(totalMl: Int) {
             // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
         )
+        Spacer(Modifier.height(4.dp))
+        // 环心珍珠分隔点（§12）：三枚渐次大小的小珍珠，柔化数字与小字的过渡。
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            PearlDot(size = 3.dp, spec = spec)
+            PearlDot(size = 5.dp, spec = spec)
+            PearlDot(size = 3.dp, spec = spec)
+        }
+        Spacer(Modifier.height(4.dp))
         Text(
             text = "今日已喝",
             color = spec.ringValueText.copy(alpha = 0.6f),
             style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
         )
     }
+}
+
+/** 小珍珠点（§12）：主题环值文字色的柔和圆点。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun PearlDot(
+    size: Dp,
+    spec: ThemeSpec,
+) {
+    Box(
+        modifier =
+            Modifier
+                .size(size)
+                .background(color = spec.ringValueText.copy(alpha = 0.45f), shape = CircleShape),
+    )
 }
 
 /** 满环微光呼吸（规格 §4.2 第 6 步「满环微光呼吸」）：柔光晕在环后缓缓起伏。 */
