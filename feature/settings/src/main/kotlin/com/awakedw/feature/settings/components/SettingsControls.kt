@@ -218,9 +218,8 @@ internal fun IntervalChipsRow(
     }
 }
 
-/**
- * 外观主题单选 chips（§3.4）：「跟随时间 / 固定翡翠绿 / 固定草莓雾光 / 固定焦糖奶茶」，
- * 每个选项带色点——跟随时间为三主题色渐变点，固定项为对应主题主色实心点。
+/** 外观主题单选 chips（§3.4）：「跟随时间 / 固定翡翠绿 / 固定草莓雾光 / 固定焦糖奶茶 / 固定深夜墨青」，
+ * 每个选项带色点——跟随时间为四主题色渐变点，固定项为对应主题主色实心点。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -242,13 +241,14 @@ internal fun ThemeChoiceChips(
     }
 }
 
-/** 主题选项文案（§3.4 原文）。 */
+/** 主题选项文案（§3.4 原文 + §10.1 深夜墨青）。 */
 internal fun themeLabel(choice: ThemeChoice): String =
     when (choice) {
         ThemeChoice.FOLLOW_TIME -> "跟随时间"
         ThemeChoice.FIXED_EMERALD -> "固定翡翠绿"
         ThemeChoice.FIXED_STRAWBERRY -> "固定草莓雾光"
         ThemeChoice.FIXED_CARAMEL -> "固定焦糖奶茶"
+        ThemeChoice.FIXED_NIGHT -> "固定深夜墨青"
     }
 
 @Suppress("ktlint:standard:function-naming")
@@ -262,6 +262,7 @@ private fun ThemeDot(choice: ThemeChoice) {
                         ThemeById.getValue(ThemeId.STRAWBERRY).primary,
                         ThemeById.getValue(ThemeId.EMERALD).primary,
                         ThemeById.getValue(ThemeId.CARAMEL).primary,
+                        ThemeById.getValue(ThemeId.NIGHT).primary,
                     ),
                 )
             else -> Brush.horizontalGradient(listOf(themePrimary(choice), themePrimary(choice)))
@@ -274,6 +275,7 @@ private fun themePrimary(choice: ThemeChoice): Color =
         ThemeChoice.FIXED_EMERALD -> ThemeById.getValue(ThemeId.EMERALD).primary
         ThemeChoice.FIXED_STRAWBERRY -> ThemeById.getValue(ThemeId.STRAWBERRY).primary
         ThemeChoice.FIXED_CARAMEL -> ThemeById.getValue(ThemeId.CARAMEL).primary
+        ThemeChoice.FIXED_NIGHT -> ThemeById.getValue(ThemeId.NIGHT).primary
         ThemeChoice.FOLLOW_TIME -> ThemeById.getValue(ThemeId.EMERALD).primary
     }
 

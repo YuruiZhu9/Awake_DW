@@ -93,10 +93,41 @@ val CaramelThemeSpec: ThemeSpec =
         haloColor = Color(ThemePalette.CARAMEL_PRIMARY),
     )
 
+/** D · 深夜墨青（深夜），色值对照规格 §2.1；墨青底 + 薄荷强调，柔光晕与粒子在暗底上成为主角。 */
+val NightThemeSpec: ThemeSpec =
+    ThemeSpec(
+        id = ThemeId.NIGHT,
+        backgroundGradient =
+            listOf(
+                Color(ThemePalette.NIGHT_BG_1),
+                Color(ThemePalette.NIGHT_BG_2),
+                Color(ThemePalette.NIGHT_BG_3),
+            ),
+        primary = Color(ThemePalette.NIGHT_PRIMARY),
+        ringTrack = Color(ThemePalette.NIGHT_RING_TRACK),
+        ringValueText = Color(ThemePalette.NIGHT_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.NIGHT_GREETING),
+        greetingSubColor = Color(ThemePalette.NIGHT_GREETING_SUB),
+        buttonTop = Color(ThemePalette.NIGHT_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.NIGHT_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.NIGHT_CHIP_BG),
+        chipText = Color(ThemePalette.NIGHT_CHIP_TEXT),
+        particleColors =
+            listOf(
+                Color(ThemePalette.NIGHT_PARTICLE_1),
+                Color(ThemePalette.NIGHT_PARTICLE_2),
+                Color(ThemePalette.NIGHT_PARTICLE_3),
+                Color(ThemePalette.NIGHT_PARTICLE_4),
+            ),
+        haloColor = Color(ThemePalette.NIGHT_PRIMARY),
+        isDark = true,
+    )
+
 /** ThemeId → 主题规格 的全覆盖查找表。 */
 val ThemeById: Map<ThemeId, ThemeSpec> =
     mapOf(
         EmeraldThemeSpec.id to EmeraldThemeSpec,
         StrawberryThemeSpec.id to StrawberryThemeSpec,
         CaramelThemeSpec.id to CaramelThemeSpec,
+        NightThemeSpec.id to NightThemeSpec,
     )

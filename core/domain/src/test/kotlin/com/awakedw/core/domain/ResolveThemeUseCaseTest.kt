@@ -54,10 +54,31 @@ class ResolveThemeUseCaseTest {
                 ThemeChoice.FIXED_EMERALD to ThemeId.EMERALD,
                 ThemeChoice.FIXED_STRAWBERRY to ThemeId.STRAWBERRY,
                 ThemeChoice.FIXED_CARAMEL to ThemeId.CARAMEL,
+                ThemeChoice.FIXED_NIGHT to ThemeId.NIGHT,
             ).forEach { (choice, expected) ->
                 prefs.setThemeChoice(choice)
                 assertEquals(expected, useCase().first())
             }
+        }
+
+    @Test
+    fun `FOLLOW_TIME_深夜边界_22点切墨青_06点回草莓_傍晚保持焦糖`() =
+        runTest {
+            suspend fun themeAt(hour: Int, minute: Int = 0): ThemeId {
+                clock.setAtLocal(hour, minute)
+                return useCase().first()
+            }
+
+            // 18–21 点的 EVENING 槽维持焦糖奶茶。
+            assertEquals(ThemeId.CARAMEL, themeAt(18, 0))
+            assertEquals(ThemeId.CARAMEL, themeAt(21, 59))
+            // 22:00 起切入深夜墨青，横跨子夜直到 05:59。
+            assertEquals(ThemeId.NIGHT, themeAt(22, 0))
+            assertEquals(ThemeId.NIGHT, themeAt(23, 59))
+            assertEquals(ThemeId.NIGHT, themeAt(0, 0))
+            assertEquals(ThemeId.NIGHT, themeAt(5, 59))
+            // 06:00 回到清晨草莓。
+            assertEquals(ThemeId.STRAWBERRY, themeAt(6, 0))
         }
 
     companion object {

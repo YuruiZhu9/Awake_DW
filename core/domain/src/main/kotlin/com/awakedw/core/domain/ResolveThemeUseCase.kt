@@ -18,12 +18,22 @@ import java.time.Instant
 import java.time.LocalDateTime
 import javax.inject.Inject
 
-/** 时段 → 主题映射：清晨草莓（轻快起势）、日间翡翠（清爽专注）、夜晚焦糖（温暖收尾）。 */
-private fun themeFor(slot: TimeSlot): ThemeId =
+/** 深夜主题接入点（含）：22:00 起从焦糖切到深夜墨青（§2.3）。 */
+private const val NIGHT_START_HOUR = 22
+
+/** 深夜主题结束点（不含）：06:00 起进入清晨草莓。 */
+private const val NIGHT_END_HOUR = 6
+
+/** 时段 → 主题映射：清晨草莓（轻快起势）、日间翡翠（清爽专注）、傍晚焦糖（温暖收尾）、
+ * 深夜墨青（§2.3：22:00–05:59 暗色低亮度）。 */
+private fun themeFor(
+    slot: TimeSlot,
+    hour24: Int,
+): ThemeId =
     when (slot) {
         TimeSlot.MORNING -> ThemeId.STRAWBERRY
         TimeSlot.DAY -> ThemeId.EMERALD
-        TimeSlot.EVENING -> ThemeId.CARAMEL
+        TimeSlot.EVENING -> if (hour24 >= NIGHT_START_HOUR || hour24 < NIGHT_END_HOUR) ThemeId.NIGHT else ThemeId.CARAMEL
     }
 
 /**
@@ -58,6 +68,7 @@ class ResolveThemeUseCase(
             ThemeChoice.FIXED_EMERALD -> flowOf(ThemeId.EMERALD)
             ThemeChoice.FIXED_STRAWBERRY -> flowOf(ThemeId.STRAWBERRY)
             ThemeChoice.FIXED_CARAMEL -> flowOf(ThemeId.CARAMEL)
+            ThemeChoice.FIXED_NIGHT -> flowOf(ThemeId.NIGHT)
         }
 
     /** 周期重读时钟的时段流：没有可订阅的外部时间事件源，轻量轮询是最简可靠的刷新方式。 */
@@ -71,7 +82,7 @@ class ResolveThemeUseCase(
 
     private fun currentFollowTimeTheme(): ThemeId {
         val hour = LocalDateTime.ofInstant(Instant.ofEpochMilli(clock.nowEpochMs()), clock.zone()).hour
-        return themeFor(TimeSlots.slotOfHour(hour))
+        return themeFor(TimeSlots.slotOfHour(hour), hour)
     }
 
     companion object {

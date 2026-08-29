@@ -42,6 +42,7 @@ internal fun buttonLabel(themeId: ThemeId): String =
         ThemeId.EMERALD -> "干杯一下 💧"
         ThemeId.STRAWBERRY -> "喝一杯啦 ♡"
         ThemeId.CARAMEL -> "来一口温暖"
+        ThemeId.NIGHT -> "轻轻抿一口 🌙"
     }
 
 /**

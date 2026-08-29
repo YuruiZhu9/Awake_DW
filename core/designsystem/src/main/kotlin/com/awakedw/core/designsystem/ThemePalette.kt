@@ -120,6 +120,42 @@ object ThemePalette {
     const val CARAMEL_PARTICLE_4 = 0xFFFFE0AE
 
     // ------------------------------------------------------------------
+    // D · 深夜墨青 Night（深夜，2026-08-29 显示效果优化迭代 §10.1）
+    // ------------------------------------------------------------------
+
+    /** 背景渐变：#0B1412 → #0F1D1A → #122621 */
+    const val NIGHT_BG_1 = 0xFF0B1412
+    const val NIGHT_BG_2 = 0xFF0F1D1A
+    const val NIGHT_BG_3 = 0xFF122621
+
+    /** 主色（进度环/强调）：#3ECFA5 */
+    const val NIGHT_PRIMARY = 0xFF3ECFA5
+
+    /** 进度环轨道：#1E3A33 */
+    const val NIGHT_RING_TRACK = 0xFF1E3A33
+
+    /** 环心数值文字：#7FE7C6 */
+    const val NIGHT_RING_VALUE_TEXT = 0xFF7FE7C6
+
+    /** 问候语文字：#CDEFE2（副 #7FA99C） */
+    const val NIGHT_GREETING = 0xFFCDEFE2
+    const val NIGHT_GREETING_SUB = 0xFF7FA99C
+
+    /** 按钮（线性渐变）：#2FB98F → #4ADBB0 */
+    const val NIGHT_BUTTON_TOP = 0xFF2FB98F
+    const val NIGHT_BUTTON_BOTTOM = 0xFF4ADBB0
+
+    /** 徽章底/字：#172B25 / #A8D8C6 */
+    const val NIGHT_CHIP_BG = 0xFF172B25
+    const val NIGHT_CHIP_TEXT = 0xFFA8D8C6
+
+    /** 粒子色族：#3ECFA5 #5FDDBB #8AE8CE #2A6B58（降亮度适配暗底） */
+    const val NIGHT_PARTICLE_1 = 0xFF3ECFA5
+    const val NIGHT_PARTICLE_2 = 0xFF5FDDBB
+    const val NIGHT_PARTICLE_3 = 0xFF8AE8CE
+    const val NIGHT_PARTICLE_4 = 0xFF2A6B58
+
+    // ------------------------------------------------------------------
     // 统一质感参数（§2.2）
     // ------------------------------------------------------------------
 

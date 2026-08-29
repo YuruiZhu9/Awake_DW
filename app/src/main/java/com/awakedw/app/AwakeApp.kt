@@ -1,13 +1,18 @@
 package com.awakedw.app
 
+import android.app.Activity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.LocalAwakeTheme
 import com.awakedw.core.designsystem.ThemeById
@@ -67,6 +72,10 @@ private fun Color.animateAnchor(label: String): Color =
  *
  * [onEntryReady] 在组合挂载后回调一次，用于释放系统闪屏驻留
  * （此后由 Compose 内的 [SplashMorph] 续场接管）。
+ *
+ * [SystemBarsSync] 随当前主题同步系统栏：深色主题切深色栏 + 浅色图标，
+ * 浅色主题维持日间底色（XML 静态配色仅作首帧兜底；Android 15+ 强制
+ * edge-to-edge 下栏色被系统忽略，布局仍由 Scaffold insets 兜底）。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -76,7 +85,29 @@ fun AwakeApp(onEntryReady: () -> Unit = {}) {
 
     SideEffect(onEntryReady)
 
+    SystemBarsSync(themeId = themeId)
+
     AnimatedAwakeTheme(themeId = themeId) {
         AwakeNavHost()
+    }
+}
+
+/** 系统栏与主题同步：状态栏/导航栏取渐变首停靠点，图标深浅随 [ThemeSpec.isDark]。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun SystemBarsSync(themeId: ThemeId) {
+    val view = LocalView.current
+    DisposableEffect(themeId) {
+        val window = (view.context as? Activity)?.window
+        if (window != null) {
+            val spec = ThemeById.getValue(themeId)
+            val barColor = spec.backgroundGradient.first().toArgb()
+            window.statusBarColor = barColor
+            window.navigationBarColor = barColor
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !spec.isDark
+            controller.isAppearanceLightNavigationBars = !spec.isDark
+        }
+        onDispose { }
     }
 }

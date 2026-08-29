@@ -98,4 +98,32 @@ class ThemePaletteTest {
         assertEquals(0xFFFFCF8E, ThemePalette.CARAMEL_PARTICLE_3)
         assertEquals(0xFFFFE0AE, ThemePalette.CARAMEL_PARTICLE_4)
     }
+
+    @Test
+    fun `深夜墨青全部十六进制锚点`() {
+        // 背景渐变：#0B1412 → #0F1D1A → #122621
+        assertEquals(0xFF0B1412, ThemePalette.NIGHT_BG_1)
+        assertEquals(0xFF0F1D1A, ThemePalette.NIGHT_BG_2)
+        assertEquals(0xFF122621, ThemePalette.NIGHT_BG_3)
+        // 主色（进度环/强调）：#3ECFA5
+        assertEquals(0xFF3ECFA5, ThemePalette.NIGHT_PRIMARY)
+        // 进度环轨道：#1E3A33
+        assertEquals(0xFF1E3A33, ThemePalette.NIGHT_RING_TRACK)
+        // 环心数值文字：#7FE7C6
+        assertEquals(0xFF7FE7C6, ThemePalette.NIGHT_RING_VALUE_TEXT)
+        // 问候语文字：#CDEFE2（副 #7FA99C）
+        assertEquals(0xFFCDEFE2, ThemePalette.NIGHT_GREETING)
+        assertEquals(0xFF7FA99C, ThemePalette.NIGHT_GREETING_SUB)
+        // 按钮（线性渐变）：#2FB98F → #4ADBB0
+        assertEquals(0xFF2FB98F, ThemePalette.NIGHT_BUTTON_TOP)
+        assertEquals(0xFF4ADBB0, ThemePalette.NIGHT_BUTTON_BOTTOM)
+        // 徽章底/字：#172B25 / #A8D8C6
+        assertEquals(0xFF172B25, ThemePalette.NIGHT_CHIP_BG)
+        assertEquals(0xFFA8D8C6, ThemePalette.NIGHT_CHIP_TEXT)
+        // 粒子色族：#3ECFA5 #5FDDBB #8AE8CE #2A6B58
+        assertEquals(0xFF3ECFA5, ThemePalette.NIGHT_PARTICLE_1)
+        assertEquals(0xFF5FDDBB, ThemePalette.NIGHT_PARTICLE_2)
+        assertEquals(0xFF8AE8CE, ThemePalette.NIGHT_PARTICLE_3)
+        assertEquals(0xFF2A6B58, ThemePalette.NIGHT_PARTICLE_4)
+    }
 }
