@@ -15,7 +15,8 @@ sealed interface LogResult {
     ) : LogResult
 }
 
-/** 记一笔喝水：按设置写入一杯；若本次使当日总量首次达到/超过目标，持久化 celebrated_day_key 并返回 celebrated=true。 */
+/** 记一笔喝水：[amountMl] 缺省按设置写一杯，传快捷量（小口/满杯）则写该量；
+ * 若本次使当日总量首次达到/超过目标，持久化 celebrated_day_key 并返回 celebrated=true。 */
 class LogWaterUseCase
     @Inject
     constructor(
@@ -23,9 +24,9 @@ class LogWaterUseCase
         private val prefs: UserPreferencesRepository,
         private val clock: AppClock,
     ) {
-        suspend operator fun invoke(): LogResult {
+        suspend operator fun invoke(amountMl: Int? = null): LogResult {
             val settings = prefs.settings.first()
-            val record = water.addCup(settings.cupMl)
+            val record = water.addCup(amountMl ?: settings.cupMl)
             val totalAfterLog = water.todayStats().totalMl
             val reachedGoal = totalAfterLog >= settings.goalMl
             val notCelebratedYet = prefs.celebratedDayKey() != record.dayKeyLocal

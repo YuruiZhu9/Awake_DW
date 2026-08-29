@@ -54,6 +54,34 @@ class LogWaterUseCaseTest {
         }
 
     @Test
+    fun `自定义快捷量写入该量_缺省仍写一杯`() =
+        runBlocking {
+            prefs.setCupMl(250)
+
+            val sip = useCase(amountMl = 125) as LogResult.Logged
+            assertEquals(125, sip.record.amountMl)
+
+            val big = useCase(amountMl = 375) as LogResult.Logged
+            assertEquals(375, big.record.amountMl)
+
+            // 缺省路径不回归：仍按设置的杯容量。
+            val standard = useCase() as LogResult.Logged
+            assertEquals(250, standard.record.amountMl)
+        }
+
+    @Test
+    fun `快捷量叠加跨过目标同样触发首次达标庆祝`() =
+        runBlocking {
+            prefs.setGoalMl(500)
+            prefs.setCupMl(250)
+
+            useCase() // 250ml，未达标
+            val second = useCase(amountMl = 300) as LogResult.Logged // 550ml 越过目标
+
+            assertEquals(true, second.celebrated)
+        }
+
+    @Test
     fun `次日重新达标可再次庆祝`() =
         runBlocking {
             prefs.setGoalMl(250) // 单杯即达标

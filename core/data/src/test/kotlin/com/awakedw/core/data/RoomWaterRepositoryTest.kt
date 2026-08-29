@@ -69,7 +69,10 @@ class RoomWaterRepositoryTest {
             val third = repo.addCup(250)
 
             // total=750 杯数=3；last-first=90min，(90/2)=45min
-            assertEquals(DailyStats(totalMl = 750, cupCount = 3, avgIntervalMin = 45), repo.todayStats())
+            assertEquals(
+                DailyStats(totalMl = 750, cupCount = 3, avgIntervalMin = 45, lastDrankAtEpochMs = third.drankAtEpochMs),
+                repo.todayStats(),
+            )
 
             // 记录按时间升序
             val records = repo.todayRecords()
@@ -88,7 +91,7 @@ class RoomWaterRepositoryTest {
     @Test
     fun `空库统计为0且无平均间隔`() {
         runBlocking {
-            assertEquals(DailyStats(totalMl = 0, cupCount = 0, avgIntervalMin = null), repo.todayStats())
+            assertEquals(DailyStats(totalMl = 0, cupCount = 0, avgIntervalMin = null, lastDrankAtEpochMs = null), repo.todayStats())
 
             val bars = repo.weekBars()
             assertEquals(7, bars.size)

@@ -38,6 +38,7 @@ class RoomWaterRepository
                 totalMl = records.sumOf { it.amountMl },
                 cupCount = records.size,
                 avgIntervalMin = avgIntervalMinOf(records),
+                lastDrankAtEpochMs = records.maxOfOrNull { it.drankAtEpochMs },
             )
         }
 
