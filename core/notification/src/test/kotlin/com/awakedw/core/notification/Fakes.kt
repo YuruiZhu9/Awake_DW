@@ -101,6 +101,39 @@ class FakeUserPreferencesRepository(
     }
 
     override suspend fun onboardingDone(): Boolean = doneOnboarding
+
+    // —— v0.2 画廊与音效（内存版，仅满足契约加宽） ——
+    private val unlocked = MutableStateFlow(emptySet<String>())
+    private val pinned = MutableStateFlow<String?>(null)
+    private var daily: Pair<String, String>? = null
+    private val sound = MutableStateFlow(true)
+
+    override val unlockedOutfits: Flow<Set<String>> = unlocked
+
+    override suspend fun markOutfitsUnlocked(ids: Collection<String>) {
+        unlocked.value = unlocked.value + ids.toSet()
+    }
+
+    override val pinnedOutfitId: Flow<String?> = pinned
+
+    override suspend fun setPinnedOutfit(id: String?) {
+        pinned.value = id
+    }
+
+    override suspend fun dailyOutfit(): Pair<String, String>? = daily
+
+    override suspend fun setDailyOutfit(
+        dayKey: String,
+        outfitId: String,
+    ) {
+        daily = dayKey to outfitId
+    }
+
+    override val soundEnabled: Flow<Boolean> = sound
+
+    override suspend fun setSoundEnabled(v: Boolean) {
+        sound.value = v
+    }
 }
 
 /** 固定文案仓储：按时段返回确定句子并记录抽取时段，测试可直接断言通知正文。 */

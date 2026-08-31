@@ -11,6 +11,7 @@ import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.ZoneId
 
@@ -66,6 +67,39 @@ class FakePrefsRepository(
     override suspend fun markOnboardingDone() = Unit
 
     override suspend fun onboardingDone(): Boolean = onboardingDoneValue
+
+    // —— v0.2 画廊与音效（内存版，仅满足契约加宽） ——
+    private val unlocked = MutableStateFlow(emptySet<String>())
+    private val pinned = MutableStateFlow<String?>(null)
+    private var daily: Pair<String, String>? = null
+    private val sound = MutableStateFlow(true)
+
+    override val unlockedOutfits: Flow<Set<String>> = unlocked
+
+    override suspend fun markOutfitsUnlocked(ids: Collection<String>) {
+        unlocked.value = unlocked.value + ids.toSet()
+    }
+
+    override val pinnedOutfitId: Flow<String?> = pinned
+
+    override suspend fun setPinnedOutfit(id: String?) {
+        pinned.value = id
+    }
+
+    override suspend fun dailyOutfit(): Pair<String, String>? = daily
+
+    override suspend fun setDailyOutfit(
+        dayKey: String,
+        outfitId: String,
+    ) {
+        daily = dayKey to outfitId
+    }
+
+    override val soundEnabled: Flow<Boolean> = sound
+
+    override suspend fun setSoundEnabled(v: Boolean) {
+        sound.value = v
+    }
 }
 
 /** 内存版文案库仓储：增删改即时落到 StateFlow，供「编辑 → UiState 回灌」断言。 */
