@@ -14,7 +14,8 @@ class UnlockOutfitsUseCase
     ) {
         suspend operator fun invoke(currentStreakDays: Int): List<Outfit> {
             val have = prefs.unlockedOutfits.first()
-            val new = OutfitCatalog.all.filter { it.unlockDay <= currentStreakDays && it.id !in have }
+            // 走 unlockedBy 升序契约（unlockDay 升序），差集过滤既有已解锁。
+            val new = OutfitCatalog.unlockedBy(currentStreakDays).filter { it.id !in have }
             if (new.isNotEmpty()) {
                 prefs.markOutfitsUnlocked(new.map { it.id })
             }

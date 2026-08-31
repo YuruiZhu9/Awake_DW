@@ -4,6 +4,7 @@ import com.awakedw.core.model.OutfitCatalog
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.ZoneId
@@ -42,6 +43,29 @@ class ResolveDailyOutfitUseCaseTest {
             val outfit = useCase()
 
             assertEquals("museum_02", outfit.id)
+        }
+
+    @Test
+    fun `钉选指向未知id_安全穿透到随机`() =
+        runBlocking {
+            prefs.markOutfitsUnlocked(listOf("dress_00", "dress_01"))
+            prefs.setPinnedOutfit("ghost_id")
+
+            val outfit = useCase()
+
+            assertTrue(outfit.id in setOf("dress_00", "dress_01"))
+            assertEquals(dayKey to outfit.id, prefs.dailyOutfit())
+        }
+
+    @Test
+    fun `钉选分支短路_不写当日落库记录`() =
+        runBlocking {
+            prefs.markOutfitsUnlocked(listOf("dress_00"))
+            prefs.setPinnedOutfit("museum_02")
+
+            useCase()
+
+            assertEquals(null, prefs.dailyOutfit())
         }
 
     @Test

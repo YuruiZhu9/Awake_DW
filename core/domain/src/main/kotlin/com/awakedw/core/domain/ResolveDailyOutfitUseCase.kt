@@ -28,7 +28,10 @@ class ResolveDailyOutfitUseCase
         }
     }
 
-/** 纯函数（供测试与复用）：dayKey 稳定随机挑选，同池同 key 永远同结果。 */
+/**
+ * 纯函数（供测试与复用）：dayKey 稳定随机挑选，同池同 key 永远同结果。
+ * 前置条件：[pool] 非空（空池由调用方回退 dress_00，不进入本函数）。
+ */
 fun pickForDay(
     dayKey: String,
     pool: List<Outfit>,
