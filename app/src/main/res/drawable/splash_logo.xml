@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 系统闪屏图标：水滴（主题翡翠绿主色）。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF0FA37A"
+        android:pathData="M54,26 C54,26 76,52 76,66 A22,22 0 0,1 32,66 C32,52 54,26 54,26 Z" />
+</vector>

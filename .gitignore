@@ -1,0 +1,11 @@
+.superpowers/
+.env.txt
+build/
+local.properties
+.idea/
+*.iml
+.gradle/
+.kotlin/
+.cxx/
+captures/
+

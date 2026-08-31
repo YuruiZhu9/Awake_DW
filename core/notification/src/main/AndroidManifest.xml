@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 温柔提醒链路自持：权限与三个接收器随库清单合并进宿主应用（:app 无需改动）。 -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <application>
+        <!-- 闹钟到点：发布「温柔提醒」并排下一点。 -->
+        <receiver
+            android:name=".ReminderReceiver"
+            android:exported="false" />
+        <!-- 通知动作「喝啦 💧」落点：同步记一杯并更新通知。 -->
+        <receiver
+            android:name=".RecordingBroadcast"
+            android:exported="false" />
+        <!-- 开机自启：重排当日提醒链（系统保护广播，exported=false 亦可送达）。 -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
