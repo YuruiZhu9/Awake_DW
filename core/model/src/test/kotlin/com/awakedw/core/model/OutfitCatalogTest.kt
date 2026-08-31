@@ -18,6 +18,19 @@ class OutfitCatalogTest {
         assertEquals(1, OutfitCatalog.unlockedBy(0).size)
         assertEquals(OutfitCatalog.all.size, OutfitCatalog.unlockedBy(100).size)
         assertTrue(OutfitCatalog.unlockedBy(0).all { it.unlockDay == 0 })
+        assertEquals(OutfitCatalog.all.filter { it.unlockDay <= 100 }.sortedBy { it.unlockDay }, OutfitCatalog.unlockedBy(100))
+    }
+
+    @Test
+    fun `目录约束 - id非空且unlockDay非负且DRESS严格升序`() {
+        OutfitCatalog.all.forEach {
+            assertTrue("${it.id} id为空", it.id.isNotBlank())
+            assertTrue("${it.id} unlockDay为负", it.unlockDay >= 0)
+        }
+        val dresses = OutfitCatalog.all.filter { it.category == OutfitCategory.DRESS }
+        dresses.zipWithNext().forEach { (a, b) ->
+            assertTrue("DRESS unlockDay非严格升序: ${a.id} -> ${b.id}", a.unlockDay < b.unlockDay)
+        }
     }
 
     @Test
