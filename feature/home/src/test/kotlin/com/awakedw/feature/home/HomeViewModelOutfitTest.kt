@@ -61,6 +61,7 @@ class HomeViewModelOutfitTest {
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),
+                newUnlockHoldMs = newUnlockHoldMs,
                 catLineHoldMs = catLineHoldMs,
             )
         return Harness(clock, water, prefs, copies, viewModel)
