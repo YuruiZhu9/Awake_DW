@@ -489,8 +489,10 @@ fun shouldPlay(ringerMode: Int, soundEnabled: Boolean): Boolean  // ringerMode==
 | 主题色描述 | dress_00 素白米 / dress_01 天水碧青绿 / dress_02 十样锦橙粉 / dress_03 藕荷紫粉 / dress_04 缃叶暖黄 / dress_05 月白夜色缀猫眼石 / dress_06 秋香黄绿 / dress_07 绯红缎面 | 逐张对应目录 |
 | 夜变体（可选） | 同提示词 + 「夜晚低亮度版本，整体压暗三成，月光冷调」 | `dress_XX_night.webp` |
 | 馆藏替代 | 不用 AI——直接下博物馆 CC0 高清（Met/Rijksmuseum/NGA，见 moodboard §8），裁 9:16 + 顶部/底部加柔和同色渐变遮罩后压 WebP | `museum_XX.webp` |
-| 猫三态 | 「Q版水彩小猫，2.5头身，圆脸大眼，米白底毛淡橘斑，[坐姿抬尾/举爪扑水滴/蜷缩打盹闭眼]，纯色浅背景」+ 画风后缀 | 1:1 方图，`cat/idle|happy|sleepy.webp` |
+| 猫三态 | 「Q版水彩布偶猫（Ragdoll），2.5头身，奶油白底毛，暖灰褐重点色（双耳/小面具/尾巴），大而圆的蓝宝石眼睛，胸前蓬松围脖，长而蓬的羽状尾，[坐姿抬尾/举爪扑水滴/蜷缩打盹闭眼]，纯色浅背景」+ 画风后缀 | 1:1 方图，`cat/idle|happy|sleepy.webp` |
 | 猫配饰 | 「[缎带蝴蝶结/珍珠项链/迷你洛丽塔小裙]，水彩质感，纯白背景」+ 画风后缀 | 1:1，纯白底抠图成透明，`cat/acc_bow|acc_pearl|acc_dress.webp` |
+
+> 2026-09-01 更新：猫种已定为**布偶猫**（用户指定）——矢量兜底形象已先行布偶猫化（重点色/蓝宝石眼/羽状尾），出图时请与该形象保持同种同人设；三态与配饰的锚点比例见 CatFigure.kt（bow 头顶 0.18h / pearl 颈 0.52h / dress 身 0.72h），出图构图时留出这些位置的配饰空间。
 
 交付方式：图片放进 `app/src/main/assets/outfit/` 与 `app/src/main/assets/cat/`（目录不存在则新建），文件名严格按上表——命名即接线，放入即生效，无需改代码。
 
