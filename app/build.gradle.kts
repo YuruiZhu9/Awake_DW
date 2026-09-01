@@ -104,6 +104,7 @@ dependencies {
     implementation(project(":feature:stats"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:onboarding"))
+    implementation(project(":feature:gallery"))
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

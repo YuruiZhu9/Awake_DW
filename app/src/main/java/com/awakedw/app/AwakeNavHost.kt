@@ -49,6 +49,7 @@ import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.notification.NotifBuilder
 import com.awakedw.core.notification.Reason
 import com.awakedw.core.notification.ReminderScheduler
+import com.awakedw.feature.gallery.GalleryScreen
 import com.awakedw.feature.home.HomeScreen
 import com.awakedw.feature.onboarding.OnboardingScreen
 import com.awakedw.feature.settings.SettingsScreen
@@ -59,7 +60,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 
-/** 四条路由：三个主页签（规格 §3：首页 / 统计 / 我的）+ 首次引导（无底栏）。 */
+/** 五条路由：三个主页签（规格 §3：首页 / 统计 / 我的）+ 首次引导 + 画廊压栈页（无底栏）。 */
 sealed class AwakeDestination(val route: String) {
     data object Home : AwakeDestination("home")
 
@@ -68,6 +69,9 @@ sealed class AwakeDestination(val route: String) {
     data object Settings : AwakeDestination("settings")
 
     data object Onboarding : AwakeDestination("onboarding")
+
+    /** 画廊「衣橱」（moodboard §5.2）：从首页压栈进入，不在 MAIN_TAB_ROUTES → 底栏自动隐藏。 */
+    data object Gallery : AwakeDestination("gallery")
 }
 
 /** 启动分支判定（集成决议）：未完成引导先入引导路由，否则正常进首页。 */
@@ -164,7 +168,18 @@ private fun AwakeShell(onboardingDone: Boolean) {
             composable(AwakeDestination.Onboarding.route) {
                 OnboardingScreen(onComplete = { navigateHomeAfterOnboarding(navController) })
             }
-            composable(AwakeDestination.Home.route) { HomeScreen() }
+            composable(AwakeDestination.Home.route) {
+                HomeScreen(
+                    onOpenGallery = {
+                        // 画廊是压栈页不是页签：直接 navigate（launchSingleTop 防重压），
+                        // 沿用 navigateToTab 的 popUpTo 清栈语义反而会丢掉回程——返回键须回首页页签。
+                        navController.navigate(AwakeDestination.Gallery.route) { launchSingleTop = true }
+                    },
+                )
+            }
+            composable(AwakeDestination.Gallery.route) {
+                GalleryScreen(onBack = { navController.popBackStack() })
+            }
             composable(AwakeDestination.Stats.route) { StatsScreen() }
             composable(AwakeDestination.Settings.route) {
                 SettingsScreen(
