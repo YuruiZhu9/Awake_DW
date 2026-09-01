@@ -54,7 +54,7 @@ const val CAT_LINE_HOLD_MS = 2_000L
  * [praiseLine] 为 null 时隐藏；[celebrating] 仅当日首次达标为 true（规格 §4.2 第 6 步）；
  * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认句；
  * [cupMl]/[streakDays]/[lastDrinkLabel] 供快捷量 chips 与徽章行展示（§11.1/11.2）；
- * [todayOutfit] 为 null 表示今日之裙解析未就绪，表现层不画卷不显签（moodboard §5.1）；
+ * [todayOutfit] 为 null 表示今日之裙解析未就绪，表现层不绘制画卷（moodboard §5.1）；
  * [newUnlock] 为本次打卡新解锁的藏品，浮出轻提示 [NEW_UNLOCK_HOLD_MS] 后收场清空；
  * [catMood] 为胆大王心情三态（moodboard §6，打卡短暂 HAPPY、深夜安睡）；
  * [catLine] 为猫语气泡，浮现 [CAT_LINE_HOLD_MS] 后收场清空（独立于夸夸语位置与节奏）；
@@ -84,9 +84,9 @@ data class HomeUiState(
  * 治愈打卡首页 ViewModel。
  *
  * - 快照流（统计/目标/主题）单向灌入 [HomeUiState] 的持久字段；
- * - 进首页即解析今日之裙（moodboard §5.1）灌入 [HomeUiState.todayOutfit]——画卷层与穿搭签的数据源；
- *   VM 存活期间画廊改钉选不重建本 VM，故对 pin 流挂收集：每次钉选变化重解析刷新画卷与穿搭签
- *   （有 pin 换成 pin 件、取消 pin 落回当日已定记录，与画廊「今日之裙」签同屏一致）；
+ * - 进首页即解析今日之裙（moodboard §5.1）灌入 [HomeUiState.todayOutfit]——画卷层的数据源；
+ *   VM 存活期间画廊改钉选不重建本 VM，故对 pin 流挂收集：每次钉选变化重解析刷新画卷
+ *   （有 pin 换成 pin 件、取消 pin 落回当日已定记录，与画廊今日之裙钉选回流同屏一致）；
  * - 打卡两入口（按钮/环区）共用同一 800ms 前沿闸门（规格 §4.1「按钮=立即记录」）：
  *   首触立即成笔，环推进/数字滚动/夸夸语随即重叠展开（§4.2）；
  *   距上次成笔不足 800ms 的连点合并忽略；
@@ -175,13 +175,13 @@ class HomeViewModel(
             _uiState.update { it.copy(greeting = greeting) }
         }
         // 今日之裙（moodboard §5.1）：进首页即解析（钉选优先/当日已定/解锁池稳定随机），
-        // 灌入画卷层与穿搭签；解析完成前 todayOutfit 保持 null——表现层不画卷不显签，UI 完全无感。
+        // 灌入画卷层；解析完成前 todayOutfit 保持 null——表现层不绘制画卷，UI 完全无感。
         viewModelScope.launch {
             val outfit = resolveDailyOutfit()
             _uiState.update { it.copy(todayOutfit = outfit) }
         }
         // 画廊 pin 回流（终审修复）：首页 VM 存活期间用户在画廊改钉选不重建本 VM，
-        // 首值之后的每次 pin 变化都重解析刷新 todayOutfit，与画廊「今日之裙」签同屏一致；
+        // 首值之后的每次 pin 变化都重解析刷新 todayOutfit，与画廊今日之裙钉选回流同屏一致；
         // resolve 幂等——有 pin 返回 pin、取消 pin 落回当日已定记录，无矛盾态。
         viewModelScope.launch {
             resolveDailyOutfit.pinnedOutfitId.drop(1).collect {

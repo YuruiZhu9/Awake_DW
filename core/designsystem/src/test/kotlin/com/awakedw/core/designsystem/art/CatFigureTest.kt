@@ -127,16 +127,24 @@ class CatFigureTest {
     }
 
     @Test
-    fun `布偶猫色板_深夜压暗语义_毛色不换只罩暗`() {
+    fun `布偶猫色板_深夜预混压暗_各色混入12黑且无罩层字段`() {
         val light = catPaletteOf(isDark = false)
         val dark = catPaletteOf(isDark = true)
-        // 同一套固定毛色：深夜不换色，整体套压暗罩。
-        assertEquals(light.body, dark.body)
-        assertEquals(light.point, dark.point)
-        assertEquals(light.iris, dark.iris)
-        assertEquals(light.whisker, dark.whisker)
-        // 浅色主题罩层全透明（无压暗），深夜为黑 12% 压暗罩。
-        assertEquals(Color.Transparent, light.veil)
-        assertEquals(Color.Black.copy(alpha = 0.12f), dark.veil)
+
+        // 深夜压暗内化为色板预混：各色 RGB 每通道 ×(1-0.12)（等效在猫本体形状上罩黑 12%），alpha 不动。
+        fun premixed(color: Color) =
+            color.copy(
+                red = color.red * (1f - 0.12f),
+                green = color.green * (1f - 0.12f),
+                blue = color.blue * (1f - 0.12f),
+            )
+        assertEquals(premixed(light.body), dark.body)
+        assertEquals(premixed(light.point), dark.point)
+        assertEquals(premixed(light.ruff), dark.ruff)
+        assertEquals(premixed(light.iris), dark.iris)
+        assertEquals(premixed(light.innerEar), dark.innerEar)
+        assertEquals(premixed(light.nose), dark.nose)
+        assertEquals(premixed(light.whisker), dark.whisker)
+        assertEquals(premixed(light.tailTip), dark.tailTip)
     }
 }

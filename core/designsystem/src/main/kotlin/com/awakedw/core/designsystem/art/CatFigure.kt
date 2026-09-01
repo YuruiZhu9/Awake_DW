@@ -92,6 +92,8 @@ private val OVERLAY_WIDTH_FRACTIONS =
  * 布偶猫矢量兜底固定色板（Q 版 2.5 头身，可爱优先）：
  * 重点色（colorpoint）配色——奶油白身体 + 暖灰褐重点（耳/面具/尾），
  * 不再全盘用主题色（真机反馈「现在的猫非常丑，要一只布偶猫」的返修规格）。
+ * 深夜由 [catPaletteOf] 构造时对各色预混 12% 黑（[darken]）——压暗内化进色值，
+ * 只随猫本体形状轮廓生效，不再有整幅方形罩层。
  *
  * @property body 奶油白：身体/脸颊/胸口。
  * @property point 重点色暖灰褐：双耳/面部小面具/羽状尾。
@@ -101,7 +103,6 @@ private val OVERLAY_WIDTH_FRACTIONS =
  * @property nose 小粉鼻。
  * @property whisker 胡须固定浅色：深夜下也可见（修复终审遗留「深夜胡须隐形」，不再用主题 chipText）。
  * @property tailTip 尾尖略浅于重点色（羽状尾贵气收笔）。
- * @property veil 深夜压暗罩：浅色主题全透明；深夜为黑 12%——毛色不换只罩暗。
  */
 internal data class CatVectorPalette(
     val body: Color,
@@ -112,30 +113,47 @@ internal data class CatVectorPalette(
     val nose: Color,
     val whisker: Color,
     val tailTip: Color,
-    val veil: Color,
 )
 
+/** 深夜预混压暗比例：12% 黑（每通道 ×(1-0.12)），与旧「整幅罩黑 12%」视觉等效。 */
+private const val DARK_VEIL_FRACTION = 0.12f
+
 /**
- * 布偶猫矢量色板纯函数：浅/深夜共用同一套固定毛色，深夜仅追加 12% 黑罩压暗。
- * 纯函数化供 [CatFigureTest] 断言关键色值与压暗语义。
+ * 深夜压暗预混：把 12% 黑直接混入色值（RGB 每通道 ×(1-0.12)，alpha 不动）。
+ * 内化自旧「drawRect 整幅罩黑 12%」（审查修复）：压暗只作用于猫本体形状，
+ * 深夜首页不再出现叠在光袋光晕上的肉眼可见黑色方形。
  */
-internal fun catPaletteOf(isDark: Boolean): CatVectorPalette =
-    CatVectorPalette(
-        body = Color(0xFFF7EFE4),
-        point = Color(0xFF9C8474),
-        ruff = Color(0xFFEFE2D0),
-        iris = Color(0xFF5B84B1),
-        innerEar = Color(0xFFF2D8D5),
-        nose = Color(0xFFE8B4B8),
-        whisker = Color(0xFFF7EFE4),
-        tailTip = Color(0xFFC2AB99),
-        veil = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.Transparent,
+private fun darken(color: Color): Color =
+    Color(
+        red = color.red * (1f - DARK_VEIL_FRACTION),
+        green = color.green * (1f - DARK_VEIL_FRACTION),
+        blue = color.blue * (1f - DARK_VEIL_FRACTION),
+        alpha = color.alpha,
     )
+
+/**
+ * 布偶猫矢量色板纯函数：浅/深夜共用同一套固定毛色，深夜将各色预混 12% 黑
+ * （[darken]，等效旧整幅罩黑——压暗只随猫本体形状生效）。
+ * 纯函数化供 [CatFigureTest] 断言关键色值与预混压暗语义。
+ */
+internal fun catPaletteOf(isDark: Boolean): CatVectorPalette {
+    val mix: (Color) -> Color = if (isDark) ::darken else { color -> color }
+    return CatVectorPalette(
+        body = mix(Color(0xFFF7EFE4)),
+        point = mix(Color(0xFF9C8474)),
+        ruff = mix(Color(0xFFEFE2D0)),
+        iris = mix(Color(0xFF5B84B1)),
+        innerEar = mix(Color(0xFFF2D8D5)),
+        nose = mix(Color(0xFFE8B4B8)),
+        whisker = mix(Color(0xFFF7EFE4)),
+        tailTip = mix(Color(0xFFC2AB99)),
+    )
+}
 
 /**
  * 胆大王（moodboard §6）：96dp 见方常驻首页一角。
  * 有资产用图（idle/happy/sleepy 三态 + 配饰 overlay 叠绘），
- * 无资产画内置矢量布偶猫（Canvas：奶油白重点色 + 蓝宝石眼 + 羽状尾，固定色板，深夜罩暗）——体验先行，资产后补即生效。
+ * 无资产画内置矢量布偶猫（Canvas：奶油白重点色 + 蓝宝石眼 + 羽状尾，固定色板，深夜色板预混压暗）——体验先行，资产后补即生效。
  * 微动效常驻：呼吸缩放 1.00→1.02（3s 循环，SLEEPY 减半）；HAPPY 一次 spring 弹跳。
  *
  * 双路径规则：
@@ -273,11 +291,12 @@ private fun DrawScope.drawAccessoryOverlay(
 /**
  * 矢量布偶猫（资产缺失兜底，Q 版 2.5 头身，可爱优先）：
  * 羽状尾 → 坐姿圆身 → 胸前围脖 → 脚爪 → 圆角双耳 → 圆头 → 重点色小面具 → 蓝宝石眼 →
- * 粉鼻倒 Y 嘴 → 胡须 → 深夜压暗罩。
+ * 粉鼻倒 Y 嘴 → 胡须。
  *
  * 配色固定取 [catPaletteOf]（奶油白身体 + 暖灰褐重点色，不再全盘用主题色）；
- * 深夜读 [ThemeSpec.isDark] 整体罩黑 12%。轮廓全部贝塞尔柔和曲线，无生硬直线拼接；
- * 头顶 0.11h~0.53h / 颈 0.52h / 身 0.53h~0.96h，与配饰锚点（bow 0.18h / pearl 0.52h / dress 0.72h）自洽。
+ * 深夜由色板构造时预混 12% 黑压暗（见 [darken]，压暗只作用于猫本体形状，无整幅罩层）。
+ * 轮廓全部贝塞尔柔和曲线，无生硬直线拼接；
+ * 头 0.135h~0.525h（耳尖至 0.068h）/ 颈 0.52h / 身 0.53h~0.96h，与配饰锚点（bow 0.18h / pearl 0.52h / dress 0.72h）自洽。
  * 眼睛区分三态（蓝宝石眼是布偶身份标志，三态均保蓝）：
  * IDLE 圆睁蓝瞳白高光 / HAPPY 上弯月牙（拱向上）/ SLEEPY 安睡闭眼（拱向下）——安睡不是消极。
  */
@@ -556,9 +575,6 @@ private fun DrawScope.drawVectorCat(
         style = Stroke(width = w * 0.009f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
-
-    // 深夜压暗罩：毛色不换，整猫统一套黑 12%（浅色主题 veil 全透明无效果）。
-    drawRect(color = palette.veil, size = size)
 }
 
 /** 矢量配饰（资产缺失兜底）：BOW 复用 [drawBow]（描金中结）；PEARL 珍珠串；OUTFIT 钟形小裙。锚点与资产叠绘同位。 */

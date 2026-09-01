@@ -100,7 +100,7 @@ private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
  * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
  * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
- * 问候语行右端挂 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
+ * 问候语真居中，行顶右端叠 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
  * 首页不再常驻穿搭文字），打卡新解锁时问候语下方浮出「新裙入柜」瞬时轻提示；
  * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
@@ -134,16 +134,17 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
-            // 问候语行（§5.2 重设计）：问候块占满左域（文字仍居中），右端与日期副行同行挂蝴蝶结衣橱入口。
+            // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
+            // 蝴蝶结衣橱入口叠于行顶右端，不挤占问候语的可视宽度。
             FadeUpOnce {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Greeting(
                         customGreeting = state.greeting,
                         totalMl = state.totalMl,
                         goalMl = state.goalMl,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                    BowEntryButton(onOpenGallery = onOpenGallery)
+                    BowEntryButton(onOpenGallery = onOpenGallery, modifier = Modifier.align(Alignment.TopEnd))
                 }
             }
             // 打卡新解锁的瞬时轻提示（§5.2，反馈非常驻文案）：问候语下方浮出「新裙入柜 ♡」，
