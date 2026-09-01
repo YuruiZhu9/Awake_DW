@@ -1,7 +1,6 @@
 package com.awakedw.feature.home
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -11,7 +10,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,7 +51,6 @@ import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.DressBackdrop
 import com.awakedw.core.designsystem.art.LightPocket
-import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
@@ -63,8 +58,8 @@ import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
-import com.awakedw.core.model.Outfit
 import com.awakedw.feature.home.components.BadgesRow
+import com.awakedw.feature.home.components.BowEntryButton
 import com.awakedw.feature.home.components.CelebrationOverlay
 import com.awakedw.feature.home.components.Greeting
 import com.awakedw.feature.home.components.HealthTipLine
@@ -88,12 +83,6 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
-/** 今日之裙签行的固定保留高：BadgeChip（labelMedium + 14/7dp padding）满高，签与轻提示互换不跳位。 */
-private val TODAY_OUTFIT_ROW_HEIGHT = 30.dp
-
-/** 今日之裙签 ↔ 新解锁轻提示的同位换浮时长：与 PraiseLine 同款。 */
-private const val TODAY_OUTFIT_FADE_MS = 400
-
 /** 猫语气泡宽：容纳一句胆大王短语，悬于猫上方居中（复用 PraiseLine 的浮现样式）。 */
 private val CAT_LINE_BUBBLE_WIDTH = 168.dp
 
@@ -111,7 +100,8 @@ private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
  * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
  * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
- * 日期副行下挂「今日之裙」小签，打卡新解锁时同位浮出轻提示（§5.2）；
+ * 问候语行右端挂 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
+ * 首页不再常驻穿搭文字），打卡新解锁时问候语下方浮出「新裙入柜」瞬时轻提示；
  * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
  */
@@ -144,12 +134,21 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
-            FadeUpOnce { Greeting(customGreeting = state.greeting, totalMl = state.totalMl, goalMl = state.goalMl) }
-            TodayOutfitRow(
-                outfit = state.todayOutfit,
-                newUnlock = state.newUnlock,
-                onOpenGallery = onOpenGallery,
-            )
+            // 问候语行（§5.2 重设计）：问候块占满左域（文字仍居中），右端与日期副行同行挂蝴蝶结衣橱入口。
+            FadeUpOnce {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                    Greeting(
+                        customGreeting = state.greeting,
+                        totalMl = state.totalMl,
+                        goalMl = state.goalMl,
+                        modifier = Modifier.weight(1f),
+                    )
+                    BowEntryButton(onOpenGallery = onOpenGallery)
+                }
+            }
+            // 打卡新解锁的瞬时轻提示（§5.2，反馈非常驻文案）：问候语下方浮出「新裙入柜 ♡」，
+            // 2.5s 后由 ViewModel 收场；无解锁时 [PraiseLine] 留白占位，下方环块不跳位。
+            PraiseLine(text = state.newUnlock?.let { "新裙入柜 ♡ ${it.title}" })
             Spacer(Modifier.height(20.dp))
             RingBlock(
                 progress = state.progress,
@@ -216,51 +215,6 @@ private fun CatCorner(
         Box(contentAlignment = Alignment.Center) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
             CatFigure(mood = mood, accessories = accessories, onPet = onPet)
-        }
-    }
-}
-
-/**
- * 今日之裙签 + 新解锁轻提示（§5.2，挂日期副行下方）：
- * 今日之裙就绪时显「今日之裙 · {title}」小签（BadgeChip 复用），点击回调 [onOpenGallery] 进衣柜
- * （:app 导航接线在下一任务）；打卡新解锁时同位浮出「新裙入柜 ♡ {title}」——
- * 浮现样式复用 [PraiseLine]（Crossfade 淡入淡出），2.5s 后由 ViewModel 收场、小签自动回位。
- * 今日之裙未就绪（null）时整行不占位：画卷不显、签不出现，UI 完全无感。
- */
-@Suppress("ktlint:standard:function-naming")
-@Composable
-private fun TodayOutfitRow(
-    outfit: Outfit?,
-    newUnlock: Outfit?,
-    onOpenGallery: () -> Unit,
-) {
-    if (outfit == null && newUnlock == null) return
-    val spec = currentThemeSpec()
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp)
-                .height(TODAY_OUTFIT_ROW_HEIGHT),
-        contentAlignment = Alignment.Center,
-    ) {
-        Crossfade(
-            targetState = newUnlock,
-            animationSpec = tween(durationMillis = TODAY_OUTFIT_FADE_MS),
-            label = "todayOutfitRow",
-        ) { unlock ->
-            if (unlock != null) {
-                PraiseLine(text = "新裙入柜 ♡ ${unlock.title}")
-            } else if (outfit != null) {
-                Box(
-                    modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(percent = 50))
-                            .clickable(onClick = onOpenGallery),
-                ) {
-                    BadgeChip(text = "今日之裙 · ${outfit.title}", spec = spec)
-                }
-            }
         }
     }
 }

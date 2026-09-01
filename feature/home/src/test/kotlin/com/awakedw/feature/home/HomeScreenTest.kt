@@ -3,6 +3,7 @@ package com.awakedw.feature.home
 import android.os.Looper
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.awakedw.core.designsystem.AwakeTheme
@@ -62,18 +63,26 @@ class HomeScreenTest {
                 sound = FakeSoundPlayer(),
             )
 
+        var galleryOpens = 0
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             AwakeTheme(themeId = ThemeId.EMERALD) {
-                HomeScreen(viewModel = viewModel)
+                HomeScreen(
+                    viewModel = viewModel,
+                    onOpenGallery = { galleryOpens++ },
+                )
             }
         }
         advanceClock(FIRST_FRAME_MS)
 
         composeRule.onNodeWithText("0ml").assertIsDisplayed()
         composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
-        // 今日之裙已解析就绪：日期副行下的穿搭签上屏（画卷层同帧挂载，资产缺失不绘制）。
-        composeRule.onNodeWithText("今日之裙 · 素呢初见").assertIsDisplayed()
+        // 今日之裙文字签已移除：今日穿搭信息回归衣橱页呈现，首页不再有常驻穿搭文字。
+        composeRule.onNodeWithText("今日之裙 · 素呢初见").assertDoesNotExist()
+        // 问候语行右端的蝴蝶结衣橱入口：语义节点上屏，点击回调 onOpenGallery。
+        composeRule.onNodeWithContentDescription("衣橱").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("衣橱").performClick()
+        assertEquals(1, galleryOpens)
 
         // 假钟未动的同刻连点：前沿闸门合并，只记一杯。
         composeRule.onNodeWithText("干杯一下 💧").performClick()
