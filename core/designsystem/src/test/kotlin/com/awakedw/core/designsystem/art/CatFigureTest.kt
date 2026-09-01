@@ -1,5 +1,6 @@
 package com.awakedw.core.designsystem.art
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -101,5 +102,41 @@ class CatFigureTest {
         assertEquals("cat/idle.webp", catAssetFileOf(CatMood.IDLE))
         assertEquals("cat/happy.webp", catAssetFileOf(CatMood.HAPPY))
         assertEquals("cat/sleepy.webp", catAssetFileOf(CatMood.SLEEPY))
+    }
+
+    // ---------- 布偶猫矢量兜底：固定色板纯函数 ----------
+
+    @Test
+    fun `布偶猫色板_浅色关键色与规格一致`() {
+        val palette = catPaletteOf(isDark = false)
+        // 身体/脸颊/胸口：奶油白。
+        assertEquals(Color(0xFFF7EFE4), palette.body)
+        // 重点色（双耳/面具/尾巴）：暖灰褐。
+        assertEquals(Color(0xFF9C8474), palette.point)
+        // 胸前围脖：略深米色。
+        assertEquals(Color(0xFFEFE2D0), palette.ruff)
+        // 蓝宝石眼。
+        assertEquals(Color(0xFF5B84B1), palette.iris)
+        // 耳内浅粉 / 小粉鼻。
+        assertEquals(Color(0xFFF2D8D5), palette.innerEar)
+        assertEquals(Color(0xFFE8B4B8), palette.nose)
+        // 胡须固定浅色（深夜也可见，不再随主题 chipText 变深）。
+        assertEquals(Color(0xFFF7EFE4), palette.whisker)
+        // 尾尖略浅于重点色。
+        assertEquals(Color(0xFFC2AB99), palette.tailTip)
+    }
+
+    @Test
+    fun `布偶猫色板_深夜压暗语义_毛色不换只罩暗`() {
+        val light = catPaletteOf(isDark = false)
+        val dark = catPaletteOf(isDark = true)
+        // 同一套固定毛色：深夜不换色，整体套压暗罩。
+        assertEquals(light.body, dark.body)
+        assertEquals(light.point, dark.point)
+        assertEquals(light.iris, dark.iris)
+        assertEquals(light.whisker, dark.whisker)
+        // 浅色主题罩层全透明（无压暗），深夜为黑 12% 压暗罩。
+        assertEquals(Color.Transparent, light.veil)
+        assertEquals(Color.Black.copy(alpha = 0.12f), dark.veil)
     }
 }

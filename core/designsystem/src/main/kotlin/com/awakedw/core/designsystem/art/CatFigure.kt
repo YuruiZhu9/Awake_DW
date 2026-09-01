@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
@@ -88,15 +89,59 @@ private val OVERLAY_WIDTH_FRACTIONS =
     )
 
 /**
+ * 布偶猫矢量兜底固定色板（Q 版 2.5 头身，可爱优先）：
+ * 重点色（colorpoint）配色——奶油白身体 + 暖灰褐重点（耳/面具/尾），
+ * 不再全盘用主题色（真机反馈「现在的猫非常丑，要一只布偶猫」的返修规格）。
+ *
+ * @property body 奶油白：身体/脸颊/胸口。
+ * @property point 重点色暖灰褐：双耳/面部小面具/羽状尾。
+ * @property ruff 胸前围脖：略深于身体的米色（短弧簇表现长毛感）。
+ * @property iris 蓝宝石眼（布偶身份标志）。
+ * @property innerEar 耳内浅粉。
+ * @property nose 小粉鼻。
+ * @property whisker 胡须固定浅色：深夜下也可见（修复终审遗留「深夜胡须隐形」，不再用主题 chipText）。
+ * @property tailTip 尾尖略浅于重点色（羽状尾贵气收笔）。
+ * @property veil 深夜压暗罩：浅色主题全透明；深夜为黑 12%——毛色不换只罩暗。
+ */
+internal data class CatVectorPalette(
+    val body: Color,
+    val point: Color,
+    val ruff: Color,
+    val iris: Color,
+    val innerEar: Color,
+    val nose: Color,
+    val whisker: Color,
+    val tailTip: Color,
+    val veil: Color,
+)
+
+/**
+ * 布偶猫矢量色板纯函数：浅/深夜共用同一套固定毛色，深夜仅追加 12% 黑罩压暗。
+ * 纯函数化供 [CatFigureTest] 断言关键色值与压暗语义。
+ */
+internal fun catPaletteOf(isDark: Boolean): CatVectorPalette =
+    CatVectorPalette(
+        body = Color(0xFFF7EFE4),
+        point = Color(0xFF9C8474),
+        ruff = Color(0xFFEFE2D0),
+        iris = Color(0xFF5B84B1),
+        innerEar = Color(0xFFF2D8D5),
+        nose = Color(0xFFE8B4B8),
+        whisker = Color(0xFFF7EFE4),
+        tailTip = Color(0xFFC2AB99),
+        veil = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.Transparent,
+    )
+
+/**
  * 胆大王（moodboard §6）：96dp 见方常驻首页一角。
  * 有资产用图（idle/happy/sleepy 三态 + 配饰 overlay 叠绘），
- * 无资产画内置矢量简笔猫（Canvas：圆头+三角耳+卷尾曲线，主题色调用）——体验先行，资产后补即生效。
+ * 无资产画内置矢量布偶猫（Canvas：奶油白重点色 + 蓝宝石眼 + 羽状尾，固定色板，深夜罩暗）——体验先行，资产后补即生效。
  * 微动效常驻：呼吸缩放 1.00→1.02（3s 循环，SLEEPY 减半）；HAPPY 一次 spring 弹跳。
  *
  * 双路径规则：
  * - 立绘资产（[catAssetFileOf]）存在 → 整幅用图；已解锁配饰的资产也存在时按 [accessoryAnchorY]
  *   锚点叠绘（图缺失不画，资产后补即生效，不做矢量与位图混拼）；
- * - 立绘资产缺失 → Canvas 矢量简笔猫 + 全矢量配饰（BOW 复用 [drawBow]，PEARL 珍珠串，OUTFIT 钟形裙）。
+ * - 立绘资产缺失 → Canvas 矢量布偶猫 + 全矢量配饰（BOW 复用 [drawBow]，PEARL 珍珠串，OUTFIT 钟形裙）。
  *
  * 微动效：
  * - 呼吸缩放 [breathTargetOf]（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；mood 变化时 [key] 重启换档）；
@@ -226,8 +271,15 @@ private fun DrawScope.drawAccessoryOverlay(
 }
 
 /**
- * 矢量简笔猫（资产缺失兜底，主题色调用）：卷尾曲线 → 身体椭圆 → 双耳三角 → 圆头 → 表情 → 胡须。
- * 眼睛区分三态：IDLE 圆点 / HAPPY 弯月笑眼（拱向上）/ SLEEPY 安睡闭眼（拱向下）——安睡不是消极。
+ * 矢量布偶猫（资产缺失兜底，Q 版 2.5 头身，可爱优先）：
+ * 羽状尾 → 坐姿圆身 → 胸前围脖 → 脚爪 → 圆角双耳 → 圆头 → 重点色小面具 → 蓝宝石眼 →
+ * 粉鼻倒 Y 嘴 → 胡须 → 深夜压暗罩。
+ *
+ * 配色固定取 [catPaletteOf]（奶油白身体 + 暖灰褐重点色，不再全盘用主题色）；
+ * 深夜读 [ThemeSpec.isDark] 整体罩黑 12%。轮廓全部贝塞尔柔和曲线，无生硬直线拼接；
+ * 头顶 0.11h~0.53h / 颈 0.52h / 身 0.53h~0.96h，与配饰锚点（bow 0.18h / pearl 0.52h / dress 0.72h）自洽。
+ * 眼睛区分三态（蓝宝石眼是布偶身份标志，三态均保蓝）：
+ * IDLE 圆睁蓝瞳白高光 / HAPPY 上弯月牙（拱向上）/ SLEEPY 安睡闭眼（拱向下）——安睡不是消极。
  */
 private fun DrawScope.drawVectorCat(
     mood: CatMood,
@@ -236,140 +288,277 @@ private fun DrawScope.drawVectorCat(
 ) {
     val w = size.width
     val h = size.height
-    val fur = theme.primary
-    val ink = theme.chipText
-    val eye = theme.ringTrack
+    val palette = catPaletteOf(theme.isDark)
 
-    // 卷尾：身体右侧甩出向上卷回（圆头笔触）。
+    // 羽状尾：体侧甩出、沿右侧上扬收卷的宽笔触曲线（重点色，根部藏于身后）。
     drawPath(
         path =
             Path().apply {
-                moveTo(w * 0.68f, h * 0.70f)
-                cubicTo(w * 0.94f, h * 0.62f, w * 0.96f, h * 0.36f, w * 0.80f, h * 0.40f)
-                cubicTo(w * 0.68f, h * 0.42f, w * 0.70f, h * 0.54f, w * 0.78f, h * 0.54f)
+                moveTo(w * 0.66f, h * 0.85f)
+                cubicTo(w * 0.86f, h * 0.87f, w * 0.95f, h * 0.72f, w * 0.93f, h * 0.58f)
+                cubicTo(w * 0.915f, h * 0.47f, w * 0.85f, h * 0.42f, w * 0.80f, h * 0.44f)
             },
-        color = fur,
-        style = Stroke(width = w * 0.055f, cap = StrokeCap.Round),
+        color = palette.point,
+        style = Stroke(width = w * 0.095f, cap = StrokeCap.Round),
+        colorFilter = colorFilter,
+    )
+    // 尾尖略浅叠段：末段羽尖提亮，蓬松贵气。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.905f, h * 0.60f)
+                cubicTo(w * 0.89f, h * 0.49f, w * 0.85f, h * 0.43f, w * 0.80f, h * 0.44f)
+            },
+        color = palette.tailTip,
+        style = Stroke(width = w * 0.095f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
 
-    // 身体椭圆（趴姿）。
-    drawOval(color = fur, topLeft = Offset(w * 0.24f, h * 0.56f), size = Size(w * 0.52f, h * 0.30f), colorFilter = colorFilter)
-
-    // 双耳三角。
+    // 坐姿身体：颈口收窄、臀部外扩、底缘圆润的梨形（头略大身圆的 2.5 头身）。
     drawPath(
         path =
             Path().apply {
-                moveTo(w * 0.32f, h * 0.30f)
-                lineTo(w * 0.27f, h * 0.11f)
-                lineTo(w * 0.47f, h * 0.21f)
+                moveTo(w * 0.395f, h * 0.53f)
+                cubicTo(w * 0.30f, h * 0.58f, w * 0.245f, h * 0.70f, w * 0.245f, h * 0.82f)
+                cubicTo(w * 0.245f, h * 0.915f, w * 0.335f, h * 0.955f, w * 0.50f, h * 0.955f)
+                cubicTo(w * 0.665f, h * 0.955f, w * 0.755f, h * 0.915f, w * 0.755f, h * 0.82f)
+                cubicTo(w * 0.755f, h * 0.70f, w * 0.70f, h * 0.58f, w * 0.605f, h * 0.53f)
+                quadraticBezierTo(w * 0.50f, h * 0.49f, w * 0.395f, h * 0.53f)
                 close()
             },
-        color = fur,
+        color = palette.body,
+        colorFilter = colorFilter,
+    )
+
+    // 胸前围脖（ruff）：略深米色胸襟，上缘藏于头下。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.402f, h * 0.548f)
+                cubicTo(w * 0.388f, h * 0.632f, w * 0.435f, h * 0.682f, w * 0.50f, h * 0.682f)
+                cubicTo(w * 0.565f, h * 0.682f, w * 0.612f, h * 0.632f, w * 0.598f, h * 0.548f)
+                close()
+            },
+        color = palette.ruff,
+        colorFilter = colorFilter,
+    )
+    // 长毛感：几簇短弧自围脖缘甩出到奶油身上（同色于襟内隐形、出襟可见，成绒毛层次）。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.392f, h * 0.575f)
+                quadraticBezierTo(w * 0.355f, h * 0.59f, w * 0.345f, h * 0.62f)
+                moveTo(w * 0.398f, h * 0.625f)
+                quadraticBezierTo(w * 0.365f, h * 0.645f, w * 0.362f, h * 0.665f)
+                moveTo(w * 0.45f, h * 0.665f)
+                quadraticBezierTo(w * 0.44f, h * 0.69f, w * 0.452f, h * 0.705f)
+                moveTo(w * 0.608f, h * 0.575f)
+                quadraticBezierTo(w * 0.645f, h * 0.59f, w * 0.655f, h * 0.62f)
+                moveTo(w * 0.602f, h * 0.625f)
+                quadraticBezierTo(w * 0.635f, h * 0.645f, w * 0.638f, h * 0.665f)
+                moveTo(w * 0.55f, h * 0.665f)
+                quadraticBezierTo(w * 0.56f, h * 0.69f, w * 0.548f, h * 0.705f)
+            },
+        color = palette.ruff,
+        style = Stroke(width = w * 0.016f, cap = StrokeCap.Round),
+        colorFilter = colorFilter,
+    )
+
+    // 脚爪：身前两只小圆弧（奶油白），围脖色趾缝细线勾饱满。
+    drawOval(color = palette.body, topLeft = Offset(w * 0.355f, h * 0.885f), size = Size(w * 0.115f, h * 0.078f), colorFilter = colorFilter)
+    drawOval(color = palette.body, topLeft = Offset(w * 0.530f, h * 0.885f), size = Size(w * 0.115f, h * 0.078f), colorFilter = colorFilter)
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.395f, h * 0.90f)
+                quadraticBezierTo(w * 0.391f, h * 0.925f, w * 0.396f, h * 0.948f)
+                moveTo(w * 0.430f, h * 0.90f)
+                quadraticBezierTo(w * 0.429f, h * 0.925f, w * 0.433f, h * 0.948f)
+                moveTo(w * 0.570f, h * 0.90f)
+                quadraticBezierTo(w * 0.569f, h * 0.925f, w * 0.573f, h * 0.948f)
+                moveTo(w * 0.605f, h * 0.90f)
+                quadraticBezierTo(w * 0.604f, h * 0.925f, w * 0.609f, h * 0.948f)
+            },
+        color = palette.ruff,
+        style = Stroke(width = w * 0.007f, cap = StrokeCap.Round),
+        colorFilter = colorFilter,
+    )
+
+    // 双耳：圆角三角（布偶耳圆），耳外重点色、耳内浅粉；耳根由圆头盖住自然衔接。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.325f, h * 0.275f)
+                cubicTo(w * 0.272f, h * 0.21f, w * 0.262f, h * 0.115f, w * 0.302f, h * 0.068f)
+                cubicTo(w * 0.352f, h * 0.078f, w * 0.428f, h * 0.128f, w * 0.462f, h * 0.185f)
+                close()
+            },
+        color = palette.point,
         colorFilter = colorFilter,
     )
     drawPath(
         path =
             Path().apply {
-                moveTo(w * 0.68f, h * 0.30f)
-                lineTo(w * 0.73f, h * 0.11f)
-                lineTo(w * 0.53f, h * 0.21f)
+                moveTo(w * 0.675f, h * 0.275f)
+                cubicTo(w * 0.728f, h * 0.21f, w * 0.738f, h * 0.115f, w * 0.698f, h * 0.068f)
+                cubicTo(w * 0.648f, h * 0.078f, w * 0.572f, h * 0.128f, w * 0.538f, h * 0.185f)
                 close()
             },
-        color = fur,
+        color = palette.point,
+        colorFilter = colorFilter,
+    )
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.345f, h * 0.245f)
+                cubicTo(w * 0.312f, h * 0.196f, w * 0.305f, h * 0.128f, w * 0.328f, h * 0.098f)
+                cubicTo(w * 0.365f, h * 0.118f, w * 0.418f, h * 0.152f, w * 0.443f, h * 0.195f)
+                close()
+            },
+        color = palette.innerEar,
+        colorFilter = colorFilter,
+    )
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.655f, h * 0.245f)
+                cubicTo(w * 0.688f, h * 0.196f, w * 0.695f, h * 0.128f, w * 0.672f, h * 0.098f)
+                cubicTo(w * 0.635f, h * 0.118f, w * 0.582f, h * 0.152f, w * 0.557f, h * 0.195f)
+                close()
+            },
+        color = palette.innerEar,
         colorFilter = colorFilter,
     )
 
-    // 圆头（盖住耳根与身体上缘）。
-    drawCircle(color = fur, radius = w * 0.21f, center = Offset(w * 0.50f, h * 0.38f), colorFilter = colorFilter)
+    // 圆头：略宽的圆润椭圆（盖住耳根、颈口与围脖上缘）。
+    drawOval(color = palette.body, topLeft = Offset(w * 0.285f, h * 0.135f), size = Size(w * 0.43f, h * 0.39f), colorFilter = colorFilter)
 
-    // 表情：IDLE 圆点 / HAPPY 笑眼（上拱）/ SLEEPY 闭眼（下拱）。
-    val eyeRadius = w * 0.045f
-    val eyeHalfWidth = w * 0.08f
+    // 重点色小面具：眼周到鼻梁的柔和 V 形（不整脸涂满，奶油脸颊大半保留，下巴奶油）。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.50f, h * 0.24f)
+                cubicTo(w * 0.60f, h * 0.245f, w * 0.635f, h * 0.30f, w * 0.635f, h * 0.36f)
+                cubicTo(w * 0.635f, h * 0.42f, w * 0.585f, h * 0.455f, w * 0.50f, h * 0.462f)
+                cubicTo(w * 0.415f, h * 0.455f, w * 0.365f, h * 0.42f, w * 0.365f, h * 0.36f)
+                cubicTo(w * 0.365f, h * 0.30f, w * 0.40f, h * 0.245f, w * 0.50f, h * 0.24f)
+                close()
+            },
+        color = palette.point,
+        colorFilter = colorFilter,
+    )
+
+    // 蓝宝石眼：IDLE 圆睁蓝瞳白高光 / HAPPY 上弯月牙 / SLEEPY 安睡闭眼下弧。
+    val irisRadius = w * 0.037f
+    val crescentHalfWidth = w * 0.045f
+    val crescentRadius = w * 0.035f
     when (mood) {
         CatMood.IDLE -> {
-            drawCircle(color = eye, radius = w * 0.018f, center = Offset(w * 0.42f, h * 0.40f), colorFilter = colorFilter)
-            drawCircle(color = eye, radius = w * 0.018f, center = Offset(w * 0.58f, h * 0.40f), colorFilter = colorFilter)
+            drawCircle(color = palette.iris, radius = irisRadius, center = Offset(w * 0.425f, h * 0.355f), colorFilter = colorFilter)
+            drawCircle(color = palette.iris, radius = irisRadius, center = Offset(w * 0.575f, h * 0.355f), colorFilter = colorFilter)
+            drawCircle(color = Color.White, radius = w * 0.012f, center = Offset(w * 0.438f, h * 0.342f), colorFilter = colorFilter)
+            drawCircle(color = Color.White, radius = w * 0.012f, center = Offset(w * 0.588f, h * 0.342f), colorFilter = colorFilter)
         }
         CatMood.HAPPY -> {
             drawArc(
-                color = eye,
+                color = palette.iris,
                 startAngle = 180f,
                 sweepAngle = 180f,
                 useCenter = false,
-                topLeft = Offset(w * 0.42f - eyeHalfWidth, h * 0.40f - eyeRadius),
-                size = Size(eyeHalfWidth * 2f, eyeRadius * 2f),
-                style = Stroke(width = w * 0.012f, cap = StrokeCap.Round),
+                topLeft = Offset(w * 0.425f - crescentHalfWidth, h * 0.355f - crescentRadius),
+                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
+                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
                 colorFilter = colorFilter,
             )
             drawArc(
-                color = eye,
+                color = palette.iris,
                 startAngle = 180f,
                 sweepAngle = 180f,
                 useCenter = false,
-                topLeft = Offset(w * 0.58f - eyeHalfWidth, h * 0.40f - eyeRadius),
-                size = Size(eyeHalfWidth * 2f, eyeRadius * 2f),
-                style = Stroke(width = w * 0.012f, cap = StrokeCap.Round),
+                topLeft = Offset(w * 0.575f - crescentHalfWidth, h * 0.355f - crescentRadius),
+                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
+                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
                 colorFilter = colorFilter,
             )
         }
         CatMood.SLEEPY -> {
             drawArc(
-                color = eye,
+                color = palette.iris,
                 startAngle = 0f,
                 sweepAngle = 180f,
                 useCenter = false,
-                topLeft = Offset(w * 0.42f - eyeHalfWidth, h * 0.40f - eyeRadius),
-                size = Size(eyeHalfWidth * 2f, eyeRadius * 2f),
-                style = Stroke(width = w * 0.012f, cap = StrokeCap.Round),
+                topLeft = Offset(w * 0.425f - crescentHalfWidth, h * 0.355f - crescentRadius),
+                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
+                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
                 colorFilter = colorFilter,
             )
             drawArc(
-                color = eye,
+                color = palette.iris,
                 startAngle = 0f,
                 sweepAngle = 180f,
                 useCenter = false,
-                topLeft = Offset(w * 0.58f - eyeHalfWidth, h * 0.40f - eyeRadius),
-                size = Size(eyeHalfWidth * 2f, eyeRadius * 2f),
-                style = Stroke(width = w * 0.012f, cap = StrokeCap.Round),
+                topLeft = Offset(w * 0.575f - crescentHalfWidth, h * 0.355f - crescentRadius),
+                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
+                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
                 colorFilter = colorFilter,
             )
         }
     }
 
-    // 胡须：左右各二（墨色，随主题明暗自适应）。
-    drawLine(
-        color = ink,
-        start = Offset(w * 0.26f, h * 0.40f),
-        end = Offset(w * 0.12f, h * 0.38f),
-        strokeWidth = w * 0.008f,
-        cap = StrokeCap.Round,
+    // 小粉鼻：柔和圆角小三角（重点色面具内）。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.471f, h * 0.427f)
+                cubicTo(w * 0.478f, h * 0.408f, w * 0.522f, h * 0.408f, w * 0.529f, h * 0.427f)
+                cubicTo(w * 0.526f, h * 0.443f, w * 0.509f, h * 0.452f, w * 0.50f, h * 0.452f)
+                cubicTo(w * 0.491f, h * 0.452f, w * 0.474f, h * 0.443f, w * 0.471f, h * 0.427f)
+                close()
+            },
+        color = palette.nose,
         colorFilter = colorFilter,
     )
-    drawLine(
-        color = ink,
-        start = Offset(w * 0.26f, h * 0.44f),
-        end = Offset(w * 0.12f, h * 0.46f),
-        strokeWidth = w * 0.008f,
-        cap = StrokeCap.Round,
+
+    // 倒 Y 小嘴：鼻下短茎 + 左右分叉弧（重点色细线，落在奶油下巴上清晰）。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.50f, h * 0.452f)
+                quadraticBezierTo(w * 0.502f, h * 0.462f, w * 0.50f, h * 0.470f)
+                moveTo(w * 0.50f, h * 0.470f)
+                quadraticBezierTo(w * 0.488f, h * 0.480f, w * 0.474f, h * 0.479f)
+                moveTo(w * 0.50f, h * 0.470f)
+                quadraticBezierTo(w * 0.512f, h * 0.480f, w * 0.526f, h * 0.479f)
+            },
+        color = palette.point,
+        style = Stroke(width = w * 0.008f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
-    drawLine(
-        color = ink,
-        start = Offset(w * 0.74f, h * 0.40f),
-        end = Offset(w * 0.88f, h * 0.38f),
-        strokeWidth = w * 0.008f,
-        cap = StrokeCap.Round,
+
+    // 胡须：左右各三根微曲浅色须（固定奶油白，深夜下也可见——不再随主题 chipText 变深）。
+    drawPath(
+        path =
+            Path().apply {
+                moveTo(w * 0.345f, h * 0.375f)
+                quadraticBezierTo(w * 0.24f, h * 0.362f, w * 0.155f, h * 0.352f)
+                moveTo(w * 0.348f, h * 0.400f)
+                quadraticBezierTo(w * 0.24f, h * 0.402f, w * 0.150f, h * 0.412f)
+                moveTo(w * 0.352f, h * 0.425f)
+                quadraticBezierTo(w * 0.25f, h * 0.440f, w * 0.165f, h * 0.462f)
+                moveTo(w * 0.655f, h * 0.375f)
+                quadraticBezierTo(w * 0.76f, h * 0.362f, w * 0.845f, h * 0.352f)
+                moveTo(w * 0.652f, h * 0.400f)
+                quadraticBezierTo(w * 0.76f, h * 0.402f, w * 0.850f, h * 0.412f)
+                moveTo(w * 0.648f, h * 0.425f)
+                quadraticBezierTo(w * 0.75f, h * 0.440f, w * 0.835f, h * 0.462f)
+            },
+        color = palette.whisker,
+        style = Stroke(width = w * 0.009f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
-    drawLine(
-        color = ink,
-        start = Offset(w * 0.74f, h * 0.44f),
-        end = Offset(w * 0.88f, h * 0.46f),
-        strokeWidth = w * 0.008f,
-        cap = StrokeCap.Round,
-        colorFilter = colorFilter,
-    )
+
+    // 深夜压暗罩：毛色不换，整猫统一套黑 12%（浅色主题 veil 全透明无效果）。
+    drawRect(color = palette.veil, size = size)
 }
 
 /** 矢量配饰（资产缺失兜底）：BOW 复用 [drawBow]（描金中结）；PEARL 珍珠串；OUTFIT 钟形小裙。锚点与资产叠绘同位。 */
