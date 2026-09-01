@@ -65,7 +65,34 @@ class DefaultCopyLibraryRepository
                 nextRecents = (recents + chosen).takeLast(RECENT_KEEP_PER_SLOT)
             }
 
-            persistRecents(recentsBySlot, slot, nextRecents)
+            persistRecents(recentsBySlot, slot.name, nextRecents)
+            return chosen
+        }
+
+        override suspend fun randomCatLine(avoidRecent: Int): String {
+            val prefs = dataStore.data.first()
+            val recentsByGroup = decodeRecents(prefs[recentCopyIdsKey])
+            val recents = recentsByGroup[GROUP_CAT].orEmpty()
+
+            // 持久化组为空（含旧版库缺 cat 字段）时回退默认猫语组，保证永远有句子可返回。
+            val customPool = decodeLibrary(prefs[copyLibraryJsonKey]).cat
+            val pool = if (customPool.isEmpty()) DefaultCopies.cat else customPool
+            if (pool.isEmpty()) error("猫语池为空")
+
+            // 跳过最近 avoidRecent 条；候选耗尽 => 清空猫语去重池重来（与 randomFor 同语义）。
+            val blocked = recents.takeLast(avoidRecent.coerceAtLeast(0)).toSet()
+            val candidates = pool.filterNot { it in blocked }
+            val chosen: String
+            val nextRecents: List<String>
+            if (candidates.isEmpty()) {
+                chosen = pool.random()
+                nextRecents = listOf(chosen)
+            } else {
+                chosen = candidates.random()
+                nextRecents = (recents + chosen).takeLast(RECENT_KEEP_PER_SLOT)
+            }
+
+            persistRecents(recentsByGroup, GROUP_CAT, nextRecents)
             return chosen
         }
 
@@ -99,12 +126,12 @@ class DefaultCopyLibraryRepository
 
         private suspend fun persistRecents(
             current: Map<String, List<String>>,
-            slot: TimeSlot,
+            groupName: String,
             next: List<String>,
         ) {
             dataStore.edit { prefs ->
                 val updated = current.toMutableMap()
-                updated[slot.name] = next
+                updated[groupName] = next
                 prefs[recentCopyIdsKey] = json.encodeToString(entriesFromRecents(updated))
             }
         }
@@ -164,6 +191,9 @@ class DefaultCopyLibraryRepository
 
         private companion object {
             const val ENTRY_SEPARATOR = "|"
+
+            /** 猫语组在去重池持久化格式里的组名（与时段组共用一键，组间互不污染）。 */
+            const val GROUP_CAT = "CAT"
 
             /** 每个时段最多保留的「最近用过的句子」条数（须不小于常用 avoidRecent）。 */
             const val RECENT_KEEP_PER_SLOT = 32

@@ -16,6 +16,12 @@ interface CopyLibraryRepository {
         avoidRecent: Int = 5,
     ): String
 
+    /**
+     * 从胆大王猫语组随机抽一句；去重池独立于早/昼/晚时段组，语义同 [randomFor]：
+     * 跳过最近 [avoidRecent] 条，候选耗尽则清空猫语去重池重来；持久化组为空（含旧版库缺 cat 字段）时回退默认猫语组。
+     */
+    suspend fun randomCatLine(avoidRecent: Int = 5): String
+
     /** [index] 在组内则替换；等于或超出组长度时按追加处理（宽容语义）。 */
     suspend fun upsert(
         slot: TimeSlot,
