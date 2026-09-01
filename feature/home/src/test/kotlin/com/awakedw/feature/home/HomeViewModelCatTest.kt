@@ -71,6 +71,7 @@ class HomeViewModelCatTest {
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),
+                sound = FakeSoundPlayer(),
                 catLineHoldMs = catLineHoldMs,
             )
         return Harness(clock, viewModel)

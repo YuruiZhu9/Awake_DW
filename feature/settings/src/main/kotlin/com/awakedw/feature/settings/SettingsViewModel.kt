@@ -38,6 +38,8 @@ data class SettingsUiState(
     val reminderArmed: Boolean = false,
     /** 「试一试」刚发送的短暂回显窗口。 */
     val testReminderSent: Boolean = false,
+    /** 音效总开关（任务 12，默认开）：切换即乐观更新 + prefs 落库；系统静音时播放器自行安静。 */
+    val soundEnabled: Boolean = true,
 )
 
 /**
@@ -95,6 +97,12 @@ class SettingsViewModel(
             val done = prefs.onboardingDone()
             _uiState.update { it.copy(onboardingDone = done) }
         }
+        // 音效开关（任务 12）：单独的 DataStore 键，独立收集灌入——重进页面如实回显持久值。
+        viewModelScope.launch {
+            prefs.soundEnabled.collect { enabled ->
+                _uiState.update { it.copy(soundEnabled = enabled) }
+            }
+        }
     }
 
     /** 每日目标量；非法（越界或步进外）回落原值。 */
@@ -144,6 +152,16 @@ class SettingsViewModel(
     /** 外观主题选择。 */
     fun setThemeChoice(choice: ThemeChoice) {
         viewModelScope.launch { prefs.setThemeChoice(choice) }
+    }
+
+    /**
+     * 音效总开关（任务 12）：以本地状态**乐观更新**后再落库（语义同 [stepGoalMl]）——
+     * 开关即响不含糊，不受 DataStore 异步写回时延影响；是否真出声由播放器内部裁决
+     * （应用内开关 + 系统静音遵从），本层只管写偏好。
+     */
+    fun setSoundEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(soundEnabled = enabled) }
+        viewModelScope.launch { prefs.setSoundEnabled(enabled) }
     }
 
     /** 编辑 [slot] 组内第 [index] 句；空文本或超 [COPY_MAX_CHARS] 字一律不落库。 */

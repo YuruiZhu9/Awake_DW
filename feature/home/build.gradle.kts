@@ -45,6 +45,8 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
+    // 打卡/达标/摸猫三触发点的声音接线（打卡→DROP_*、达标→GOAL_MELODY、摸猫→PURR）。
+    implementation(project(":core:sound"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

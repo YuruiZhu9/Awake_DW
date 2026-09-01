@@ -19,6 +19,7 @@ import java.time.ZoneId
 class FakePrefsRepository(
     initial: UserSettings = UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD),
     private val onboardingDoneValue: Boolean = true,
+    initialSoundEnabled: Boolean = true,
 ) : UserPreferencesRepository {
     private val _settings = MutableStateFlow(initial)
 
@@ -72,7 +73,7 @@ class FakePrefsRepository(
     private val unlocked = MutableStateFlow(emptySet<String>())
     private val pinned = MutableStateFlow<String?>(null)
     private var daily: Pair<String, String>? = null
-    private val sound = MutableStateFlow(true)
+    private val sound = MutableStateFlow(initialSoundEnabled)
 
     override val unlockedOutfits: Flow<Set<String>> = unlocked
 
@@ -98,6 +99,7 @@ class FakePrefsRepository(
     override val soundEnabled: Flow<Boolean> = sound
 
     override suspend fun setSoundEnabled(v: Boolean) {
+        calls += "sound=$v"
         sound.value = v
     }
 }

@@ -54,6 +54,7 @@ class HomeViewModelTest {
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),
+                sound = FakeSoundPlayer(),
             )
         return Harness(clock, water, prefs, copies, viewModel)
     }
@@ -239,6 +240,7 @@ class HomeViewModelTest {
                     unlockOutfits = UnlockOutfitsUseCase(h.prefs),
                     resolveDailyOutfit = ResolveDailyOutfitUseCase(h.prefs, h.clock),
                     streakOf = GetStreakUseCase(h.water, h.prefs),
+                    sound = FakeSoundPlayer(),
                 )
             runCurrent()
             assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)

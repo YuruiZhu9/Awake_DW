@@ -111,7 +111,10 @@ private fun StepButton(
     }
 }
 
-/** 提醒总开关行（§3.4）：标签 + Switch。切换即持久化，无保存键。 */
+/**
+ * 开关行（§3.4）：标签（可选副文案 [supporting]）+ Switch。切换即持久化，无保存键。
+ * 副文案收在标签下方的小字（greetingSubColor），如「音效 · 水滴与八音盒；系统静音时自动安静」。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun ToggleRow(
@@ -119,6 +122,7 @@ internal fun ToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    supporting: String? = null,
 ) {
     val spec = currentThemeSpec()
     Row(
@@ -126,7 +130,16 @@ internal fun ToggleRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = label, color = spec.chipText, style = MaterialTheme.typography.bodyMedium)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, color = spec.chipText, style = MaterialTheme.typography.bodyMedium)
+            if (supporting != null) {
+                Text(
+                    text = supporting,
+                    color = spec.greetingSubColor,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,

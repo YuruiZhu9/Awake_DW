@@ -12,6 +12,8 @@ import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import com.awakedw.core.sound.AwakeSoundPlayer
+import com.awakedw.core.sound.SoundEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -209,6 +211,15 @@ class FakePrefsRepository(
 
     override suspend fun setSoundEnabled(v: Boolean) {
         sound.value = v
+    }
+}
+
+/** 假声音门面（fire-and-forget 契约不变）：只记录 play 调用序列，供触发点断言。 */
+class FakeSoundPlayer : AwakeSoundPlayer {
+    val events = mutableListOf<SoundEvent>()
+
+    override fun play(event: SoundEvent) {
+        events += event
     }
 }
 

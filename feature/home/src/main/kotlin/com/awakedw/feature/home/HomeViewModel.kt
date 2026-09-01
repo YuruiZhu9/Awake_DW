@@ -19,6 +19,8 @@ import com.awakedw.core.model.Outfit
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.resolveCatMood
 import com.awakedw.core.model.unlockedCatAccessories
+import com.awakedw.core.sound.AwakeSoundPlayer
+import com.awakedw.core.sound.SoundEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,7 +95,11 @@ data class HomeUiState(
  *   打卡成功即 HAPPY 一次并抽一句猫语（回应每次成笔，celebrated 与否不论），[CAT_LINE_HOLD_MS] 后
  *   气泡清空、心情按当前小时落回；摸猫（[petCat]）同样抽一句猫语回应；
  *   猫序列（气泡 + 心情）走独立的 catEpoch 防串场——摸猫/新打卡只互踩猫自己，
- *   不殃及夸夸语/庆祝/新解锁的 feedbackEpoch 收场。
+ *   不殃及夸夸语/庆祝/新解锁的 feedbackEpoch 收场；
+ * - 声音三触发点（任务 12，fire-and-forget 绝不抛）：打卡成笔确认即随机一声掉落音
+ *   （[DROP_EVENTS] 三档其一）；celebrated=true 时掉落音后追加一段达标旋律；
+ *   摸猫一声呼噜。播放与动画解耦——成笔即响，不等夸夸语/庆祝的任何一拍；
+ *   是否出声（应用内开关 + 系统静音遵从）由播放器内部裁决，本层不问。
  *
  * 防抖窗与提示停留时长由 [logDebounceMs]/[newUnlockHoldMs]/[catLineHoldMs] 注入（生产缺省、测试缩窗），
  * 窗口按时钟 [clock] 计量；成笔后反馈序列不取消，仅以 epoch 防串场。
@@ -107,6 +113,7 @@ class HomeViewModel(
     private val unlockOutfits: UnlockOutfitsUseCase,
     private val resolveDailyOutfit: ResolveDailyOutfitUseCase,
     private val streakOf: GetStreakUseCase,
+    private val sound: AwakeSoundPlayer,
     private val logDebounceMs: Long = LOG_DEBOUNCE_MS,
     private val newUnlockHoldMs: Long = NEW_UNLOCK_HOLD_MS,
     private val catLineHoldMs: Long = CAT_LINE_HOLD_MS,
@@ -121,6 +128,7 @@ class HomeViewModel(
         unlockOutfits: UnlockOutfitsUseCase,
         resolveDailyOutfit: ResolveDailyOutfitUseCase,
         streakOf: GetStreakUseCase,
+        sound: AwakeSoundPlayer,
     ) : this(
         clock,
         observeHome,
@@ -129,6 +137,7 @@ class HomeViewModel(
         unlockOutfits,
         resolveDailyOutfit,
         streakOf,
+        sound,
         LOG_DEBOUNCE_MS,
         NEW_UNLOCK_HOLD_MS,
         CAT_LINE_HOLD_MS,
@@ -202,8 +211,9 @@ class HomeViewModel(
         scheduleLog()
     }
 
-    /** 摸猫：戳一下胆大王，抽一句猫语回应（同 [CAT_LINE_HOLD_MS] 收场，心情不动）。 */
+    /** 摸猫：戳一下胆大王，抽一句猫语回应（同 [CAT_LINE_HOLD_MS] 收场，心情不动）+ 一声呼噜。 */
     fun petCat() {
+        sound.play(SoundEvent.PURR)
         playCatResponse(happy = false)
     }
 
@@ -248,6 +258,10 @@ class HomeViewModel(
 
         // 打卡成功即推进猫序列（moodboard §6.2）：HAPPY 一次 + 抽一句猫语，回应每次成笔。
         if (result != null) {
+            // 声音三触发点之一（任务 12）：成笔确认即随机一声掉落音；当日首次达标再追一段旋律。
+            // fire-and-forget，与动画解耦——不等夸夸语/庆祝的任何一拍。
+            sound.play(DROP_EVENTS.random())
+            if (result.celebrated) sound.play(SoundEvent.GOAL_MELODY)
             playCatResponse(happy = true)
             // 猫配饰随连胜刷新：本次成笔后连胜或增，重结算（幂等）。
             viewModelScope.launch {
@@ -300,5 +314,8 @@ class HomeViewModel(
 
     private companion object {
         val TIME_OF_DAY: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+        /** 掉落音三档（任务 12）：打卡成笔随机抽其一——同一颗水滴听三遍不重样。 */
+        val DROP_EVENTS = listOf(SoundEvent.DROP_A, SoundEvent.DROP_B, SoundEvent.DROP_C)
     }
 }

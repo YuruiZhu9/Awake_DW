@@ -59,6 +59,7 @@ class HomeScreenTest {
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),
+                sound = FakeSoundPlayer(),
             )
 
         composeRule.mainClock.autoAdvance = false

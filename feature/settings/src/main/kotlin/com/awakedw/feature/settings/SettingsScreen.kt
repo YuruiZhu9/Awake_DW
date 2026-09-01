@@ -64,9 +64,9 @@ private val SECTION_SPACING = 14.dp
 private const val SETTINGS_PARTICLE_SEED = 13L
 
 /**
- * 「我的」页（设计规格 §3.4）：四个分区卡 + 白名单引导入口——
+ * 「我的」页（设计规格 §3.4）：分区卡 + 白名单引导入口——
  * 目标（± 步进器）、提醒（总开关 / 清醒时段双滑杆 / 间隔档位 chips）、
- * 外观（主题单选 chips）、心意文案库（早/午/晚折叠编辑器）。
+ * 外观（主题单选 chips）、声音（音效开关，任务 12）、心意文案库（早/午/晚折叠编辑器）。
  * 背景为全局渐变底座 + 漂浮粒子（规格 §2.2，与其他各屏同一份主题呼吸）。
  * 所有变更经 [SettingsViewModel] 即时持久化，无保存键。
  *
@@ -170,6 +170,15 @@ fun SettingsScreen(
                 ThemeChoiceChips(
                     selected = settings.themeChoice,
                     onSelect = viewModel::setThemeChoice,
+                )
+            }
+
+            SettingsCard(title = "声音", subtitle = null) {
+                ToggleRow(
+                    label = "音效",
+                    supporting = "水滴与八音盒；系统静音时自动安静",
+                    checked = state.soundEnabled,
+                    onCheckedChange = viewModel::setSoundEnabled,
                 )
             }
 

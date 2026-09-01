@@ -61,6 +61,7 @@ class HomeViewModelOutfitTest {
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),
+                sound = FakeSoundPlayer(),
                 newUnlockHoldMs = newUnlockHoldMs,
                 catLineHoldMs = catLineHoldMs,
             )
