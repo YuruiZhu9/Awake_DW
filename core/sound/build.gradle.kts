@@ -38,6 +38,8 @@ android {
 dependencies {
     // 声音开关裁决需要 Task 2 的 soundEnabled（UserPreferences 契约）。
     implementation(project(":core:domain"))
+    // 契约接口的 UserSettings/ThemeChoice 等模型类型（:core:domain 以 implementation 引入，不外泄）。
+    implementation(project(":core:model"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

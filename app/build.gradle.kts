@@ -97,6 +97,8 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:domain"))
+    // 声音门面（AwakeSoundPlayer → SoundPoolPlayer 的 Hilt 绑定随 :core:sound 聚合进主图）。
+    implementation(project(":core:sound"))
     implementation(project(":core:notification"))
     implementation(project(":core:designsystem"))
 
