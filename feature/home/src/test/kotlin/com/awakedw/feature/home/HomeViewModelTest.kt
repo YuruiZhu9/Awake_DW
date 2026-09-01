@@ -1,5 +1,6 @@
 package com.awakedw.feature.home
 
+import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.ResolveDailyOutfitUseCase
@@ -52,6 +53,7 @@ class HomeViewModelTest {
                 copies = copies,
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
+                streakOf = GetStreakUseCase(water, prefs),
             )
         return Harness(clock, water, prefs, copies, viewModel)
     }
@@ -236,6 +238,7 @@ class HomeViewModelTest {
                     copies = h.copies,
                     unlockOutfits = UnlockOutfitsUseCase(h.prefs),
                     resolveDailyOutfit = ResolveDailyOutfitUseCase(h.prefs, h.clock),
+                    streakOf = GetStreakUseCase(h.water, h.prefs),
                 )
             runCurrent()
             assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)

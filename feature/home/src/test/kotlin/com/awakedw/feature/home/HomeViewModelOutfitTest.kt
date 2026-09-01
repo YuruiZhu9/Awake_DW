@@ -2,6 +2,7 @@ package com.awakedw.feature.home
 
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
+import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.ResolveDailyOutfitUseCase
@@ -44,6 +45,7 @@ class HomeViewModelOutfitTest {
     private fun harness(
         scheduler: TestCoroutineScheduler,
         newUnlockHoldMs: Long = NEW_UNLOCK_HOLD_MS,
+        catLineHoldMs: Long = CAT_HOLD_OUT_OF_WINDOW_MS,
     ): Harness {
         val clock = FakeClock(BASE_TIME)
         val water = FakeWaterRepository(clock)
@@ -58,7 +60,8 @@ class HomeViewModelOutfitTest {
                 copies = copies,
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
-                newUnlockHoldMs = newUnlockHoldMs,
+                streakOf = GetStreakUseCase(water, prefs),
+                catLineHoldMs = catLineHoldMs,
             )
         return Harness(clock, water, prefs, copies, viewModel)
     }
@@ -188,5 +191,11 @@ class HomeViewModelOutfitTest {
         /** 与生产同值的夸夸语停留与防抖跨窗间隔（复用 HomeViewModelTest 的节奏常量）。 */
         const val PRAISE_HOLD_MS = 1_400L
         const val WINDOW_GAP_MS = 1_300L
+
+        /**
+         * 猫语停留时长拨到观察窗外：本类只验证夸夸语/新解锁（feedbackEpoch 族）的收场节奏，
+         * 猫序列（catEpoch 族）2.0s 处的合法收场发射不应闯入 expectNoEvents 的观察窗。
+         */
+        const val CAT_HOLD_OUT_OF_WINDOW_MS = 10_000L
     }
 }

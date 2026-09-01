@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.ResolveDailyOutfitUseCase
@@ -57,6 +58,7 @@ class HomeScreenTest {
                 copies = copies,
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
+                streakOf = GetStreakUseCase(water, prefs),
             )
 
         composeRule.mainClock.autoAdvance = false

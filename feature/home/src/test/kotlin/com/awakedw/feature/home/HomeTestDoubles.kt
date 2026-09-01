@@ -31,9 +31,13 @@ class FakeClock(
 /**
  * 内存版水记录仓储：changes 用 replay=1 的 SharedFlow 供给，
  * 与 Room「首值即当前态」语义对齐；平均间隔算法复刻 RoomWaterRepository。
+ *
+ * [pastGoalMetDays] 为历史铺数：过去该天数按达标量填充 weekBars（其余过去天 0），
+ * 供连胜/猫配饰类测试搭历史（缺省 0 = 无历史，与旧用例行为一致）。
  */
 class FakeWaterRepository(
     private val clock: FakeClock,
+    private val pastGoalMetDays: Int = 0,
 ) : WaterRepository {
     var addCount: Int = 0
         private set
@@ -92,7 +96,15 @@ class FakeWaterRepository(
         val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
         return (daysBack - 1 downTo 0).map { offset ->
             val key = today.minusDays(offset.toLong()).toDayKey()
-            WeekBar(dayKey = key, totalMl = if (offset == 0) todayTotal() else 0)
+            WeekBar(
+                dayKey = key,
+                totalMl =
+                    when {
+                        offset == 0 -> todayTotal()
+                        offset <= pastGoalMetDays -> PAST_GOAL_MET_ML
+                        else -> 0
+                    },
+            )
         }
     }
 
@@ -112,6 +124,9 @@ class FakeWaterRepository(
 
     private companion object {
         const val DEFAULT_CUP_ML = 250
+
+        /** 历史达标日的铺量：不低于最高常规目标（1600ml），保证在连胜结算中计为达标。 */
+        const val PAST_GOAL_MET_ML = 1600
     }
 }
 
@@ -197,14 +212,28 @@ class FakePrefsRepository(
     }
 }
 
-/** 固定文案库：按时段返回固定短句，并记录被询问过的时段供断言。 */
-class FakeCopyLibraryRepository : CopyLibraryRepository {
+/**
+ * 固定文案库：按时段返回固定短句，并记录被询问过的时段供断言。
+ * 猫语组为构造入参 [catLines]，按游标循环抽取——连抽可断言「新的一句」；
+ * 缺省单句「喵，喝水啦」，与生产缺省语料的首句语义一致。
+ */
+class FakeCopyLibraryRepository(
+    catLines: List<String> = listOf(DEFAULT_CAT_LINE),
+) : CopyLibraryRepository {
     val requestedSlots = mutableListOf<TimeSlot>()
 
     private val _library =
         MutableStateFlow(
-            CopyLibrary(morning = listOf("早安短句"), day = listOf("日间短句"), evening = listOf("晚安短句")),
+            CopyLibrary(
+                morning = listOf("早安短句"),
+                day = listOf("日间短句"),
+                evening = listOf("晚安短句"),
+                cat = catLines,
+            ),
         )
+
+    /** 猫语抽取游标：循环推进，模拟「连抽不重样」的最小语义。 */
+    private var catCursor = 0
 
     override val library = _library
 
@@ -216,7 +245,10 @@ class FakeCopyLibraryRepository : CopyLibraryRepository {
         return _library.value.groupOf(slot).first()
     }
 
-    override suspend fun randomCatLine(avoidRecent: Int): String = _library.value.cat.firstOrNull() ?: "喵，喝水啦"
+    override suspend fun randomCatLine(avoidRecent: Int): String {
+        val lines = _library.value.cat.ifEmpty { listOf(DEFAULT_CAT_LINE) }
+        return lines[catCursor++ % lines.size]
+    }
 
     override suspend fun upsert(
         slot: TimeSlot,
@@ -230,4 +262,8 @@ class FakeCopyLibraryRepository : CopyLibraryRepository {
     ) = Unit
 
     override suspend fun resetToDefaults() = Unit
+
+    private companion object {
+        const val DEFAULT_CAT_LINE = "喵，喝水啦"
+    }
 }

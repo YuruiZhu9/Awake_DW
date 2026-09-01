@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
+import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.DressBackdrop
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -57,6 +60,8 @@ import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.core.model.CatAccessory
+import com.awakedw.core.model.CatMood
 import com.awakedw.core.model.Outfit
 import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.CelebrationOverlay
@@ -88,11 +93,18 @@ private val TODAY_OUTFIT_ROW_HEIGHT = 30.dp
 /** 今日之裙签 ↔ 新解锁轻提示的同位换浮时长：与 PraiseLine 同款。 */
 private const val TODAY_OUTFIT_FADE_MS = 400
 
+/** 猫语气泡宽：容纳一句胆大王短语，悬于猫上方居中（复用 PraiseLine 的浮现样式）。 */
+private val CAT_LINE_BUBBLE_WIDTH = 168.dp
+
+/** 胆大王落角的边距：底部 leading 角，「记一杯」按钮（居中）同行对侧。 */
+private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
+
 /**
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
  * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
  * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
- * 日期副行下挂「今日之裙」小签，打卡新解锁时同位浮出轻提示（§5.2）。
+ * 日期副行下挂「今日之裙」小签，打卡新解锁时同位浮出轻提示（§5.2）；
+ * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
  */
 @Suppress("ktlint:standard:function-naming")
@@ -157,6 +169,38 @@ fun HomeScreen(
         }
 
         CelebrationOverlay(visible = state.celebrating, modifier = Modifier.matchParentSize())
+
+        // 胆大王常驻（moodboard §6.2）：底部 leading 角，「记一杯」按钮同行对侧；
+        // 猫语气泡悬于猫上方（独立于环下夸夸语位置），点击立绘即摸猫（viewModel::petCat）。
+        CatCorner(
+            mood = state.catMood,
+            accessories = state.catAccessories,
+            line = state.catLine,
+            onPet = viewModel::petCat,
+            modifier = Modifier.align(Alignment.BottomStart).padding(CAT_CORNER_PADDING),
+        )
+    }
+}
+
+/**
+ * 胆大王角落（moodboard §6.2）：猫语气泡 + 立绘。
+ * 气泡复用 [PraiseLine] 的 Crossfade 浮现样式，悬于猫上方、与猫列对齐（独立于环下夸夸语位置）；
+ * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun CatCorner(
+    mood: CatMood,
+    accessories: List<CatAccessory>,
+    line: String?,
+    onPet: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.width(CAT_LINE_BUBBLE_WIDTH)) {
+            PraiseLine(text = line)
+        }
+        CatFigure(mood = mood, accessories = accessories, onPet = onPet)
     }
 }
 
