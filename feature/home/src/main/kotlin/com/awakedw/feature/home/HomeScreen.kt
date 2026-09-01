@@ -54,6 +54,7 @@ import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.DressBackdrop
+import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
@@ -95,6 +96,13 @@ private const val TODAY_OUTFIT_FADE_MS = 400
 
 /** 猫语气泡宽：容纳一句胆大王短语，悬于猫上方居中（复用 PraiseLine 的浮现样式）。 */
 private val CAT_LINE_BUBBLE_WIDTH = 168.dp
+
+/** 「记一杯」按钮光袋尺寸（96–160dp 区间取值）：呼吸光晕衬在按钮后方的浅浅一汪光。 */
+private val LOG_BUTTON_POCKET_WIDTH = 160.dp
+private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
+
+/** 胆大王光袋直径（96–160dp 区间取值）：给 96dp 立绘留一圈 16dp 的呼吸光晕。 */
+private val CAT_POCKET_DIAMETER = 128.dp
 
 /** 胆大王落角的边距：底部 leading 角，「记一杯」按钮（居中）同行对侧。 */
 private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
@@ -164,7 +172,11 @@ fun HomeScreen(
             Spacer(Modifier.weight(1f))
             QuickSipsRow(cupMl = state.cupMl, onQuickLog = viewModel::quickLog)
             Spacer(Modifier.height(12.dp))
-            LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
+            // 光袋（moodboard §2 光·遇）：按钮后方的呼吸光晕（96–160dp），绘制在按钮之下、背景之上。
+            Box(contentAlignment = Alignment.Center) {
+                LightPocket(modifier = Modifier.size(width = LOG_BUTTON_POCKET_WIDTH, height = LOG_BUTTON_POCKET_HEIGHT))
+                LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
+            }
             Spacer(Modifier.height(36.dp))
         }
 
@@ -183,7 +195,7 @@ fun HomeScreen(
 }
 
 /**
- * 胆大王角落（moodboard §6.2）：猫语气泡 + 立绘。
+ * 胆大王角落（moodboard §6.2）：猫语气泡 + 立绘 + 立绘后方的呼吸光袋（moodboard §2 光·遇）。
  * 气泡复用 [PraiseLine] 的 Crossfade 浮现样式，悬于猫上方、与猫列对齐（独立于环下夸夸语位置）；
  * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
  */
@@ -200,7 +212,11 @@ private fun CatCorner(
         Box(modifier = Modifier.width(CAT_LINE_BUBBLE_WIDTH)) {
             PraiseLine(text = line)
         }
-        CatFigure(mood = mood, accessories = accessories, onPet = onPet)
+        // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp），光在猫下、不压猫。
+        Box(contentAlignment = Alignment.Center) {
+            LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
+            CatFigure(mood = mood, accessories = accessories, onPet = onPet)
+        }
     }
 }
 
