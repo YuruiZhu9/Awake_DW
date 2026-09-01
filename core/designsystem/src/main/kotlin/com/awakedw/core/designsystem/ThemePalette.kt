@@ -133,7 +133,7 @@ object ThemePalette {
     const val SHENYE_BG_2 = 0xFF0F1221 // 青黛·深
     const val SHENYE_BG_3 = 0xFF111430 // 青黛·暗
 
-    /** 主色（进度环/强调）：#B9D8E0 月白降饱和变体（S46→39，月光感） */
+    /** 主色（进度环/强调）：#B9D8E0 月白降饱和变体（S60→39，月光感） */
     const val SHENYE_PRIMARY = 0xFFB9D8E0 // 月白·降饱和
 
     /** 进度环轨道：#1F2639 */

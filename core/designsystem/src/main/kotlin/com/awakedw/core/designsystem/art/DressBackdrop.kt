@@ -56,8 +56,8 @@ internal fun backdropCropSrc(
  * 浅色主题 alpha=0.30f，深色主题 alpha=0.18f；BlendMode.Multiply；
  * 换图 600ms 交叉淡入；夜变体优先；资产缺失不绘制（回退纯渐变）。
  *
- * 注意：纸纹由全局 GrainOverlay 体系统一负责，本层不重复叠加，以免噪点浓度翻倍
- * （先例见 GrainOverlay 头注释）。位图按 ContentScale.Crop 语义铺满并居中；
+ * 注意：纸纹由全局背景底座统一负责——真实噪点烘焙在 `Backdrop.kt` 的 `GradientBackdrop`
+ * 离屏图层内，本层不重复叠加，以免噪点浓度翻倍。位图按 ContentScale.Crop 语义铺满并居中；
  * 交叉淡入以**位图**为目标态而非 [outfit]——资产尚未就位（null）不参与过渡，避免闪跳。
  *
  * @param outfit 今日之裙；null 或资产缺失/解码失败时不绘制任何图像。

@@ -20,7 +20,7 @@ import org.robolectric.annotation.GraphicsMode
  * assets 位图装载与夜变体解析（Robolectric）：
  * 缺失/解码失败一律回退为 null，绝不抛异常（规格：图像产线的工程半边）。
  *
- * - 正向路径用 src/main/assets/arttest/ 下的 1×1 PNG（dot.png / dot_night.png）验证；
+ * - 正向路径用 src/test/assets/arttest/ 下的 1×1 PNG（dot.png / dot_night.png）验证（夹具不进生产包）；
  * - 回退路径用不存在的 `__nope__` 路径与损坏字节（broken.png）验证；
  * - 组合层 rememberAssetImageOrN 用 createComposeRule 走真实 composition（produceState + Dispatchers.IO）。
  */
