@@ -62,6 +62,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
+    // HomeViewModelOutfitTest 的 uiState 状态序列断言（Turbine）。
+    testImplementation(libs.turbine)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.robolectric)
     // Robolectric compose 测试的宿主 Activity 登记在 src/test/AndroidManifest.xml（两变体共用）。

@@ -1,6 +1,7 @@
 package com.awakedw.feature.home
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,17 +11,20 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -45,11 +50,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
+import com.awakedw.core.designsystem.art.DressBackdrop
+import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.core.model.Outfit
 import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.CelebrationOverlay
 import com.awakedw.feature.home.components.Greeting
@@ -74,15 +82,25 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
+/** 今日之裙签行的固定保留高：BadgeChip（labelMedium + 14/7dp padding）满高，签与轻提示互换不跳位。 */
+private val TODAY_OUTFIT_ROW_HEIGHT = 30.dp
+
+/** 今日之裙签 ↔ 新解锁轻提示的同位换浮时长：与 PraiseLine 同款。 */
+private const val TODAY_OUTFIT_FADE_MS = 400
+
 /**
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
  * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
- * 底座为渐变背景 + 漂浮粒子（GradientBackdrop 自带柔光晕与噪点颗粒）。
+ * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
+ * 日期副行下挂「今日之裙」小签，打卡新解锁时同位浮出轻提示（§5.2）。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onOpenGallery: () -> Unit = {},
+) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
     val view = LocalView.current
@@ -94,6 +112,8 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        // 画卷层（moodboard §5.1）：渐变之上、内容之下；今日之裙未就绪或资产缺失时不绘制。
+        DressBackdrop(outfit = state.todayOutfit, modifier = Modifier.matchParentSize())
         FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
 
         Column(
@@ -105,6 +125,11 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         ) {
             Spacer(Modifier.height(44.dp))
             FadeUpOnce { Greeting(customGreeting = state.greeting, totalMl = state.totalMl, goalMl = state.goalMl) }
+            TodayOutfitRow(
+                outfit = state.todayOutfit,
+                newUnlock = state.newUnlock,
+                onOpenGallery = onOpenGallery,
+            )
             Spacer(Modifier.height(20.dp))
             RingBlock(
                 progress = state.progress,
@@ -132,6 +157,51 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         }
 
         CelebrationOverlay(visible = state.celebrating, modifier = Modifier.matchParentSize())
+    }
+}
+
+/**
+ * 今日之裙签 + 新解锁轻提示（§5.2，挂日期副行下方）：
+ * 今日之裙就绪时显「今日之裙 · {title}」小签（BadgeChip 复用），点击回调 [onOpenGallery] 进衣柜
+ * （:app 导航接线在下一任务）；打卡新解锁时同位浮出「新裙入柜 ♡ {title}」——
+ * 浮现样式复用 [PraiseLine]（Crossfade 淡入淡出），2.5s 后由 ViewModel 收场、小签自动回位。
+ * 今日之裙未就绪（null）时整行不占位：画卷不显、签不出现，UI 完全无感。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun TodayOutfitRow(
+    outfit: Outfit?,
+    newUnlock: Outfit?,
+    onOpenGallery: () -> Unit,
+) {
+    if (outfit == null && newUnlock == null) return
+    val spec = currentThemeSpec()
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp)
+                .height(TODAY_OUTFIT_ROW_HEIGHT),
+        contentAlignment = Alignment.Center,
+    ) {
+        Crossfade(
+            targetState = newUnlock,
+            animationSpec = tween(durationMillis = TODAY_OUTFIT_FADE_MS),
+            label = "todayOutfitRow",
+        ) { unlock ->
+            if (unlock != null) {
+                PraiseLine(text = "新裙入柜 ♡ ${unlock.title}")
+            } else if (outfit != null) {
+                Box(
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .clickable(onClick = onOpenGallery),
+                ) {
+                    BadgeChip(text = "今日之裙 · ${outfit.title}", spec = spec)
+                }
+            }
+        }
     }
 }
 

@@ -2,7 +2,9 @@ package com.awakedw.feature.home
 
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
+import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.ResolveThemeUseCase
+import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
@@ -48,6 +50,8 @@ class HomeViewModelTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
+                unlockOutfits = UnlockOutfitsUseCase(prefs),
+                resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
             )
         return Harness(clock, water, prefs, copies, viewModel)
     }
@@ -230,6 +234,8 @@ class HomeViewModelTest {
                     observeHome = ObserveHomeUseCase(h.water, h.prefs, ResolveThemeUseCase(h.prefs, h.clock)),
                     logWater = LogWaterUseCase(h.water, h.prefs, h.clock),
                     copies = h.copies,
+                    unlockOutfits = UnlockOutfitsUseCase(h.prefs),
+                    resolveDailyOutfit = ResolveDailyOutfitUseCase(h.prefs, h.clock),
                 )
             runCurrent()
             assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)

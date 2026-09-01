@@ -8,7 +8,9 @@ import androidx.compose.ui.test.performClick
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
+import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.ResolveThemeUseCase
+import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.UserSettings
@@ -53,6 +55,8 @@ class HomeScreenTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
+                unlockOutfits = UnlockOutfitsUseCase(prefs),
+                resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
             )
 
         composeRule.mainClock.autoAdvance = false
@@ -65,6 +69,8 @@ class HomeScreenTest {
 
         composeRule.onNodeWithText("0ml").assertIsDisplayed()
         composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+        // 今日之裙已解析就绪：日期副行下的穿搭签上屏（画卷层同帧挂载，资产缺失不绘制）。
+        composeRule.onNodeWithText("今日之裙 · 素呢初见").assertIsDisplayed()
 
         // 假钟未动的同刻连点：前沿闸门合并，只记一杯。
         composeRule.onNodeWithText("干杯一下 💧").performClick()
@@ -73,6 +79,8 @@ class HomeScreenTest {
 
         composeRule.onNodeWithText("250ml").assertIsDisplayed()
         assertEquals(1, water.addCount)
+        // 首杯命中开局件解锁：同位浮出「新裙入柜」轻提示（2.5s 收场，尚未到时）。
+        composeRule.onNodeWithText("新裙入柜 ♡ 素呢初见").assertIsDisplayed()
 
         // 假钟拨过 800ms 防抖窗后再点一杯：正常成笔。
         clock.ms += WINDOW_GAP_MS

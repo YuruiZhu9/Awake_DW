@@ -9,7 +9,10 @@ import com.awakedw.core.designsystem.components.IntervalLabel
 import com.awakedw.core.domain.LogResult
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
+import com.awakedw.core.domain.ResolveDailyOutfitUseCase
+import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
+import com.awakedw.core.model.Outfit
 import com.awakedw.core.model.ThemeId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -32,11 +35,16 @@ const val PRAISE_HOLD_MS = 1_400L
 /** 达成庆祝横幅停留时长（任务规格：2500ms 自动收敛）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
+/** 新解锁轻提示停留时长（任务规格：与庆祝横幅同拍 2500ms 后由 epoch 收场清空）。 */
+const val NEW_UNLOCK_HOLD_MS = 2_500L
+
 /**
  * 首页一屏状态。[progress] 已截断到 0..1（达标即满环，微光呼吸交给表现层）；
  * [praiseLine] 为 null 时隐藏；[celebrating] 仅当日首次达标为 true（规格 §4.2 第 6 步）；
  * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认句；
- * [cupMl]/[streakDays]/[lastDrinkLabel] 供快捷量 chips 与徽章行展示（§11.1/11.2）。
+ * [cupMl]/[streakDays]/[lastDrinkLabel] 供快捷量 chips 与徽章行展示（§11.1/11.2）；
+ * [todayOutfit] 为 null 表示今日之裙解析未就绪，表现层不画卷不显签（moodboard §5.1）；
+ * [newUnlock] 为本次打卡新解锁的藏品，浮出轻提示 [NEW_UNLOCK_HOLD_MS] 后收场清空。
  */
 data class HomeUiState(
     val themeId: ThemeId = ThemeId.EMERALD,
@@ -51,20 +59,25 @@ data class HomeUiState(
     val greeting: String? = null,
     val praiseLine: String? = null,
     val celebrating: Boolean = false,
+    val todayOutfit: Outfit? = null,
+    val newUnlock: Outfit? = null,
 )
 
 /**
  * 治愈打卡首页 ViewModel。
  *
  * - 快照流（统计/目标/主题）单向灌入 [HomeUiState] 的持久字段；
+ * - 进首页即解析今日之裙（moodboard §5.1）灌入 [HomeUiState.todayOutfit]——画卷层与穿搭签的数据源；
  * - 打卡两入口（按钮/环区）共用同一 800ms 前沿闸门（规格 §4.1「按钮=立即记录」）：
  *   首触立即成笔，环推进/数字滚动/夸夸语随即重叠展开（§4.2）；
  *   距上次成笔不足 800ms 的连点合并忽略；
  * - 打卡成功后按当前时段抽一句夸夸语，1.4s 后收起；celebrated=true 时庆祝态撑满 2.5s，
- *   同日后续打卡（use case 返回 false）即时回到普通反馈。
+ *   同日后续打卡（use case 返回 false）即时回到普通反馈；
+ * - 打卡成功分支后以最新连胜结算解锁（幂等）：新解锁浮出轻提示 [NEW_UNLOCK_HOLD_MS] 后收场，
+ *   新一轮打卡以本轮结果当场覆盖旧提示，与夸夸语共用 feedbackEpoch 防串场。
  *
- * 防抖窗由 [logDebounceMs] 注入（生产 800ms，测试可缩窗），窗口按 [clock] 计量；
- * 成笔后反馈序列不取消，仅以 feedbackEpoch 防串场。
+ * 防抖窗与提示停留时长由 [logDebounceMs]/[newUnlockHoldMs] 注入（生产缺省、测试缩窗），
+ * 窗口按时钟 [clock] 计量；成笔后反馈序列不取消，仅以 feedbackEpoch 防串场。
  */
 @HiltViewModel
 class HomeViewModel(
@@ -72,21 +85,29 @@ class HomeViewModel(
     observeHome: ObserveHomeUseCase,
     private val logWater: LogWaterUseCase,
     private val copies: CopyLibraryRepository,
+    private val unlockOutfits: UnlockOutfitsUseCase,
+    private val resolveDailyOutfit: ResolveDailyOutfitUseCase,
     private val logDebounceMs: Long = LOG_DEBOUNCE_MS,
+    private val newUnlockHoldMs: Long = NEW_UNLOCK_HOLD_MS,
 ) : ViewModel() {
-    /** Dagger 注入入口：生产以默认防抖窗委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
+    /** Dagger 注入入口：生产以缺省时长委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
     @Inject
     constructor(
         clock: AppClock,
         observeHome: ObserveHomeUseCase,
         logWater: LogWaterUseCase,
         copies: CopyLibraryRepository,
+        unlockOutfits: UnlockOutfitsUseCase,
+        resolveDailyOutfit: ResolveDailyOutfitUseCase,
     ) : this(
         clock,
         observeHome,
         logWater,
         copies,
+        unlockOutfits,
+        resolveDailyOutfit,
         LOG_DEBOUNCE_MS,
+        NEW_UNLOCK_HOLD_MS,
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -106,6 +127,12 @@ class HomeViewModel(
             val slot = TimeSlots.slotOfHour(currentHour())
             val greeting = copies.randomFor(slot)
             _uiState.update { it.copy(greeting = greeting) }
+        }
+        // 今日之裙（moodboard §5.1）：进首页即解析（钉选优先/当日已定/解锁池稳定随机），
+        // 灌入画卷层与穿搭签；解析完成前 todayOutfit 保持 null——表现层不画卷不显签，UI 完全无感。
+        viewModelScope.launch {
+            val outfit = resolveDailyOutfit()
+            _uiState.update { it.copy(todayOutfit = outfit) }
         }
         viewModelScope.launch {
             observeHome().collect { snapshot ->
@@ -154,6 +181,10 @@ class HomeViewModel(
         feedbackEpoch += 1
         val epoch = feedbackEpoch
 
+        // 打卡成功分支后按最新连胜结算解锁（moodboard §5.2，幂等）；
+        // 无新解锁时以 null 覆盖——新轮打卡当场清掉旧提示，不让上一轮提示悬挂。
+        val newUnlock = result?.let { unlockOutfits(_uiState.value.streakDays).firstOrNull() }
+
         val slot = TimeSlots.slotOfHour(currentHour())
         val praise = copies.randomFor(slot)
         _uiState.update {
@@ -161,7 +192,19 @@ class HomeViewModel(
                 praiseLine = praise,
                 // 当日首次达标为 true；其余打卡（含达标后再打）一律回到普通反馈。
                 celebrating = result?.celebrated == true,
+                newUnlock = newUnlock,
             )
+        }
+
+        // 新解锁轻提示的定时收场：与夸夸语同一 feedbackEpoch 防串场——
+        // 新一轮打卡后本收场失效（新轮已覆盖该字段），不再回写旧值。
+        if (newUnlock != null) {
+            viewModelScope.launch {
+                delay(newUnlockHoldMs)
+                if (feedbackEpoch == epoch) {
+                    _uiState.update { it.copy(newUnlock = null) }
+                }
+            }
         }
 
         delay(PRAISE_HOLD_MS)
