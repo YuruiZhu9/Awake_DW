@@ -33,14 +33,16 @@ class CatLineTest {
         repo = DefaultCopyLibraryRepository(dataStore)
     }
 
-    private val libraryJsonKey = stringPreferencesKey("copy_library_json")
-    private val recentIdsKey = stringPreferencesKey("recent_copy_ids")
+    private val libraryJsonKey = stringPreferencesKey(CopyPrefKeys.COPY_LIBRARY_JSON)
+    private val recentIdsKey = stringPreferencesKey(CopyPrefKeys.RECENT_COPY_IDS)
 
     @Test
     fun `默认猫语料20句且逐句非空`() {
         assertEquals(20, DefaultCopies.cat.size)
         assertTrue(DefaultCopies.cat.all { it.isNotBlank() })
         assertEquals(DefaultCopies.cat.size, DefaultCopies.cat.toSet().size)
+        // 不变量：去重池持久化格式以 "|" 分组（decodeRecents），猫语句子里不得出现该分隔符。
+        assertTrue(DefaultCopies.cat.none { it.contains('|') })
     }
 
     @Test

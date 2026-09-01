@@ -24,7 +24,7 @@ fun unlockedCatAccessories(streakDays: Int): List<CatAccessory> =
 
 /**
  * 心情判定（治愈铁律：零惩罚，无失败）：
- * 刚庆祝 → HAPPY（庆祝优先于困意）；本地 22–06 点 → SLEEPY；否则 IDLE。
+ * 刚庆祝 → HAPPY（庆祝优先于困意）；本地深夜窗 [22, 6) → SLEEPY（与 ResolveThemeUseCase 深夜窗同源，NIGHT_END_HOUR=6 不含，06:00 起算白天）；否则 IDLE。
  */
 fun resolveCatMood(
     justCelebrated: Boolean,
@@ -32,6 +32,6 @@ fun resolveCatMood(
 ): CatMood =
     when {
         justCelebrated -> CatMood.HAPPY
-        nowHour >= 22 || nowHour <= 6 -> CatMood.SLEEPY
+        nowHour >= 22 || nowHour < 6 -> CatMood.SLEEPY
         else -> CatMood.IDLE
     }

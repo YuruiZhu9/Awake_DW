@@ -317,7 +317,7 @@ fun resolveCatMood(justCelebrated: Boolean, nowHour: Int): CatMood  // celebrate
 ```
 
 - [ ] **Step 1: 写失败测试**——反序列化兼容：`Json.decodeFromString<CopyLibrary>("{\"morning\":[\"a\"],\"day\":[],\"evening\":[]}")` 成功且 `cat` 为空列表；`randomCatLine` 从 cat 组抽取且默认组为空时回退首句不抛；`resolveCatMood(true, 14)==HAPPY`、`resolveCatMood(false, 23)==SLEEPY`、`resolveCatMood(false, 14)==IDLE`；`unlockedCatAccessories(30)` 含全部三件、`(2)` 为空。
-- [ ] **Step 2-4: 红→实现→绿**——DefaultCopies 追加 `CAT_LINES`（20 句，内容逐字用附录 C），实现 `randomCatLine` 复用既有去重池模式。实现注意：既有 JSON 无 cat 字段 → `CopyLibrary` 必须给默认值（kotlinx 对缺失字段用默认值，需 `@Serializable` 类字段默认值即可）。
+- [ ] **Step 2-4: 红→实现→绿**——DefaultCopies 追加 `cat` 组（20 句，内容逐字用附录 C），实现 `randomCatLine` 复用既有去重池模式。实现注意：既有 JSON 无 cat 字段 → `CopyLibrary` 必须给默认值（kotlinx 对缺失字段用默认值，需 `@Serializable` 类字段默认值即可）。
 - [ ] **Step 5: 提交**：`git commit -m "feat(core-model+data): 胆大王语料组与猫状态纯函数——序列化向后兼容"`
 
 ---
@@ -500,7 +500,7 @@ fun shouldPlay(ringerMode: Int, soundEnabled: Boolean): Boolean  // ringerMode==
 - 处理（Audacity）：归一化 -3dB；导出 OGG（质量 6/44.1kHz/单声道）；时长 DROP ≤0.6s、GOAL_MELODY 3–5s、PURR 1–2s。
 - 交付：`core/sound/src/main/res/raw/drop_a.ogg`、`drop_b.ogg`、`drop_c.ogg`、`goal_melody.ogg`、`purr.ogg`（目录不存在则新建）。未交付期间 Task 11/12 的 no-op 保证零崩溃。
 
-## 附录 C：胆大王默认语料（DefaultCopies.CAT_LINES，20 句）
+## 附录 C：胆大王默认语料（DefaultCopies.cat，20 句）
 
 1. 咕噜咕噜——你回来了，本大王闻到你今天也很努力。
 2. 喝水要小口小口哦，本大王看着呢。

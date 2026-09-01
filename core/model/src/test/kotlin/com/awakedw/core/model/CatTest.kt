@@ -12,16 +12,17 @@ class CatTest {
     }
 
     @Test
-    fun `resolveCatMood - 夜间22至06点返回SLEEPY`() {
+    fun `resolveCatMood - 深夜窗22至6点半开区间返回SLEEPY`() {
         assertEquals(CatMood.SLEEPY, resolveCatMood(justCelebrated = false, nowHour = 23))
         assertEquals(CatMood.SLEEPY, resolveCatMood(justCelebrated = false, nowHour = 22))
         assertEquals(CatMood.SLEEPY, resolveCatMood(justCelebrated = false, nowHour = 0))
-        assertEquals(CatMood.SLEEPY, resolveCatMood(justCelebrated = false, nowHour = 6))
+        assertEquals(CatMood.SLEEPY, resolveCatMood(justCelebrated = false, nowHour = 5))
     }
 
     @Test
     fun `resolveCatMood - 白天未庆祝返回IDLE`() {
         assertEquals(CatMood.IDLE, resolveCatMood(justCelebrated = false, nowHour = 14))
+        assertEquals(CatMood.IDLE, resolveCatMood(justCelebrated = false, nowHour = 6))
         assertEquals(CatMood.IDLE, resolveCatMood(justCelebrated = false, nowHour = 7))
         assertEquals(CatMood.IDLE, resolveCatMood(justCelebrated = false, nowHour = 21))
     }
