@@ -84,6 +84,12 @@ class CatFigureTest {
     }
 
     @Test
+    fun `呼吸周期对齐3秒完整周期`() {
+        // 1.5s 单程 ×2（Reverse 回程）= 3s 完整呼吸周期（审查裁定）。
+        assertEquals(1500, BREATH_LEG_MS)
+    }
+
+    @Test
     fun `配饰锚点比例与简报一致`() {
         assertEquals(0.18f, accessoryAnchorY(CatAccessory.BOW))
         assertEquals(0.52f, accessoryAnchorY(CatAccessory.PEARL))

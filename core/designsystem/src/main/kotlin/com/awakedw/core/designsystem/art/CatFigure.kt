@@ -49,8 +49,8 @@ internal const val CAT_SEMANTICS = "胆大王"
 /** 立绘固定边长（96dp 见方，尺寸语义：常驻首页一角）。 */
 private const val CAT_FIGURE_SIZE_DP = 96
 
-/** 呼吸单程时长：3s（1.00→峰值 3s + 峰值→1.00 3s，Reverse 循环）。 */
-private const val BREATH_LEG_MS = 3000
+/** 呼吸单程时长：1.5s（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；审查裁定「3s 循环」= 完整周期）。 */
+internal const val BREATH_LEG_MS = 1500
 
 /** SLEEPY 轻微低饱和保留系数（0.85f：安睡的柔和感，不降透明度不灰暗——治愈铁律）。 */
 private const val SLEEPY_SATURATION = 0.85f
@@ -99,7 +99,7 @@ private val OVERLAY_WIDTH_FRACTIONS =
  * - 立绘资产缺失 → Canvas 矢量简笔猫 + 全矢量配饰（BOW 复用 [drawBow]，PEARL 珍珠串，OUTFIT 钟形裙）。
  *
  * 微动效：
- * - 呼吸缩放 [breathTargetOf]（3s 单程 Reverse 循环；mood 变化时 [key] 重启换档）；
+ * - 呼吸缩放 [breathTargetOf]（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；mood 变化时 [key] 重启换档）；
  * - HAPPY 一次 spring 弹跳（[Animatable] 蹲 0.92 → MediumBouncy 弹回 1.00，mood 变 HAPPY 触发一次，
  *   离开 HAPPY 复位，重组不重放）；
  * - SLEEPY 绘制层 0.85f 低饱和（[SLEEPY_SATURATION]，仅柔和降饱和、不降透明度不灰暗）。
@@ -125,7 +125,7 @@ fun CatFigure(
     val accessoryImages: List<Pair<CatAccessory, ImageBitmap?>> =
         accessories.map { accessory -> accessory to rememberAssetImageOrN(accessory.assetFile) }
 
-    // 呼吸缩放：3s 单程 Reverse 循环；SLEEPY 幅度减半。key(mood) 换档即重启（从 1.00 起步，跳变 ≤2% 不可感）。
+    // 呼吸缩放：1.5s 单程 ×2 = 3s 完整呼吸周期（Reverse 循环）；SLEEPY 幅度减半。key(mood) 换档即重启（从 1.00 起步，跳变 ≤2% 不可感）。
     val breathState: State<Float> =
         key(mood) {
             rememberInfiniteTransition(label = "CatBreath").animateFloat(

@@ -3,7 +3,9 @@ package com.awakedw.core.designsystem.art
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -73,12 +75,21 @@ fun nightVariantOf(
 
 /**
  * 组合期读取 assets 位图；缺失/解码失败组合值为 null（调用方回退，绝不抛异常）。
- * 内部 [produceState] + [Dispatchers.IO] 异步装载，[assetFile] 变化时自动重载。
+ * 内部 [Dispatchers.IO] 异步装载，[assetFile] 变化时自动重载。
+ *
+ * 实现注记：等价于 `produceState` 的展开写法（unkeyed `remember { mutableStateOf }` +
+ * keyed [LaunchedEffect]）——语义逐点一致：state 实例跨键保留（换图期间旧图保持上屏，
+ * 不闪空帧）、键变化取消旧装载并重启、IO 调度、缺失回退 null。弃用 `produceState`
+ * 是因为本工具链（Kotlin 2.0.21 K2 UAST）下 Compose runtime lint 的
+ * ProduceStateDoesNotAssignValue 无法解析 lambda 接收者上的 `value =` 赋值
+ * （多形态实测均误报，含「收 state 参数函数」的官方豁免路径），展开写法无此问题。
  */
 @Composable
 fun rememberAssetImageOrN(assetFile: String): ImageBitmap? {
     val context = LocalContext.current
-    return produceState<ImageBitmap?>(initialValue = null, assetFile) {
-        value = loadAssetBitmap(context, assetFile)
-    }.value
+    val state = remember { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(assetFile) {
+        state.value = withContext(Dispatchers.IO) { loadAssetBitmap(context, assetFile) }
+    }
+    return state.value
 }
