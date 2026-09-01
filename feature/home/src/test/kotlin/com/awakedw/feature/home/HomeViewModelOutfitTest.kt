@@ -26,6 +26,8 @@ import org.junit.Test
 /**
  * 画卷上屏与解锁轻提示（moodboard §5.1 / §5.2 首页接线）：
  * - init 即解析今日之裙灌入 `todayOutfit`（解析前为 null，表现层不画卷不显签）；
+ * - VM 存活期间画廊改钉选（首页 VM 不重建）：pin 变化回流重解析——有 pin 换成 pin 件、
+ *   取消 pin 落回当日已定记录（与画廊「今日之裙」签同屏一致，无矛盾态）；
  * - 打卡成功后按最新连胜结算解锁：新解锁命中则 `newUnlock` 浮出，停留 [NEW_UNLOCK_HOLD_MS]
  *   后被 feedbackEpoch 同款收场清空；无新解锁保持 null；
  * - 新一轮打卡当场以本轮结果覆盖旧提示（防串场），旧轮的定时收场被 epoch 拦下。
@@ -102,6 +104,39 @@ class HomeViewModelOutfitTest {
             runCurrent()
 
             assertEquals(expected, h.viewModel.uiState.value.todayOutfit)
+            assertEquals("dress_00", h.viewModel.uiState.value.todayOutfit?.id)
+        }
+
+    @Test
+    fun `画廊pin后今日之裙回流为pin件`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+            assertEquals("dress_00", h.viewModel.uiState.value.todayOutfit?.id)
+
+            // VM 存活期间外部（画廊）改钉选：假件直调 setter 模拟 pin 变化 → 画卷/穿搭签当场换装。
+            h.prefs.setPinnedOutfit("dress_02")
+            runCurrent()
+
+            assertEquals("dress_02", h.viewModel.uiState.value.todayOutfit?.id)
+        }
+
+    @Test
+    fun `取消pin后今日之裙回落当日记录`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+            // 解锁池为空 → init 解析走 dress_00（开局件）兜底，并已落库当日记录。
+            assertEquals("dress_00", h.viewModel.uiState.value.todayOutfit?.id)
+
+            h.prefs.setPinnedOutfit("dress_02")
+            runCurrent()
+            assertEquals("dress_02", h.viewModel.uiState.value.todayOutfit?.id)
+
+            // 取消钉选：回落当日已定记录（同日重启同件，不重挑），且不崩溃。
+            h.prefs.setPinnedOutfit(null)
+            runCurrent()
+
             assertEquals("dress_00", h.viewModel.uiState.value.todayOutfit?.id)
         }
 

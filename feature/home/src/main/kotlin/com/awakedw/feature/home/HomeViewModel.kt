@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -84,6 +85,8 @@ data class HomeUiState(
  *
  * - 快照流（统计/目标/主题）单向灌入 [HomeUiState] 的持久字段；
  * - 进首页即解析今日之裙（moodboard §5.1）灌入 [HomeUiState.todayOutfit]——画卷层与穿搭签的数据源；
+ *   VM 存活期间画廊改钉选不重建本 VM，故对 pin 流挂收集：每次钉选变化重解析刷新画卷与穿搭签
+ *   （有 pin 换成 pin 件、取消 pin 落回当日已定记录，与画廊「今日之裙」签同屏一致）；
  * - 打卡两入口（按钮/环区）共用同一 800ms 前沿闸门（规格 §4.1「按钮=立即记录」）：
  *   首触立即成笔，环推进/数字滚动/夸夸语随即重叠展开（§4.2）；
  *   距上次成笔不足 800ms 的连点合并忽略；
@@ -176,6 +179,15 @@ class HomeViewModel(
         viewModelScope.launch {
             val outfit = resolveDailyOutfit()
             _uiState.update { it.copy(todayOutfit = outfit) }
+        }
+        // 画廊 pin 回流（终审修复）：首页 VM 存活期间用户在画廊改钉选不重建本 VM，
+        // 首值之后的每次 pin 变化都重解析刷新 todayOutfit，与画廊「今日之裙」签同屏一致；
+        // resolve 幂等——有 pin 返回 pin、取消 pin 落回当日已定记录，无矛盾态。
+        viewModelScope.launch {
+            resolveDailyOutfit.pinnedOutfitId.drop(1).collect {
+                val outfit = resolveDailyOutfit()
+                _uiState.update { it.copy(todayOutfit = outfit) }
+            }
         }
         viewModelScope.launch {
             observeHome().collect { snapshot ->

@@ -5,6 +5,7 @@ import com.awakedw.core.common.toDayKey
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.Outfit
 import com.awakedw.core.model.OutfitCatalog
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import kotlin.random.Random
@@ -16,6 +17,9 @@ class ResolveDailyOutfitUseCase
         private val prefs: UserPreferencesRepository,
         private val clock: AppClock,
     ) {
+        /** 钉选 outfit id 的只读透传（供首页等观察 pin 变化后重解析）；null = 跟随每日随机。 */
+        val pinnedOutfitId: Flow<String?> get() = prefs.pinnedOutfitId
+
         suspend operator fun invoke(): Outfit {
             prefs.pinnedOutfitId.first()?.let { pinnedId -> OutfitCatalog.byId(pinnedId) }?.let { return it }
             val dayKey = clock.nowEpochMs().toDayKey(clock.zone())
