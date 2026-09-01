@@ -3,128 +3,128 @@ package com.awakedw.core.designsystem
 import androidx.compose.ui.graphics.Color
 import com.awakedw.core.model.ThemeId
 
-/** A · 翡翠绿（默认/白天），色值对照规格 §2.1。 */
+/** A · 清晨天水碧系（ThemeId.EMERALD，默认/白天），色值对照 moodboard §4。 */
 val EmeraldThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.EMERALD,
         backgroundGradient =
             listOf(
-                Color(ThemePalette.EMERALD_BG_1),
-                Color(ThemePalette.EMERALD_BG_2),
-                Color(ThemePalette.EMERALD_BG_3),
+                Color(ThemePalette.QINGCHEN_BG_1),
+                Color(ThemePalette.QINGCHEN_BG_2),
+                Color(ThemePalette.QINGCHEN_BG_3),
             ),
-        primary = Color(ThemePalette.EMERALD_PRIMARY),
-        ringTrack = Color(ThemePalette.EMERALD_RING_TRACK),
-        ringValueText = Color(ThemePalette.EMERALD_RING_VALUE_TEXT),
-        greetingColor = Color(ThemePalette.EMERALD_GREETING),
-        greetingSubColor = Color(ThemePalette.EMERALD_GREETING_SUB),
-        buttonTop = Color(ThemePalette.EMERALD_BUTTON_TOP),
-        buttonBottom = Color(ThemePalette.EMERALD_BUTTON_BOTTOM),
-        chipBg = Color(ThemePalette.EMERALD_CHIP_BG),
-        chipText = Color(ThemePalette.EMERALD_CHIP_TEXT),
+        primary = Color(ThemePalette.QINGCHEN_PRIMARY),
+        ringTrack = Color(ThemePalette.QINGCHEN_RING_TRACK),
+        ringValueText = Color(ThemePalette.QINGCHEN_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.QINGCHEN_GREETING),
+        greetingSubColor = Color(ThemePalette.QINGCHEN_GREETING_SUB),
+        buttonTop = Color(ThemePalette.QINGCHEN_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.QINGCHEN_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.QINGCHEN_CHIP_BG),
+        chipText = Color(ThemePalette.QINGCHEN_CHIP_TEXT),
         particleColors =
             listOf(
-                Color(ThemePalette.EMERALD_PARTICLE_1),
-                Color(ThemePalette.EMERALD_PARTICLE_2),
-                Color(ThemePalette.EMERALD_PARTICLE_3),
-                Color(ThemePalette.EMERALD_PARTICLE_4),
+                Color(ThemePalette.QINGCHEN_PARTICLE_1),
+                Color(ThemePalette.QINGCHEN_PARTICLE_2),
+                Color(ThemePalette.QINGCHEN_PARTICLE_3),
+                Color(ThemePalette.QINGCHEN_PARTICLE_4),
             ),
         // 柔光晕取主题主色低透明度（§2.2），绘制时由 GradientBackdrop 施加透明度
-        haloColor = Color(ThemePalette.EMERALD_PRIMARY),
-        laceColor = Color(ThemePalette.EMERALD_LACE),
+        haloColor = Color(ThemePalette.QINGCHEN_PRIMARY),
+        laceColor = Color(ThemePalette.QINGCHEN_LACE),
     )
 
-/** B · 草莓雾光（早晨），色值对照规格 §2.1。 */
+/** B · 午后藕荷系（ThemeId.STRAWBERRY，早晨），色值对照 moodboard §4。 */
 val StrawberryThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.STRAWBERRY,
         backgroundGradient =
             listOf(
-                Color(ThemePalette.STRAWBERRY_BG_1),
-                Color(ThemePalette.STRAWBERRY_BG_2),
-                Color(ThemePalette.STRAWBERRY_BG_3),
-                Color(ThemePalette.STRAWBERRY_BG_4),
+                Color(ThemePalette.WUHOU_BG_1),
+                Color(ThemePalette.WUHOU_BG_2),
+                Color(ThemePalette.WUHOU_BG_3),
+                Color(ThemePalette.WUHOU_BG_4),
             ),
-        primary = Color(ThemePalette.STRAWBERRY_PRIMARY),
-        ringTrack = Color(ThemePalette.STRAWBERRY_RING_TRACK),
-        ringValueText = Color(ThemePalette.STRAWBERRY_RING_VALUE_TEXT),
-        greetingColor = Color(ThemePalette.STRAWBERRY_GREETING),
-        greetingSubColor = Color(ThemePalette.STRAWBERRY_GREETING_SUB),
-        buttonTop = Color(ThemePalette.STRAWBERRY_BUTTON_TOP),
-        buttonBottom = Color(ThemePalette.STRAWBERRY_BUTTON_BOTTOM),
-        chipBg = Color(ThemePalette.STRAWBERRY_CHIP_BG).copy(alpha = ThemePalette.CHIP_BG_ALPHA),
-        chipText = Color(ThemePalette.STRAWBERRY_CHIP_TEXT),
+        primary = Color(ThemePalette.WUHOU_PRIMARY),
+        ringTrack = Color(ThemePalette.WUHOU_RING_TRACK),
+        ringValueText = Color(ThemePalette.WUHOU_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.WUHOU_GREETING),
+        greetingSubColor = Color(ThemePalette.WUHOU_GREETING_SUB),
+        buttonTop = Color(ThemePalette.WUHOU_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.WUHOU_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.WUHOU_CHIP_BG).copy(alpha = ThemePalette.CHIP_BG_ALPHA),
+        chipText = Color(ThemePalette.WUHOU_CHIP_TEXT),
         particleColors =
             listOf(
-                Color(ThemePalette.STRAWBERRY_PARTICLE_1),
-                Color(ThemePalette.STRAWBERRY_PARTICLE_2),
-                Color(ThemePalette.STRAWBERRY_PARTICLE_3),
-                Color(ThemePalette.STRAWBERRY_PARTICLE_4),
-                Color(ThemePalette.STRAWBERRY_PARTICLE_5),
+                Color(ThemePalette.WUHOU_PARTICLE_1),
+                Color(ThemePalette.WUHOU_PARTICLE_2),
+                Color(ThemePalette.WUHOU_PARTICLE_3),
+                Color(ThemePalette.WUHOU_PARTICLE_4),
+                Color(ThemePalette.WUHOU_PARTICLE_5),
             ),
-        haloColor = Color(ThemePalette.STRAWBERRY_PRIMARY),
-        laceColor = Color(ThemePalette.STRAWBERRY_LACE),
+        haloColor = Color(ThemePalette.WUHOU_PRIMARY),
+        laceColor = Color(ThemePalette.WUHOU_LACE),
     )
 
-/** C · 焦糖奶茶（夜晚），色值对照规格 §2.1。 */
+/** C · 黄昏缃叶系（ThemeId.CARAMEL，夜晚），色值对照 moodboard §4。 */
 val CaramelThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.CARAMEL,
         backgroundGradient =
             listOf(
-                Color(ThemePalette.CARAMEL_BG_1),
-                Color(ThemePalette.CARAMEL_BG_2),
-                Color(ThemePalette.CARAMEL_BG_3),
+                Color(ThemePalette.HUANGHUN_BG_1),
+                Color(ThemePalette.HUANGHUN_BG_2),
+                Color(ThemePalette.HUANGHUN_BG_3),
             ),
-        primary = Color(ThemePalette.CARAMEL_PRIMARY),
-        ringTrack = Color(ThemePalette.CARAMEL_RING_TRACK),
-        ringValueText = Color(ThemePalette.CARAMEL_RING_VALUE_TEXT),
-        greetingColor = Color(ThemePalette.CARAMEL_GREETING),
-        greetingSubColor = Color(ThemePalette.CARAMEL_GREETING_SUB),
-        buttonTop = Color(ThemePalette.CARAMEL_BUTTON_TOP),
-        buttonBottom = Color(ThemePalette.CARAMEL_BUTTON_BOTTOM),
-        chipBg = Color(ThemePalette.CARAMEL_CHIP_BG),
-        chipText = Color(ThemePalette.CARAMEL_CHIP_TEXT),
+        primary = Color(ThemePalette.HUANGHUN_PRIMARY),
+        ringTrack = Color(ThemePalette.HUANGHUN_RING_TRACK),
+        ringValueText = Color(ThemePalette.HUANGHUN_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.HUANGHUN_GREETING),
+        greetingSubColor = Color(ThemePalette.HUANGHUN_GREETING_SUB),
+        buttonTop = Color(ThemePalette.HUANGHUN_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.HUANGHUN_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.HUANGHUN_CHIP_BG),
+        chipText = Color(ThemePalette.HUANGHUN_CHIP_TEXT),
         particleColors =
             listOf(
-                Color(ThemePalette.CARAMEL_PARTICLE_1),
-                Color(ThemePalette.CARAMEL_PARTICLE_2),
-                Color(ThemePalette.CARAMEL_PARTICLE_3),
-                Color(ThemePalette.CARAMEL_PARTICLE_4),
+                Color(ThemePalette.HUANGHUN_PARTICLE_1),
+                Color(ThemePalette.HUANGHUN_PARTICLE_2),
+                Color(ThemePalette.HUANGHUN_PARTICLE_3),
+                Color(ThemePalette.HUANGHUN_PARTICLE_4),
             ),
-        haloColor = Color(ThemePalette.CARAMEL_PRIMARY),
-        laceColor = Color(ThemePalette.CARAMEL_LACE),
+        haloColor = Color(ThemePalette.HUANGHUN_PRIMARY),
+        laceColor = Color(ThemePalette.HUANGHUN_LACE),
     )
 
-/** D · 深夜墨青（深夜），色值对照规格 §2.1；墨青底 + 薄荷强调，柔光晕与粒子在暗底上成为主角。 */
+/** D · 深夜青黛系（ThemeId.NIGHT，深夜），色值对照 moodboard §4；青黛暗底 + 月白强调，柔光晕与粒子在暗底上成为主角。 */
 val NightThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.NIGHT,
         backgroundGradient =
             listOf(
-                Color(ThemePalette.NIGHT_BG_1),
-                Color(ThemePalette.NIGHT_BG_2),
-                Color(ThemePalette.NIGHT_BG_3),
+                Color(ThemePalette.SHENYE_BG_1),
+                Color(ThemePalette.SHENYE_BG_2),
+                Color(ThemePalette.SHENYE_BG_3),
             ),
-        primary = Color(ThemePalette.NIGHT_PRIMARY),
-        ringTrack = Color(ThemePalette.NIGHT_RING_TRACK),
-        ringValueText = Color(ThemePalette.NIGHT_RING_VALUE_TEXT),
-        greetingColor = Color(ThemePalette.NIGHT_GREETING),
-        greetingSubColor = Color(ThemePalette.NIGHT_GREETING_SUB),
-        buttonTop = Color(ThemePalette.NIGHT_BUTTON_TOP),
-        buttonBottom = Color(ThemePalette.NIGHT_BUTTON_BOTTOM),
-        chipBg = Color(ThemePalette.NIGHT_CHIP_BG),
-        chipText = Color(ThemePalette.NIGHT_CHIP_TEXT),
+        primary = Color(ThemePalette.SHENYE_PRIMARY),
+        ringTrack = Color(ThemePalette.SHENYE_RING_TRACK),
+        ringValueText = Color(ThemePalette.SHENYE_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.SHENYE_GREETING),
+        greetingSubColor = Color(ThemePalette.SHENYE_GREETING_SUB),
+        buttonTop = Color(ThemePalette.SHENYE_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.SHENYE_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.SHENYE_CHIP_BG),
+        chipText = Color(ThemePalette.SHENYE_CHIP_TEXT),
         particleColors =
             listOf(
-                Color(ThemePalette.NIGHT_PARTICLE_1),
-                Color(ThemePalette.NIGHT_PARTICLE_2),
-                Color(ThemePalette.NIGHT_PARTICLE_3),
-                Color(ThemePalette.NIGHT_PARTICLE_4),
+                Color(ThemePalette.SHENYE_PARTICLE_1),
+                Color(ThemePalette.SHENYE_PARTICLE_2),
+                Color(ThemePalette.SHENYE_PARTICLE_3),
+                Color(ThemePalette.SHENYE_PARTICLE_4),
             ),
-        haloColor = Color(ThemePalette.NIGHT_PRIMARY),
+        haloColor = Color(ThemePalette.SHENYE_PRIMARY),
         isDark = true,
-        laceColor = Color(ThemePalette.NIGHT_LACE),
+        laceColor = Color(ThemePalette.SHENYE_LACE),
     )
 
 /** ThemeId → 主题规格 的全覆盖查找表。 */

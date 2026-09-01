@@ -5,7 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.awakedw.core.model.ThemeId
 
-/** 当前主题规格的 CompositionLocal，未显式提供时回落到默认翡翠绿。 */
+/** 当前主题规格的 CompositionLocal，未显式提供时回落到默认清晨天水碧。 */
 val LocalAwakeTheme = staticCompositionLocalOf<ThemeSpec> { EmeraldThemeSpec }
 
 /** 按 [ThemeId] 注入对应主题规格，子树内经 [currentThemeSpec] 读取。 */
