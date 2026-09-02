@@ -92,20 +92,22 @@ private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 private val CAT_POCKET_DIAMETER = 128.dp
 
 /**
- * 胆大王落角的边距（布局审计 P1-1）：底部 leading 角，落到左下空带与居中簇错开——
- * bottom 132dp 把立绘（y≈148–244）抬出「记一杯」按钮（y≈36–94）与快捷胶囊行（y≈106–136）所在下带；
- * start 收到 4dp，猫钉在列首不随气泡变宽右移。
+ * 胆大王落角的边距（布局审计 P1-1 + 审查修复几何重定位）：底部 leading 角，落进居中簇下方的空带——
+ * 内容列尾呼吸 112dp 使「记一杯」按钮（距底 112–170）与快捷胶囊行（182–212）整带高于猫盒；
+ * bottom 8dp 使猫盒（y≈8–104）与按钮带下缘 112 保持 8dp 互斥余量，且簇距底固定、滚动任何位置都不变。
+ * start 4dp，猫钉在列首不随气泡变宽右移。
  */
-private val CAT_CORNER_PADDING = PaddingValues(start = 4.dp, bottom = 132.dp)
+private val CAT_CORNER_PADDING = PaddingValues(start = 4.dp, bottom = 8.dp)
 
 /** 环下夸夸语的悬浮落差（布局审计 P1-2）：从环底缘垂下 12dp，浮在既有空档带上，不挤压徽章行。 */
 private val PRAISE_LINE_DROP = 12.dp
 
 /**
- * 内容列尾呼吸（布局审计 P1-7）：整列可滚后列尾固定留白，给「记一杯」按钮与猫角收尾
- * （猫是 Box 叠层不随滚动；≈快捷胶囊行 30 + 间距 12 + 按钮 58 的满滚抵底 clearance）。
+ * 内容列尾呼吸（布局审计 P1-7 + 审查修复）：整列可滚后列尾固定留白，给「记一杯」按钮与猫角收尾
+ * （≈快捷胶囊行 30 + 间距 12 + 按钮 58 + 猫带互斥余量 12 的满滚抵底 clearance——
+ * 该值同时决定居中簇距底 112dp 起，与猫盒上缘 104dp 保持 8dp 互斥，见 [CAT_CORNER_PADDING]）。
  */
-private val CONTENT_TAIL_BREATHING = 104.dp
+private val CONTENT_TAIL_BREATHING = 112.dp
 
 /** 健康贴士与快捷胶囊行之间的固定空档（布局审计 P1-7）：弹性 weight 空档与滚动互斥，改为固定间距。 */
 private val TIP_TO_SIPS_GAP = 16.dp
@@ -216,9 +218,10 @@ fun HomeScreen(
 }
 
 /**
- * 胆大王角落（moodboard §6.2）：猫语气泡 + 立绘 + 立绘后方的呼吸光袋（moodboard §2 光·遇）。
- * 气泡复用 [PraiseLine] 的浮现样式（multiLine 路径：宽度随内容上限 200dp、行数不限、零占位），
- * 悬于猫上方；列取 Start 对齐——气泡最长时也不把猫往右推（P1-1：猫钉在左下带）；
+ * 胆大王角落（moodboard §6.2 + 审查修复几何重定位）：立绘 + 立绘后方的呼吸光袋 + 猫语气泡。
+ * 三者同处底部空带（y≈8–104）：光袋与立绘居中起始，气泡在猫右侧（start 92dp 起、垂直居中于猫带，
+ * 多行时上下越出的仍是空带——按钮带自 112dp 起，互斥）；气泡叠绘于猫之上（Box 后绘者在上），
+ * 复用 [PraiseLine] 的 multiLine 浮现样式（宽度随内容上限 200dp、行数不限、零占位）。
  * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
  */
 @Suppress("ktlint:standard:function-naming")
@@ -230,13 +233,17 @@ private fun CatCorner(
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
-        PraiseLine(text = line, multiLine = true)
-        // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp），光在猫下、不压猫。
+    Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
+        // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp 区间取 128dp），光在猫下、不压猫。
         Box(contentAlignment = Alignment.Center) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
             CatFigure(mood = mood, accessories = accessories, onPet = onPet)
         }
+        PraiseLine(
+            text = line,
+            multiLine = true,
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 96.dp),
+        )
     }
 }
 

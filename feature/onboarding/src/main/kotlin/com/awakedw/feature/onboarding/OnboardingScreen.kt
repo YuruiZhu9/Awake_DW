@@ -55,6 +55,7 @@ import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
+import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.designsystem.particles.FloatingParticles
 
 /** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
@@ -257,7 +258,8 @@ private fun PrimaryButton(
                 .clickable(interactionSource = interactionSource, indication = null, onClick = onTap)
                 .padding(horizontal = 46.dp, vertical = 17.dp),
     ) {
-        Text(text = text, color = Color.White, style = MaterialTheme.typography.titleMedium)
+        // 主按钮文字对比（布局审计 P2-4 同构病灶）：浅色主题主色渐变偏亮，白字改走 onPrimarySurface 深暖字色。
+        Text(text = text, color = onPrimarySurface(spec), style = MaterialTheme.typography.titleMedium)
     }
 }
 

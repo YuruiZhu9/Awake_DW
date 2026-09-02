@@ -35,6 +35,8 @@ android {
             all { test ->
                 // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
                 test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                // Compose+Robolectric 组合测试的 NATIVE 渲染内存峰值大（溢出断言类曾 OOM），给足堆。
+                test.maxHeapSize = "2g"
             }
         }
     }
