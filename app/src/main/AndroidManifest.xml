@@ -32,7 +32,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.AwakeDW">
+            <!-- 布局审计 P1-7：首页为竖屏单手构图（底部打卡簇 + 猫角），锁定竖屏避免横屏整体挤压。 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

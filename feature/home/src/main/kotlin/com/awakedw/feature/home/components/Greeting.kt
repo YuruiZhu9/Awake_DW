@@ -2,7 +2,9 @@ package com.awakedw.feature.home.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,12 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.awakedw.core.common.TimeSlots
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.model.TimeSlot
 import java.time.LocalDateTime
+
+/** 问候语文字区右侧让位（布局审计 P1-3）：给行顶右端的蝴蝶结衣橱入口留出避让带。 */
+private val GREETING_BOW_CLEARANCE = 36.dp
 
 /** 时段问候语（规格 §3.2 第 1 条：早/午/晚分组内置）。 */
 internal fun greetingFor(slot: TimeSlot): String =
@@ -61,8 +67,13 @@ internal fun Greeting(
             text = customGreeting ?: greetingFor(TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
             // 问候语用系统衬线（§12 L2）：古典洛丽塔的书卷气，随 ROM 落到宋体/思源宋。
-            style = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Serif),
+            // 布局审计 P1-3：headlineSmall 24sp 下 12–20 字句在 360dp 屏必折行且第一行行尾
+            // 被蝴蝶结压住——降为 titleLarge 22sp、至多两行（溢出省略），文字区右让位 36dp 给蝴蝶结。
+            style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Serif),
             textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(end = GREETING_BOW_CLEARANCE),
         )
         Spacer(Modifier.height(6.dp))
         Text(

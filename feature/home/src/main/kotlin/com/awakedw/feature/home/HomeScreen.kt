@@ -22,8 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,9 +84,6 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
-/** 猫语气泡宽：容纳一句胆大王短语，悬于猫上方居中（复用 PraiseLine 的浮现样式）。 */
-private val CAT_LINE_BUBBLE_WIDTH = 168.dp
-
 /** 「记一杯」按钮光袋尺寸（96–160dp 区间取值）：呼吸光晕衬在按钮后方的浅浅一汪光。 */
 private val LOG_BUTTON_POCKET_WIDTH = 160.dp
 private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
@@ -93,17 +91,37 @@ private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 /** 胆大王光袋直径（96–160dp 区间取值）：给 96dp 立绘留一圈 16dp 的呼吸光晕。 */
 private val CAT_POCKET_DIAMETER = 128.dp
 
-/** 胆大王落角的边距：底部 leading 角，「记一杯」按钮（居中）同行对侧。 */
-private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
+/**
+ * 胆大王落角的边距（布局审计 P1-1）：底部 leading 角，落到左下空带与居中簇错开——
+ * bottom 132dp 把立绘（y≈148–244）抬出「记一杯」按钮（y≈36–94）与快捷胶囊行（y≈106–136）所在下带；
+ * start 收到 4dp，猫钉在列首不随气泡变宽右移。
+ */
+private val CAT_CORNER_PADDING = PaddingValues(start = 4.dp, bottom = 132.dp)
+
+/** 环下夸夸语的悬浮落差（布局审计 P1-2）：从环底缘垂下 12dp，浮在既有空档带上，不挤压徽章行。 */
+private val PRAISE_LINE_DROP = 12.dp
+
+/**
+ * 内容列尾呼吸（布局审计 P1-7）：整列可滚后列尾固定留白，给「记一杯」按钮与猫角收尾
+ * （猫是 Box 叠层不随滚动；≈快捷胶囊行 30 + 间距 12 + 按钮 58 的满滚抵底 clearance）。
+ */
+private val CONTENT_TAIL_BREATHING = 104.dp
+
+/** 健康贴士与快捷胶囊行之间的固定空档（布局审计 P1-7）：弹性 weight 空档与滚动互斥，改为固定间距。 */
+private val TIP_TO_SIPS_GAP = 16.dp
 
 /**
  * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
- * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
+ * 可点按进度环居中承重，夸夸语在环下方叠层浮现（§4.2 第 5 步，不占列内高度），达标后满环微光呼吸；
  * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
  * 问候语真居中，行顶右端叠 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
  * 首页不再常驻穿搭文字；新解锁也不弹文字横幅——仅蝴蝶结右上角亮描金圆点，用户裁定「无声等待制」），
  * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
+ *
+ * 布局审计 P1-7：内容列包 [verticalScroll]——小屏/大字体（fontScale 1.3）整列溢出时可垂直滚动，
+ * 弹性 weight 空档随之改为固定间距，列尾留 [CONTENT_TAIL_BREATHING] 给猫角与按钮收尾；
+ * 猫角是 Box 叠层挂载，不随滚动。竖屏锁定由 app 清单承担。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -130,7 +148,8 @@ fun HomeScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 28.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 28.dp, end = 28.dp, bottom = CONTENT_TAIL_BREATHING),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
@@ -156,10 +175,9 @@ fun HomeScreen(
             RingBlock(
                 progress = state.progress,
                 totalMl = state.totalMl,
+                praiseLine = state.praiseLine,
                 onRingTap = viewModel::tapRing,
             )
-            Spacer(Modifier.height(12.dp))
-            PraiseLine(text = state.praiseLine)
             Spacer(Modifier.height(20.dp))
             FadeUpOnce(delayMillis = 80) {
                 BadgesRow(
@@ -171,7 +189,8 @@ fun HomeScreen(
             }
             Spacer(Modifier.height(12.dp))
             FadeUpOnce(delayMillis = 120) { HealthTipLine() }
-            Spacer(Modifier.weight(1f))
+            // P1-7：weight 弹性空档改固定间距——列已可滚，弹性空档与滚动互斥。
+            Spacer(Modifier.height(TIP_TO_SIPS_GAP))
             QuickSipsRow(cupMl = state.cupMl, onQuickLog = viewModel::quickLog)
             Spacer(Modifier.height(12.dp))
             // 光袋（moodboard §2 光·遇）：按钮后方的呼吸光晕（96–160dp），绘制在按钮之下、背景之上。
@@ -179,12 +198,12 @@ fun HomeScreen(
                 LightPocket(modifier = Modifier.size(width = LOG_BUTTON_POCKET_WIDTH, height = LOG_BUTTON_POCKET_HEIGHT))
                 LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
             }
-            Spacer(Modifier.height(36.dp))
+            // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供（原 Spacer(36) 随之删除）。
         }
 
         CelebrationOverlay(visible = state.celebrating, modifier = Modifier.matchParentSize())
 
-        // 胆大王常驻（moodboard §6.2）：底部 leading 角，「记一杯」按钮同行对侧；
+        // 胆大王常驻（moodboard §6.2）：底部 leading 角叠层挂载、不随内容滚动；
         // 猫语气泡悬于猫上方（独立于环下夸夸语位置），点击立绘即摸猫（viewModel::petCat）。
         CatCorner(
             mood = state.catMood,
@@ -198,7 +217,8 @@ fun HomeScreen(
 
 /**
  * 胆大王角落（moodboard §6.2）：猫语气泡 + 立绘 + 立绘后方的呼吸光袋（moodboard §2 光·遇）。
- * 气泡复用 [PraiseLine] 的 Crossfade 浮现样式，悬于猫上方、与猫列对齐（独立于环下夸夸语位置）；
+ * 气泡复用 [PraiseLine] 的浮现样式（multiLine 路径：宽度随内容上限 200dp、行数不限、零占位），
+ * 悬于猫上方；列取 Start 对齐——气泡最长时也不把猫往右推（P1-1：猫钉在左下带）；
  * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
  */
 @Suppress("ktlint:standard:function-naming")
@@ -210,10 +230,8 @@ private fun CatCorner(
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.width(CAT_LINE_BUBBLE_WIDTH)) {
-            PraiseLine(text = line)
-        }
+    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
+        PraiseLine(text = line, multiLine = true)
         // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp），光在猫下、不压猫。
         Box(contentAlignment = Alignment.Center) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
@@ -228,6 +246,7 @@ private fun CatCorner(
 private fun RingBlock(
     progress: Float,
     totalMl: Int,
+    praiseLine: String?,
     onRingTap: (Offset?) -> Unit,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
@@ -251,6 +270,12 @@ private fun RingBlock(
         Box(Modifier.matchParentSize()) {
             RingBow(goalMet = progress >= 1f, modifier = Modifier.align(Alignment.TopCenter).offset(y = -BOW_LIFT))
         }
+        // 夸夸语改叠层挂载（布局审计 P1-2）：从环底缘垂下悬浮，不再占列内 26dp 常驻高度——
+        // 无文案时零占位，浮现时不挤压下方徽章行。
+        PraiseLine(
+            text = praiseLine,
+            modifier = Modifier.align(Alignment.BottomCenter).offset(y = PRAISE_LINE_DROP),
+        )
     }
 }
 

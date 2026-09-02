@@ -24,7 +24,12 @@ internal fun BadgesRow(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    FlowRow(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    // 布局审计 P2-2：换行时行间距 8dp——窄屏四枚折行不再叠成零行距的实心块。
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         BadgeChip(text = "今日 $cupCount 杯 ☀", spec = spec)
         if (lastDrinkLabel != null) {
             BadgeChip(text = "最近一杯 $lastDrinkLabel", spec = spec)

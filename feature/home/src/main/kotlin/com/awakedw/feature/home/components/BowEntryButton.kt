@@ -26,7 +26,10 @@ import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
 
-/** 蝴蝶结衣橱入口边长（§5.2 重设计）：24–28dp 取上限，兼顾点按命中率与装饰克制。 */
+/** 蝴蝶结衣橱触摸域边长（布局审计 P3-5）：48dp 无障碍下限，外扩不放大视觉。 */
+private val BOW_ENTRY_TOUCH_SIZE = 48.dp
+
+/** 蝴蝶结视觉边长（§5.2 重设计）：24–28dp 取上限，装饰克制；触摸域外扩由 [BOW_ENTRY_TOUCH_SIZE] 承担。 */
 private val BOW_ENTRY_SIZE = 28.dp
 
 /** 蝴蝶结绘制宽占按钮边长的比例：结饰略小于点击域，留出涟漪与呼吸的边。 */
@@ -40,6 +43,13 @@ private const val UNSEEN_DOT_SCALE_IN_MS = 200
 
 /** 未看圆点内缩量：沿圆裁形边内收，避免被入口的圆形裁形削角。 */
 private val UNSEEN_DOT_INSET = 2.dp
+
+/**
+ * 未看圆点钉在视觉蝴蝶结右上角所需的外扩内缩量（布局审计 P3-5）：
+ * 视觉蝴蝶结（[BOW_ENTRY_SIZE]）在 48dp 触摸域内居中 → 距容器边 (48-28)/2 = 10dp，
+ * 再沿视觉蝴蝶结边内收 [UNSEEN_DOT_INSET] = 2dp——圆点随结构外扩仍钉在视觉结角右上。
+ */
+private val UNSEEN_DOT_VISUAL_INSET = (BOW_ENTRY_TOUCH_SIZE - BOW_ENTRY_SIZE) / 2 + UNSEEN_DOT_INSET
 
 /** 未看圆点语义描述：测试与无障碍共用（有新藏品未看）。 */
 internal const val UNSEEN_DOT_DESCRIPTION = "新裙入柜"
@@ -63,15 +73,16 @@ internal fun BowEntryButton(
     showDot: Boolean = false,
 ) {
     val spec = currentThemeSpec()
+    // 布局审计 P3-5：触摸域外扩到 48dp，视觉蝴蝶结（28dp Canvas）在域内居中保持原尺寸。
     Box(
         modifier =
             modifier
-                .size(BOW_ENTRY_SIZE)
+                .size(BOW_ENTRY_TOUCH_SIZE)
                 .clip(CircleShape)
                 .clickable(role = Role.Button) { onOpenGallery() }
                 .semantics { contentDescription = "衣橱" },
     ) {
-        Canvas(modifier = Modifier.size(BOW_ENTRY_SIZE)) {
+        Canvas(modifier = Modifier.align(Alignment.Center).size(BOW_ENTRY_SIZE)) {
             drawBow(
                 center = Offset(size.width / 2f, size.height / 2f),
                 width = size.minDimension * BOW_ENTRY_DRAW_RATIO,
@@ -87,7 +98,7 @@ internal fun BowEntryButton(
                 modifier =
                     Modifier
                         .align(Alignment.TopEnd)
-                        .offset(x = -UNSEEN_DOT_INSET, y = UNSEEN_DOT_INSET)
+                        .offset(x = -UNSEEN_DOT_VISUAL_INSET, y = UNSEEN_DOT_VISUAL_INSET)
                         .size(UNSEEN_DOT_SIZE)
                         .graphicsLayer {
                             scaleX = dotScale.value
