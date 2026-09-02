@@ -185,6 +185,12 @@ class SoundPoolPlayerTest {
 
         override suspend fun markOutfitsUnlocked(ids: Collection<String>) = throw UnsupportedOperationException()
 
+        override val unseenOutfits: Flow<Set<String>> get() = throw UnsupportedOperationException()
+
+        override suspend fun markOutfitsUnseen(ids: Collection<String>) = throw UnsupportedOperationException()
+
+        override suspend fun markOutfitsSeen(ids: Collection<String>) = throw UnsupportedOperationException()
+
         override val pinnedOutfitId: Flow<String?> get() = throw UnsupportedOperationException()
 
         override suspend fun setPinnedOutfit(id: String?) = throw UnsupportedOperationException()

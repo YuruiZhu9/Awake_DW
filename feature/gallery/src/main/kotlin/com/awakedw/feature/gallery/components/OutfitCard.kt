@@ -3,6 +3,7 @@ package com.awakedw.feature.gallery.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.feature.gallery.GalleryItemUi
 
@@ -44,7 +46,9 @@ private const val LOCKED_DIM_ALPHA = 0.55f
  * 画廊卡片（moodboard §5.2 册页式呈现）：
  * 缩略图（assets 位图；缺失/锁定回退主题色渐变 + 裙装剪影）+ 标题行；
  * 锁定件叠加「第 N 天解锁 ♡」小字——是期待感文案不是惩罚文案（治愈铁律）；
- * [item.pinned] 为 true 时标题行挂「今日之裙」小签。整卡可点开详情底部弹层。
+ * [item.pinned] 为 true 时标题行挂「今日之裙」小签；
+ * [item.isNew] 且已解锁时图区左上角挂「新」标（未看新解锁，进画廊即随已读清账退场）。
+ * 整卡可点开详情底部弹层。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -82,6 +86,9 @@ fun OutfitCard(
                 }
             } else {
                 DressSilhouette(spec = spec, modifier = Modifier.fillMaxSize())
+            }
+            if (item.isNew && item.unlocked) {
+                NewBadge(modifier = Modifier.align(Alignment.TopStart).padding(8.dp))
             }
             if (!item.unlocked) {
                 Text(
@@ -123,6 +130,32 @@ private const val TODAY_SIGN = "♡ 今日之裙"
 
 /** 锁定件期待感文案（治愈铁律：倒数的是见面，不是惩罚）。 */
 private val UNLOCK_HINT_FORMAT = "第 %d 天解锁 ♡"
+
+/**
+ * 「新」标（用户裁定「无声等待制」第三层）：未看新解锁的卡片左上角小签——
+ * 11sp 描金字 + 描金细描边胶囊，衬半透明暗底保证位图上可读；克制不闪不跳，
+ * 进画廊即随已读清账退场。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun NewBadge(modifier: Modifier = Modifier) {
+    Box(
+        modifier =
+            modifier
+                .background(Color.Black.copy(alpha = 0.30f), RoundedCornerShape(percent = 50))
+                .border(1.dp, GOLD_TRIM, RoundedCornerShape(percent = 50))
+                .padding(horizontal = 7.dp, vertical = 1.dp),
+    ) {
+        Text(
+            text = NEW_SIGN,
+            color = GOLD_TRIM,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+        )
+    }
+}
+
+/** 「新」标文案。 */
+private const val NEW_SIGN = "新"
 
 /**
  * 裙装剪影（占位视觉）：A 字裙身矢量剪影 + 腰间小蝴蝶结，主题色低透明度绘制——

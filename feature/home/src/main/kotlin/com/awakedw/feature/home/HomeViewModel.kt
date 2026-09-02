@@ -13,6 +13,7 @@ import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
 import com.awakedw.core.model.Outfit
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -43,9 +45,6 @@ const val PRAISE_HOLD_MS = 1_400L
 /** 达成庆祝横幅停留时长（任务规格：2500ms 自动收敛）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
-/** 新解锁轻提示停留时长（任务规格：与庆祝横幅同拍 2500ms 后由 epoch 收场清空）。 */
-const val NEW_UNLOCK_HOLD_MS = 2_500L
-
 /** 猫语气泡停留时长（moodboard §6.2：2.0s 收场，独立于夸夸语的 1.4s）。 */
 const val CAT_LINE_HOLD_MS = 2_000L
 
@@ -55,7 +54,8 @@ const val CAT_LINE_HOLD_MS = 2_000L
  * [greeting] 为 null 表示文案库首抽未就绪，表现层回落时段默认句；
  * [cupMl]/[streakDays]/[lastDrinkLabel] 供快捷量 chips 与徽章行展示（§11.1/11.2）；
  * [todayOutfit] 为 null 表示今日之裙解析未就绪，表现层不绘制画卷（moodboard §5.1）；
- * [newUnlock] 为本次打卡新解锁的藏品，浮出轻提示 [NEW_UNLOCK_HOLD_MS] 后收场清空；
+ * [hasUnseenOutfits] 为有未看新解锁（「无声等待制」：解锁落库即并入未看集、进画廊清账，
+ * 首页不弹任何文字，表现层仅在蝴蝶结右上角亮描金圆点）；
  * [catMood] 为胆大王心情三态（moodboard §6，打卡短暂 HAPPY、深夜安睡）；
  * [catLine] 为猫语气泡，浮现 [CAT_LINE_HOLD_MS] 后收场清空（独立于夸夸语位置与节奏）；
  * [catAccessories] 为按连胜解锁的猫配饰（init 与每次打卡成功后刷新）。
@@ -74,7 +74,7 @@ data class HomeUiState(
     val praiseLine: String? = null,
     val celebrating: Boolean = false,
     val todayOutfit: Outfit? = null,
-    val newUnlock: Outfit? = null,
+    val hasUnseenOutfits: Boolean = false,
     val catMood: CatMood = CatMood.IDLE,
     val catLine: String? = null,
     val catAccessories: List<CatAccessory> = emptyList(),
@@ -87,24 +87,25 @@ data class HomeUiState(
  * - 进首页即解析今日之裙（moodboard §5.1）灌入 [HomeUiState.todayOutfit]——画卷层的数据源；
  *   VM 存活期间画廊改钉选不重建本 VM，故对 pin 流挂收集：每次钉选变化重解析刷新画卷
  *   （有 pin 换成 pin 件、取消 pin 落回当日已定记录，与画廊今日之裙钉选回流同屏一致）；
+ * - 未看新解锁（用户裁定「无声等待制」）：收集 prefs 未看集映射 [HomeUiState.hasUnseenOutfits]，
+ *   解锁落库（用例内同步并入未看集）即亮、进画廊清账即灭——首页不弹任何文字；
  * - 打卡两入口（按钮/环区）共用同一 800ms 前沿闸门（规格 §4.1「按钮=立即记录」）：
  *   首触立即成笔，环推进/数字滚动/夸夸语随即重叠展开（§4.2）；
  *   距上次成笔不足 800ms 的连点合并忽略；
  * - 打卡成功后按当前时段抽一句夸夸语，1.4s 后收起；celebrated=true 时庆祝态撑满 2.5s，
  *   同日后续打卡（use case 返回 false）即时回到普通反馈；
- * - 打卡成功分支后以最新连胜结算解锁（幂等）：新解锁浮出轻提示 [NEW_UNLOCK_HOLD_MS] 后收场，
- *   新一轮打卡以本轮结果当场覆盖旧提示，与夸夸语共用 feedbackEpoch 防串场；
+ * - 打卡成功分支后以最新连胜结算解锁（幂等）：新解锁由用例并入未看集，本轮圆点亮起；
  * - 胆大王的回应编排（moodboard §6.2）：init 按当前小时定心情（22 点后安睡）、按连胜披挂配饰；
  *   打卡成功即 HAPPY 一次并抽一句猫语（回应每次成笔，celebrated 与否不论），[CAT_LINE_HOLD_MS] 后
  *   气泡清空、心情按当前小时落回；摸猫（[petCat]）同样抽一句猫语回应；
  *   猫序列（气泡 + 心情）走独立的 catEpoch 防串场——摸猫/新打卡只互踩猫自己，
- *   不殃及夸夸语/庆祝/新解锁的 feedbackEpoch 收场；
+ *   不殃及夸夸语/庆祝的 feedbackEpoch 收场；
  * - 声音三触发点（任务 12，fire-and-forget 绝不抛）：打卡成笔确认即随机一声掉落音
  *   （[DROP_EVENTS] 三档其一）；celebrated=true 时掉落音后追加一段达标旋律；
  *   摸猫一声呼噜。播放与动画解耦——成笔即响，不等夸夸语/庆祝的任何一拍；
  *   是否出声（应用内开关 + 系统静音遵从）由播放器内部裁决，本层不问。
  *
- * 防抖窗与提示停留时长由 [logDebounceMs]/[newUnlockHoldMs]/[catLineHoldMs] 注入（生产缺省、测试缩窗），
+ * 防抖窗与提示停留时长由 [logDebounceMs]/[catLineHoldMs] 注入（生产缺省、测试缩窗），
  * 窗口按时钟 [clock] 计量；成笔后反馈序列不取消，仅以 epoch 防串场。
  */
 @HiltViewModel
@@ -113,12 +114,12 @@ class HomeViewModel(
     observeHome: ObserveHomeUseCase,
     private val logWater: LogWaterUseCase,
     private val copies: CopyLibraryRepository,
+    private val prefs: UserPreferencesRepository,
     private val unlockOutfits: UnlockOutfitsUseCase,
     private val resolveDailyOutfit: ResolveDailyOutfitUseCase,
     private val streakOf: GetStreakUseCase,
     private val sound: AwakeSoundPlayer,
     private val logDebounceMs: Long = LOG_DEBOUNCE_MS,
-    private val newUnlockHoldMs: Long = NEW_UNLOCK_HOLD_MS,
     private val catLineHoldMs: Long = CAT_LINE_HOLD_MS,
 ) : ViewModel() {
     /** Dagger 注入入口：生产以缺省时长委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
@@ -128,6 +129,7 @@ class HomeViewModel(
         observeHome: ObserveHomeUseCase,
         logWater: LogWaterUseCase,
         copies: CopyLibraryRepository,
+        prefs: UserPreferencesRepository,
         unlockOutfits: UnlockOutfitsUseCase,
         resolveDailyOutfit: ResolveDailyOutfitUseCase,
         streakOf: GetStreakUseCase,
@@ -137,12 +139,12 @@ class HomeViewModel(
         observeHome,
         logWater,
         copies,
+        prefs,
         unlockOutfits,
         resolveDailyOutfit,
         streakOf,
         sound,
         LOG_DEBOUNCE_MS,
-        NEW_UNLOCK_HOLD_MS,
         CAT_LINE_HOLD_MS,
     )
 
@@ -173,6 +175,13 @@ class HomeViewModel(
             val slot = TimeSlots.slotOfHour(currentHour())
             val greeting = copies.randomFor(slot)
             _uiState.update { it.copy(greeting = greeting) }
+        }
+        // 未看新解锁（用户裁定「无声等待制」）：未看集非空映射 hasUnseenOutfits，
+        // 解锁落库即亮（蝴蝶结圆点）、进画廊 markOutfitsSeen 清账即灭——首页全程无文字。
+        viewModelScope.launch {
+            prefs.unseenOutfits.map { it.isNotEmpty() }.collect { hasUnseen ->
+                _uiState.update { it.copy(hasUnseenOutfits = hasUnseen) }
+            }
         }
         // 今日之裙（moodboard §5.1）：进首页即解析（钉选优先/当日已定/解锁池稳定随机），
         // 灌入画卷层；解析完成前 todayOutfit 保持 null——表现层不绘制画卷，UI 完全无感。
@@ -242,9 +251,12 @@ class HomeViewModel(
         feedbackEpoch += 1
         val epoch = feedbackEpoch
 
-        // 打卡成功分支后按最新连胜结算解锁（moodboard §5.2，幂等）；
-        // 无新解锁时以 null 覆盖——新轮打卡当场清掉旧提示，不让上一轮提示悬挂。
-        val newUnlock = result?.let { unlockOutfits(_uiState.value.streakDays).firstOrNull() }
+        // 打卡成功分支后按最新连胜结算解锁（moodboard §5.2，幂等）：
+        // 新解锁在用例内同步并入未看集——hasUnseenOutfits 由 init 的收集自行翻 true，
+        // 首页不弹任何文字（用户裁定），提示交给蝴蝶结圆点与画廊「新」标。
+        if (result != null) {
+            unlockOutfits(_uiState.value.streakDays)
+        }
 
         val slot = TimeSlots.slotOfHour(currentHour())
         val praise = copies.randomFor(slot)
@@ -253,19 +265,7 @@ class HomeViewModel(
                 praiseLine = praise,
                 // 当日首次达标为 true；其余打卡（含达标后再打）一律回到普通反馈。
                 celebrating = result?.celebrated == true,
-                newUnlock = newUnlock,
             )
-        }
-
-        // 新解锁轻提示的定时收场：与夸夸语同一 feedbackEpoch 防串场——
-        // 新一轮打卡后本收场失效（新轮已覆盖该字段），不再回写旧值。
-        if (newUnlock != null) {
-            viewModelScope.launch {
-                delay(newUnlockHoldMs)
-                if (feedbackEpoch == epoch) {
-                    _uiState.update { it.copy(newUnlock = null) }
-                }
-            }
         }
 
         // 打卡成功即推进猫序列（moodboard §6.2）：HAPPY 一次 + 抽一句猫语，回应每次成笔。
@@ -297,7 +297,7 @@ class HomeViewModel(
     /**
      * 猫回应序列（moodboard §6.2）：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
      * [catLineHoldMs] 后收场——气泡清空、心情按当前小时落回（白天 IDLE / 深夜安睡，零惩罚）。
-     * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及夸夸语/庆祝/新解锁的收场。
+     * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及夸夸语/庆祝的收场。
      */
     private fun playCatResponse(happy: Boolean) {
         catEpoch += 1

@@ -101,7 +101,7 @@ private val CAT_CORNER_PADDING = PaddingValues(start = 12.dp, bottom = 24.dp)
  * 可点按进度环居中承重，夸夸语在环下方浮现（§4.2 第 5 步），达标后满环微光呼吸；
  * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
  * 问候语真居中，行顶右端叠 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
- * 首页不再常驻穿搭文字），打卡新解锁时问候语下方浮出「新裙入柜」瞬时轻提示；
+ * 首页不再常驻穿搭文字；新解锁也不弹文字横幅——仅蝴蝶结右上角亮描金圆点，用户裁定「无声等待制」），
  * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
  * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
  */
@@ -135,7 +135,8 @@ fun HomeScreen(
         ) {
             Spacer(Modifier.height(44.dp))
             // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
-            // 蝴蝶结衣橱入口叠于行顶右端，不挤占问候语的可视宽度。
+            // 蝴蝶结衣橱入口叠于行顶右端，不挤占问候语的可视宽度；
+            // 有未看新解锁时入口右上角亮描金圆点（showDot，200ms scale-in），首页不再有任何新裙文字。
             FadeUpOnce {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Greeting(
@@ -144,12 +145,13 @@ fun HomeScreen(
                         goalMl = state.goalMl,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    BowEntryButton(onOpenGallery = onOpenGallery, modifier = Modifier.align(Alignment.TopEnd))
+                    BowEntryButton(
+                        onOpenGallery = onOpenGallery,
+                        showDot = state.hasUnseenOutfits,
+                        modifier = Modifier.align(Alignment.TopEnd),
+                    )
                 }
             }
-            // 打卡新解锁的瞬时轻提示（§5.2，反馈非常驻文案）：问候语下方浮出「新裙入柜 ♡」，
-            // 2.5s 后由 ViewModel 收场；无解锁时 [PraiseLine] 留白占位，下方环块不跳位。
-            PraiseLine(text = state.newUnlock?.let { "新裙入柜 ♡ ${it.title}" })
             Spacer(Modifier.height(20.dp))
             RingBlock(
                 progress = state.progress,

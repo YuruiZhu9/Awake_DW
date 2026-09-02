@@ -45,6 +45,7 @@ class FakePrefsRepository(
 
     // —— v0.2 画廊与音效（内存版，仅满足契约加宽） ——
     private val unlocked = MutableStateFlow(emptySet<String>())
+    private val unseen = MutableStateFlow(emptySet<String>())
     private val pinned = MutableStateFlow<String?>(null)
     private var daily: Pair<String, String>? = null
     private val sound = MutableStateFlow(true)
@@ -53,6 +54,16 @@ class FakePrefsRepository(
 
     override suspend fun markOutfitsUnlocked(ids: Collection<String>) {
         unlocked.value = unlocked.value + ids.toSet()
+    }
+
+    override val unseenOutfits: Flow<Set<String>> = unseen
+
+    override suspend fun markOutfitsUnseen(ids: Collection<String>) {
+        unseen.value = unseen.value + ids.toSet()
+    }
+
+    override suspend fun markOutfitsSeen(ids: Collection<String>) {
+        unseen.value = unseen.value - ids.toSet()
     }
 
     override val pinnedOutfitId: Flow<String?> = pinned

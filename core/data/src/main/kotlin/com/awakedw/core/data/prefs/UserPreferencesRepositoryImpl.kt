@@ -28,6 +28,7 @@ internal object PrefKeys {
     const val ONBOARDING_DONE = "onboarding_done"
     const val CELEBRATED_DAY_KEY = "celebrated_day_key"
     const val UNLOCKED_OUTFITS = "unlocked_outfits"
+    const val UNSEEN_OUTFITS = "unseen_outfits"
     const val PINNED_OUTFIT_ID = "pinned_outfit_id"
     const val DAILY_OUTFIT_DAY = "daily_outfit_day"
     const val DAILY_OUTFIT_ID = "daily_outfit_id"
@@ -88,6 +89,23 @@ class UserPreferencesRepositoryImpl
             edit {
                 val unlockedOutfitsKey = stringSetPreferencesKey(PrefKeys.UNLOCKED_OUTFITS)
                 it[unlockedOutfitsKey] = (it[unlockedOutfitsKey] ?: emptySet()) + ids.toSet()
+            }
+
+        override val unseenOutfits: Flow<Set<String>> =
+            dataStore.data.map { it[stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)] ?: emptySet() }
+
+        /** 幂等并入未看集：旧集与新 ids 取并集（集合语义天然去重）。 */
+        override suspend fun markOutfitsUnseen(ids: Collection<String>) =
+            edit {
+                val unseenKey = stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)
+                it[unseenKey] = (it[unseenKey] ?: emptySet()) + ids.toSet()
+            }
+
+        /** 幂等移除已看：不存在的 ids 直接跳过，集可为空。 */
+        override suspend fun markOutfitsSeen(ids: Collection<String>) =
+            edit {
+                val unseenKey = stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)
+                it[unseenKey] = (it[unseenKey] ?: emptySet()) - ids.toSet()
             }
 
         override val pinnedOutfitId: Flow<String?> = dataStore.data.map { it[stringPreferencesKey(PrefKeys.PINNED_OUTFIT_ID)] }

@@ -30,6 +30,17 @@ class UnlockOutfitsUseCaseTest {
         }
 
     @Test
+    fun `新解锁同步并入未看集_既有藏品不入`() =
+        runBlocking {
+            prefs.markOutfitsUnlocked(listOf("dress_00", "museum_01"))
+
+            useCase(7)
+
+            // 新裙入柜即入未看集（蝴蝶结圆点数据源）；既有件不误入。
+            assertEquals(setOf("dress_01", "dress_02"), prefs.unseenOutfits.first())
+        }
+
+    @Test
     fun `重复调用幂等_再次同步返回空`() =
         runBlocking {
             prefs.markOutfitsUnlocked(listOf("dress_00", "museum_01"))
@@ -38,6 +49,8 @@ class UnlockOutfitsUseCaseTest {
             val again = useCase(7)
 
             assertTrue(again.isEmpty())
+            // 重复解锁不得重复扰动未看集：仍只有首轮的两件新裙。
+            assertEquals(setOf("dress_01", "dress_02"), prefs.unseenOutfits.first())
         }
 
     @Test

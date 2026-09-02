@@ -68,6 +68,7 @@ class HomeViewModelCatTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
+                prefs = prefs,
                 unlockOutfits = UnlockOutfitsUseCase(prefs),
                 resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
                 streakOf = GetStreakUseCase(water, prefs),

@@ -18,6 +18,9 @@ class UnlockOutfitsUseCase
             val new = OutfitCatalog.unlockedBy(currentStreakDays).filter { it.id !in have }
             if (new.isNotEmpty()) {
                 prefs.markOutfitsUnlocked(new.map { it.id })
+                // 新裙入柜同步并入未看集（「新裙提示」数据源）：差集已滤既有件，
+                // 重复解锁不会重复入集；进画廊后由 markOutfitsSeen 统一清账。
+                prefs.markOutfitsUnseen(new.map { it.id })
             }
             return new
         }

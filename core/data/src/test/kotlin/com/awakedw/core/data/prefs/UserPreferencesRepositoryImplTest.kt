@@ -41,6 +41,31 @@ class UserPreferencesRepositoryImplTest {
         }
 
     @Test
+    fun `初始unseenOutfits为空集`() =
+        runTest {
+            assertEquals(emptySet<String>(), repo.unseenOutfits.first())
+        }
+
+    @Test
+    fun `markOutfitsUnseen后flow命中_重复标记幂等`() =
+        runTest {
+            repo.markOutfitsUnseen(listOf("dress_01"))
+            assertEquals(setOf("dress_01"), repo.unseenOutfits.first())
+            repo.markOutfitsUnseen(listOf("dress_01", "dress_02"))
+            assertEquals(setOf("dress_01", "dress_02"), repo.unseenOutfits.first())
+        }
+
+    @Test
+    fun `markOutfitsSeen后从未看集移除_移除不存在id幂等`() =
+        runTest {
+            repo.markOutfitsUnseen(listOf("dress_01", "dress_02"))
+            repo.markOutfitsSeen(listOf("dress_01", "dress_03"))
+            assertEquals(setOf("dress_02"), repo.unseenOutfits.first())
+            repo.markOutfitsSeen(listOf("dress_02"))
+            assertEquals(emptySet<String>(), repo.unseenOutfits.first())
+        }
+
+    @Test
     fun `setPinnedOutfit非null命中_置null回落无钉选`() =
         runTest {
             assertNull(repo.pinnedOutfitId.first())

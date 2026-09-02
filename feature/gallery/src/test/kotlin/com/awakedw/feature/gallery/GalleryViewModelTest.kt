@@ -2,8 +2,10 @@ package com.awakedw.feature.gallery
 
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
+import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.OutfitCatalog
 import com.awakedw.core.model.OutfitCategory
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -171,4 +173,41 @@ class GalleryViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun `未看新解锁件isNew为true_init标记已看后随未看集清空退场`() =
+        runTest {
+            val prefs = FakeGalleryPrefs()
+            prefs.markOutfitsUnlocked(setOf("dress_00", "dress_01", "dress_02"))
+            prefs.markOutfitsUnseen(setOf("dress_01", "dress_02"))
+            // 门闩假件拦住 markOutfitsSeen：制造「首帧状态已就绪、清账未落」的过渡，供断言「新」标确实亮过。
+            val gate = CompletableDeferred<Unit>()
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+            val viewModel = GalleryViewModel(GatedGalleryPrefs(prefs, gate))
+            runCurrent()
+
+            // 进画廊第一帧：未看件 isNew=true；既有件与锁定件一律 false。
+            val first = viewModel.uiState.value
+            assertTrue(first.dresses.first { it.outfit.id == "dress_01" }.isNew)
+            assertTrue(first.dresses.first { it.outfit.id == "dress_02" }.isNew)
+            assertFalse(first.dresses.first { it.outfit.id == "dress_00" }.isNew)
+            assertTrue((first.dresses + first.museum).none { it.isNew && !it.unlocked })
+
+            // 放行清账（init 已把全部已解锁 id 标记为已看）：未看集清空、isNew 全 false。
+            gate.complete(Unit)
+            runCurrent()
+            assertEquals(emptySet<String>(), prefs.unseenOutfits.first())
+            assertTrue((viewModel.uiState.value.dresses + viewModel.uiState.value.museum).none { it.isNew })
+        }
+
+    /** 门闩假件：其余成员按接口委托直通 [delegate]，仅 markOutfitsSeen 等待 [gate] 放行。 */
+    private class GatedGalleryPrefs(
+        private val delegate: UserPreferencesRepository,
+        private val gate: CompletableDeferred<Unit>,
+    ) : UserPreferencesRepository by delegate {
+        override suspend fun markOutfitsSeen(ids: Collection<String>) {
+            gate.await()
+            delegate.markOutfitsSeen(ids)
+        }
+    }
 }
