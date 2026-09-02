@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -69,7 +68,7 @@ internal fun Greeting(
             // 问候语用系统衬线（§12 L2）：古典洛丽塔的书卷气，随 ROM 落到宋体/思源宋。
             // 布局审计 P1-3：headlineSmall 24sp 下 12–20 字句在 360dp 屏必折行且第一行行尾
             // 被蝴蝶结压住——降为 titleLarge 22sp、至多两行（溢出省略），文字区右让位 36dp 给蝴蝶结。
-            style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Serif),
+            style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,

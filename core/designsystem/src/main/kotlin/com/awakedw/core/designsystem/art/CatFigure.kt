@@ -38,8 +38,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
-import com.awakedw.core.designsystem.lolita.drawBow
-import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -61,17 +59,6 @@ private const val SLEEPY_SATURATION = 0.85f
  */
 internal fun breathTargetOf(mood: CatMood): Float = if (mood == CatMood.SLEEPY) 1.01f else 1.02f
 
-/**
- * 配饰叠绘锚点比例（简报逐字参数，相对 96dp 方框高度）：
- * bow=头顶 0.18h、pearl=颈 0.52h、dress=身 0.72h。资产叠绘与矢量配饰共用，保证两路径同位。
- */
-internal fun accessoryAnchorY(accessory: CatAccessory): Float =
-    when (accessory) {
-        CatAccessory.BOW -> 0.18f
-        CatAccessory.PEARL -> 0.52f
-        CatAccessory.OUTFIT -> 0.72f
-    }
-
 /** 三态立绘资产路径（:app assets 相对路径；缺失由 [rememberAssetImageOrN] 回退 null）。 */
 internal fun catAssetFileOf(mood: CatMood): String =
     when (mood) {
@@ -79,14 +66,6 @@ internal fun catAssetFileOf(mood: CatMood): String =
         CatMood.HAPPY -> "cat/happy.webp"
         CatMood.SLEEPY -> "cat/sleepy.webp"
     }
-
-/** 配饰叠绘宽度档（相对方框宽）：按各配饰图原比例等比缩放到该宽度。 */
-private val OVERLAY_WIDTH_FRACTIONS =
-    mapOf(
-        CatAccessory.BOW to 0.40f,
-        CatAccessory.PEARL to 0.42f,
-        CatAccessory.OUTFIT to 0.58f,
-    )
 
 /**
  * 布偶猫矢量兜底固定色板（Q 版 2.5 头身，可爱优先）：
@@ -151,42 +130,18 @@ internal fun catPaletteOf(isDark: Boolean): CatVectorPalette {
 }
 
 /**
- * 胆大王（moodboard §6）：96dp 见方常驻首页一角。
- * 有资产用图（idle/happy/sleepy 三态 + 配饰 overlay 叠绘），
- * 无资产画内置矢量布偶猫（Canvas：奶油白重点色 + 蓝宝石眼 + 羽状尾，固定色板，深夜色板预混压暗）——体验先行，资产后补即生效。
- * 微动效常驻：呼吸缩放 1.00→1.02（3s 循环，SLEEPY 减半）；HAPPY 一次 spring 弹跳。
- *
- * 双路径规则：
- * - 立绘资产（[catAssetFileOf]）存在 → 整幅用图；已解锁配饰的资产也存在时按 [accessoryAnchorY]
- *   锚点叠绘（图缺失不画，资产后补即生效，不做矢量与位图混拼）；
- * - 立绘资产缺失 → Canvas 矢量布偶猫 + 全矢量配饰（BOW 复用 [drawBow]，PEARL 珍珠串，OUTFIT 钟形裙）。
- *
- * 微动效：
- * - 呼吸缩放 [breathTargetOf]（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；mood 变化时 [key] 重启换档）；
- * - HAPPY 一次 spring 弹跳（[Animatable] 蹲 0.92 → MediumBouncy 弹回 1.00，mood 变 HAPPY 触发一次，
- *   离开 HAPPY 复位，重组不重放）；
- * - SLEEPY 绘制层 0.85f 低饱和（[SLEEPY_SATURATION]，仅柔和降饱和、不降透明度不灰暗）。
- *
- * 点击任意处触发 [onPet]（[detectTapGestures]，纯手势层，不进语义 click）。
- * 治愈铁律：视觉零惩罚——SLEEPY 是安睡不是消极。
- *
- * @param mood 心情三态，由调用方传入（本组件不感知时间）。
- * @param accessories 已解锁配饰（通常为 [com.awakedw.core.model.unlockedCatAccessories] 的结果）。
- * @param modifier 外部布局修饰（对齐/边距等）；96dp 见方由本组件内部固定。
- * @param onPet 摸猫回调（点击立绘触发）。
+ * Optional mascot used as a visual accent and lightweight tap response.
+ * It never exposes progression, collection, or reward state.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun CatFigure(
     mood: CatMood,
-    accessories: List<CatAccessory>,
     modifier: Modifier = Modifier,
     onPet: () -> Unit = {},
 ) {
     val theme = currentThemeSpec()
     val bodyImage = rememberAssetImageOrN(catAssetFileOf(mood))
-    val accessoryImages: List<Pair<CatAccessory, ImageBitmap?>> =
-        accessories.map { accessory -> accessory to rememberAssetImageOrN(accessory.assetFile) }
 
     // 呼吸缩放：1.5s 单程 ×2 = 3s 完整呼吸周期（Reverse 循环）；SLEEPY 幅度减半。key(mood) 换档即重启（从 1.00 起步，跳变 ≤2% 不可感）。
     val breathState: State<Float> =
@@ -233,12 +188,8 @@ fun CatFigure(
                     val body = bodyImage
                     if (body != null) {
                         drawFitted(body, sleepyFilter)
-                        for ((accessory, image) in accessoryImages) {
-                            if (image != null) drawAccessoryOverlay(accessory, image, sleepyFilter)
-                        }
                     } else {
                         drawVectorCat(mood, theme, sleepyFilter)
-                        for ((accessory, _) in accessoryImages) drawVectorAccessory(accessory, theme)
                     }
                 }
                 .semantics { contentDescription = CAT_SEMANTICS }
@@ -260,28 +211,6 @@ private fun DrawScope.drawFitted(
             IntOffset(
                 ((size.width - dstWidth) / 2f).roundToInt(),
                 ((size.height - dstHeight) / 2f).roundToInt(),
-            ),
-        dstSize = IntSize(dstWidth, dstHeight),
-        colorFilter = colorFilter,
-    )
-}
-
-/** 配饰资产叠绘：中心锚定在 [accessoryAnchorY] 比例位，按原比例缩放到 [OVERLAY_WIDTH_FRACTIONS] 宽度档。 */
-private fun DrawScope.drawAccessoryOverlay(
-    accessory: CatAccessory,
-    image: ImageBitmap,
-    colorFilter: ColorFilter?,
-) {
-    val targetWidth = size.width * OVERLAY_WIDTH_FRACTIONS.getValue(accessory)
-    val dstWidth = targetWidth.roundToInt().coerceAtLeast(1)
-    val dstHeight = (image.height * targetWidth / image.width).roundToInt().coerceAtLeast(1)
-    val centerY = size.height * accessoryAnchorY(accessory)
-    drawImage(
-        image = image,
-        dstOffset =
-            IntOffset(
-                ((size.width - dstWidth) / 2f).roundToInt(),
-                (centerY - dstHeight / 2f).roundToInt(),
             ),
         dstSize = IntSize(dstWidth, dstHeight),
         colorFilter = colorFilter,
@@ -575,48 +504,4 @@ private fun DrawScope.drawVectorCat(
         style = Stroke(width = w * 0.009f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
-}
-
-/** 矢量配饰（资产缺失兜底）：BOW 复用 [drawBow]（描金中结）；PEARL 珍珠串；OUTFIT 钟形小裙。锚点与资产叠绘同位。 */
-private fun DrawScope.drawVectorAccessory(
-    accessory: CatAccessory,
-    theme: ThemeSpec,
-) {
-    val w = size.width
-    val h = size.height
-    val anchorY = h * accessoryAnchorY(accessory)
-    when (accessory) {
-        CatAccessory.BOW ->
-            drawBow(
-                center = Offset(w * 0.50f, anchorY),
-                width = w * 0.36f,
-                color = theme.buttonTop,
-            )
-        CatAccessory.PEARL -> {
-            // 颈间珍珠串：5 颗沿浅垂弧排布（t∈[-1,1]，中点最低）。
-            for (i in -2..2) {
-                val t = i / 2f
-                drawCircle(
-                    color = theme.laceColor,
-                    radius = w * 0.022f,
-                    center = Offset(w * 0.50f + t * w * 0.17f, anchorY + (1f - t * t) * h * 0.035f),
-                )
-            }
-        }
-        CatAccessory.OUTFIT -> {
-            // 钟形小裙：肩线收窄、裙摆外扩、底缘中点微收出小波浪。
-            drawPath(
-                path =
-                    Path().apply {
-                        moveTo(w * 0.42f, anchorY - h * 0.06f)
-                        lineTo(w * 0.58f, anchorY - h * 0.06f)
-                        lineTo(w * 0.68f, anchorY + h * 0.10f)
-                        lineTo(w * 0.50f, anchorY + h * 0.07f)
-                        lineTo(w * 0.32f, anchorY + h * 0.10f)
-                        close()
-                    },
-                color = theme.buttonTop,
-            )
-        }
-    }
 }

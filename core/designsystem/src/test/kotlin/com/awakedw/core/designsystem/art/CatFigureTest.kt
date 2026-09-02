@@ -5,7 +5,6 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
-import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -33,25 +32,25 @@ class CatFigureTest {
     // ---------- 三 mood 组合：不崩溃 + 语义节点存在 ----------
 
     @Test
-    fun `IDLE_全配饰_组合不崩溃且语义节点存在`() {
+    fun `IDLE_mascot_renders`() {
         composeRule.setContent {
-            CatFigure(mood = CatMood.IDLE, accessories = CatAccessory.entries.toList())
+            CatFigure(mood = CatMood.IDLE)
         }
         composeRule.onNodeWithContentDescription(CAT_SEMANTICS).assertExists()
     }
 
     @Test
-    fun `HAPPY_空配饰_组合不崩溃且语义节点存在`() {
+    fun `HAPPY_mascot_renders`() {
         composeRule.setContent {
-            CatFigure(mood = CatMood.HAPPY, accessories = emptyList())
+            CatFigure(mood = CatMood.HAPPY)
         }
         composeRule.onNodeWithContentDescription(CAT_SEMANTICS).assertExists()
     }
 
     @Test
-    fun `SLEEPY_空配饰_组合不崩溃且语义节点存在`() {
+    fun `SLEEPY_mascot_renders`() {
         composeRule.setContent {
-            CatFigure(mood = CatMood.SLEEPY, accessories = emptyList())
+            CatFigure(mood = CatMood.SLEEPY)
         }
         composeRule.onNodeWithContentDescription(CAT_SEMANTICS).assertExists()
     }
@@ -64,7 +63,6 @@ class CatFigureTest {
         composeRule.setContent {
             CatFigure(
                 mood = CatMood.IDLE,
-                accessories = emptyList(),
                 onPet = { pets++ },
             )
         }
@@ -88,13 +86,6 @@ class CatFigureTest {
     fun `呼吸周期对齐3秒完整周期`() {
         // 1.5s 单程 ×2（Reverse 回程）= 3s 完整呼吸周期（审查裁定）。
         assertEquals(1500, BREATH_LEG_MS)
-    }
-
-    @Test
-    fun `配饰锚点比例与简报一致`() {
-        assertEquals(0.18f, accessoryAnchorY(CatAccessory.BOW))
-        assertEquals(0.52f, accessoryAnchorY(CatAccessory.PEARL))
-        assertEquals(0.72f, accessoryAnchorY(CatAccessory.OUTFIT))
     }
 
     @Test

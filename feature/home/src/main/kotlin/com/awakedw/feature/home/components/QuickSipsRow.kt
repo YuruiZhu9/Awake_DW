@@ -1,6 +1,7 @@
 package com.awakedw.feature.home.components
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -68,14 +69,15 @@ private fun QuickSipChip(
 ) {
     Surface(
         shape = QUICK_SIP_SHAPE,
-        color = spec.chipBg,
+        color = spec.chipBg.copy(alpha = 0.32f),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.78f)),
         onClick = onClick,
     ) {
         Text(
             text = label,
             color = spec.chipText,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
 }

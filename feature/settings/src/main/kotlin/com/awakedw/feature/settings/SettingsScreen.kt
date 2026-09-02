@@ -37,12 +37,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
+import com.awakedw.core.designsystem.SurfaceContentPadding
+import com.awakedw.core.designsystem.SurfaceCornerRadius
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -56,7 +57,7 @@ import kotlin.math.roundToInt
 
 // 卡形保持圆角矩形：自定义 Shape 的 outline 会干扰触摸注入的命中路径（Robolectric 实测，
 // 语义动作正常而位置点击失效）——蕾丝扇贝改为卡顶饰带绘制层实现（见 LaceTrim），观感等价且零交互风险。
-private val CARD_CORNER_RADIUS = 24.dp
+private val CARD_CORNER_RADIUS = SurfaceCornerRadius
 
 private val CARD_SHAPE: Shape = RoundedCornerShape(CARD_CORNER_RADIUS)
 
@@ -124,7 +125,7 @@ fun SettingsScreen(
             Text(
                 text = "我的",
                 color = spec.greetingColor,
-                style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
+                style = MaterialTheme.typography.headlineMedium,
             )
 
             SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
@@ -228,7 +229,7 @@ private fun SettingsCard(
             Column(
                 modifier =
                     Modifier
-                        .padding(start = 20.dp, end = 20.dp, bottom = 14.dp)
+                        .padding(start = SurfaceContentPadding, end = SurfaceContentPadding, bottom = 14.dp)
                         .padding(top = SECTION_SPACING),
                 verticalArrangement = Arrangement.spacedBy(SECTION_SPACING),
             ) {

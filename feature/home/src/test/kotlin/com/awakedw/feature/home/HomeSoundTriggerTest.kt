@@ -1,11 +1,8 @@
 package com.awakedw.feature.home
 
-import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.ResolveThemeUseCase
-import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.sound.SoundEvent
@@ -56,10 +53,6 @@ class HomeSoundTriggerTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
-                prefs = prefs,
-                unlockOutfits = UnlockOutfitsUseCase(prefs),
-                resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
-                streakOf = GetStreakUseCase(water, prefs),
                 sound = sound,
             )
         return Harness(clock, sound, viewModel)

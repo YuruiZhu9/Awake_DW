@@ -19,23 +19,18 @@ class ObserveHomeUseCaseTest {
     private lateinit var prefs: FakeUserPreferencesRepository
     private lateinit var useCase: ObserveHomeUseCase
 
-    private val yesterdayKey = "2026-08-26"
-
     @Before
     fun setUp() {
         clock = FakeClock(ZonedDateTime.of(2026, 8, 27, 12, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toInstant().toEpochMilli())
         water = FakeWaterRepository(clock)
         prefs = FakeUserPreferencesRepository()
-        // 注入以同一组 fake 构建的主题解析器，使 12 点固定解析为 DAY→EMERALD。
         useCase = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock))
     }
 
     @Test
-    fun `首快照齐活且设置与水库变化均触发重算`() =
+    fun `snapshot recomputes when settings and water change`() =
         runTest {
-            water.seedTotal(yesterdayKey, 2000)
-            water.addCup(250) // 今日统计 (250,1,null)；changes 虽先发射但被 replay=1 重放给订阅者
-
+            water.addCup(250)
             val snapshots = mutableListOf<HomeSnapshot>()
             backgroundScope.launch {
                 useCase().collect {
@@ -43,43 +38,35 @@ class ObserveHomeUseCaseTest {
                     if (snapshots.size >= 3) this.coroutineContext.cancel()
                 }
             }
-
-            // 快照一：昨天达标（连胜 1：今天未达标不计入）、12 点主题 EMERALD。
             runCurrent()
-            prefs.setGoalMl(240) // 目标下调即时生效：今日已达标 → 连胜升为 2
+            prefs.setGoalMl(240)
             runCurrent()
-            water.emitChange() // 水库变化触发器独立可见：产出同内容新快照
+            water.emitChange()
             runCurrent()
 
-            val expectedFirst =
+            val expected =
                 HomeSnapshot(
                     stats = DailyStats(totalMl = 250, cupCount = 1, avgIntervalMin = null),
                     goalMl = 1600,
                     cupMl = 250,
                     themeId = ThemeId.EMERALD,
-                    streakDays = 1,
                 )
-            val expectedAfterGoalLowered =
-                expectedFirst.copy(goalMl = 240, streakDays = 2)
-
-            assertEquals(listOf(expectedFirst, expectedAfterGoalLowered, expectedAfterGoalLowered), snapshots)
+            val afterGoal = expected.copy(goalMl = 240)
+            assertEquals(listOf(expected, afterGoal, afterGoal), snapshots)
         }
 
     @Test
-    fun `快照字段组装正确_含连胜对目标的实时响应`() =
+    fun `snapshot contains current water settings and theme`() =
         runTest {
-            water.seedTotal(yesterdayKey, 2000)
             water.addCup(250)
-
-            val expectedFirst =
+            assertEquals(
                 HomeSnapshot(
                     stats = DailyStats(totalMl = 250, cupCount = 1, avgIntervalMin = null),
                     goalMl = 1600,
                     cupMl = 250,
                     themeId = ThemeId.EMERALD,
-                    streakDays = 1,
-                )
-
-            assertEquals(expectedFirst, useCase().first())
+                ),
+                useCase().first(),
+            )
         }
 }

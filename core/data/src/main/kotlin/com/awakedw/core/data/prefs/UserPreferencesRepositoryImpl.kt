@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
@@ -27,11 +26,6 @@ internal object PrefKeys {
     const val THEME_MODE = "theme_mode"
     const val ONBOARDING_DONE = "onboarding_done"
     const val CELEBRATED_DAY_KEY = "celebrated_day_key"
-    const val UNLOCKED_OUTFITS = "unlocked_outfits"
-    const val UNSEEN_OUTFITS = "unseen_outfits"
-    const val PINNED_OUTFIT_ID = "pinned_outfit_id"
-    const val DAILY_OUTFIT_DAY = "daily_outfit_day"
-    const val DAILY_OUTFIT_ID = "daily_outfit_id"
     const val SOUND_ENABLED = "sound_enabled"
 }
 
@@ -78,63 +72,6 @@ class UserPreferencesRepositoryImpl
         override suspend fun markOnboardingDone() = edit { it[booleanPreferencesKey(PrefKeys.ONBOARDING_DONE)] = true }
 
         override suspend fun onboardingDone(): Boolean = dataStore.data.first()[booleanPreferencesKey(PrefKeys.ONBOARDING_DONE)] ?: false
-
-        // —— v0.2 画廊与音效 ——
-
-        override val unlockedOutfits: Flow<Set<String>> =
-            dataStore.data.map { it[stringSetPreferencesKey(PrefKeys.UNLOCKED_OUTFITS)] ?: emptySet() }
-
-        /** 幂等合并写入：旧集与新 ids 取并集。 */
-        override suspend fun markOutfitsUnlocked(ids: Collection<String>) =
-            edit {
-                val unlockedOutfitsKey = stringSetPreferencesKey(PrefKeys.UNLOCKED_OUTFITS)
-                it[unlockedOutfitsKey] = (it[unlockedOutfitsKey] ?: emptySet()) + ids.toSet()
-            }
-
-        override val unseenOutfits: Flow<Set<String>> =
-            dataStore.data.map { it[stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)] ?: emptySet() }
-
-        /** 幂等并入未看集：旧集与新 ids 取并集（集合语义天然去重）。 */
-        override suspend fun markOutfitsUnseen(ids: Collection<String>) =
-            edit {
-                val unseenKey = stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)
-                it[unseenKey] = (it[unseenKey] ?: emptySet()) + ids.toSet()
-            }
-
-        /** 幂等移除已看：不存在的 ids 直接跳过，集可为空。 */
-        override suspend fun markOutfitsSeen(ids: Collection<String>) =
-            edit {
-                val unseenKey = stringSetPreferencesKey(PrefKeys.UNSEEN_OUTFITS)
-                it[unseenKey] = (it[unseenKey] ?: emptySet()) - ids.toSet()
-            }
-
-        override val pinnedOutfitId: Flow<String?> = dataStore.data.map { it[stringPreferencesKey(PrefKeys.PINNED_OUTFIT_ID)] }
-
-        /** 置 null 即移除键（DataStore 不允许写 null 值）。 */
-        override suspend fun setPinnedOutfit(id: String?) =
-            edit {
-                val pinnedKey = stringPreferencesKey(PrefKeys.PINNED_OUTFIT_ID)
-                if (id == null) {
-                    it.remove(pinnedKey)
-                } else {
-                    it[pinnedKey] = id
-                }
-            }
-
-        override suspend fun dailyOutfit(): Pair<String, String>? {
-            val prefs = dataStore.data.first()
-            val dayKey = prefs[stringPreferencesKey(PrefKeys.DAILY_OUTFIT_DAY)] ?: return null
-            val outfitId = prefs[stringPreferencesKey(PrefKeys.DAILY_OUTFIT_ID)] ?: return null
-            return dayKey to outfitId
-        }
-
-        override suspend fun setDailyOutfit(
-            dayKey: String,
-            outfitId: String,
-        ) = edit {
-            it[stringPreferencesKey(PrefKeys.DAILY_OUTFIT_DAY)] = dayKey
-            it[stringPreferencesKey(PrefKeys.DAILY_OUTFIT_ID)] = outfitId
-        }
 
         override val soundEnabled: Flow<Boolean> = dataStore.data.map { it[booleanPreferencesKey(PrefKeys.SOUND_ENABLED)] ?: true }
 

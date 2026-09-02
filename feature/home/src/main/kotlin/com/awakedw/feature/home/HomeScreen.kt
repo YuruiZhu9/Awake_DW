@@ -47,23 +47,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
-import com.awakedw.core.designsystem.art.DressBackdrop
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
+import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.ring.ProgressRing
-import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
 import com.awakedw.feature.home.components.BadgesRow
-import com.awakedw.feature.home.components.BowEntryButton
-import com.awakedw.feature.home.components.CelebrationOverlay
 import com.awakedw.feature.home.components.Greeting
-import com.awakedw.feature.home.components.HealthTipLine
 import com.awakedw.feature.home.components.LogButton
 import com.awakedw.feature.home.components.PraiseLine
 import com.awakedw.feature.home.components.QuickSipsRow
@@ -113,24 +110,15 @@ private val CONTENT_TAIL_BREATHING = 112.dp
 private val TIP_TO_SIPS_GAP = 16.dp
 
 /**
- * 治愈打卡首页（规格 §3.2 自上而下：问候 → 进度环 → 统计徽章 → 健康贴士 → 「记一杯」按钮）：
- * 可点按进度环居中承重，夸夸语在环下方叠层浮现（§4.2 第 5 步，不占列内高度），达标后满环微光呼吸；
- * 底座为渐变背景 + 画卷层（moodboard §5.1 今日之裙，[DressBackdrop]）+ 漂浮粒子；
- * 问候语真居中，行顶右端叠 [BowEntryButton] 蝴蝶结衣橱入口（§5.2 重设计：今日穿搭信息回归衣橱页呈现，
- * 首页不再常驻穿搭文字；新解锁也不弹文字横幅——仅蝴蝶结右上角亮描金圆点，用户裁定「无声等待制」），
- * 胆大王常驻底部 leading 角（moodboard §6.2），猫语气泡悬于其上，摸猫即回应。
- * 打卡反馈 6 步时序由 [HomeViewModel] 与本层协同完成（规格 §4.2）。
+ * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,
+ * the primary log action, and an optional mascot response.
  *
- * 布局审计 P1-7：内容列包 [verticalScroll]——小屏/大字体（fontScale 1.3）整列溢出时可垂直滚动，
- * 弹性 weight 空档随之改为固定间距，列尾留 [CONTENT_TAIL_BREATHING] 给猫角与按钮收尾；
- * 猫角是 Box 叠层挂载，不随滚动。竖屏锁定由 app 清单承担。
+ * Visual decoration stays subordinate to the water task. The bow on the ring is a
+ * Lolita-inspired accent, not a navigation affordance or reward signal.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    onOpenGallery: () -> Unit = {},
-) {
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
     val view = LocalView.current
@@ -143,7 +131,6 @@ fun HomeScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         // 画卷层（moodboard §5.1）：渐变之上、内容之下；今日之裙未就绪或资产缺失时不绘制。
-        DressBackdrop(outfit = state.todayOutfit, modifier = Modifier.matchParentSize())
         FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
 
         Column(
@@ -151,29 +138,23 @@ fun HomeScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 28.dp, end = 28.dp, bottom = CONTENT_TAIL_BREATHING),
+                    .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = CONTENT_TAIL_BREATHING),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(44.dp))
             // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
             // 蝴蝶结衣橱入口叠于行顶右端，不挤占问候语的可视宽度；
-            // 有未看新解锁时入口右上角亮描金圆点（showDot，200ms scale-in），首页不再有任何新裙文字。
             FadeUpOnce {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Greeting(
-                        customGreeting = state.greeting,
-                        totalMl = state.totalMl,
-                        goalMl = state.goalMl,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    BowEntryButton(
-                        onOpenGallery = onOpenGallery,
-                        showDot = state.hasUnseenOutfits,
-                        modifier = Modifier.align(Alignment.TopEnd),
-                    )
-                }
+                Greeting(
+                    customGreeting = state.greeting,
+                    totalMl = state.totalMl,
+                    goalMl = state.goalMl,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(10.dp))
+            LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
+            Spacer(Modifier.height(10.dp))
             RingBlock(
                 progress = state.progress,
                 totalMl = state.totalMl,
@@ -186,11 +167,9 @@ fun HomeScreen(
                     cupCount = state.cupCount,
                     avgIntervalLabel = state.avgIntervalLabel,
                     lastDrinkLabel = state.lastDrinkLabel,
-                    streakDays = state.streakDays,
                 )
             }
             Spacer(Modifier.height(12.dp))
-            FadeUpOnce(delayMillis = 120) { HealthTipLine() }
             // P1-7：weight 弹性空档改固定间距——列已可滚，弹性空档与滚动互斥。
             Spacer(Modifier.height(TIP_TO_SIPS_GAP))
             QuickSipsRow(cupMl = state.cupMl, onQuickLog = viewModel::quickLog)
@@ -203,13 +182,10 @@ fun HomeScreen(
             // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供（原 Spacer(36) 随之删除）。
         }
 
-        CelebrationOverlay(visible = state.celebrating, modifier = Modifier.matchParentSize())
-
         // 胆大王常驻（moodboard §6.2）：底部 leading 角叠层挂载、不随内容滚动；
         // 猫语气泡悬于猫上方（独立于环下夸夸语位置），点击立绘即摸猫（viewModel::petCat）。
         CatCorner(
             mood = state.catMood,
-            accessories = state.catAccessories,
             line = state.catLine,
             onPet = viewModel::petCat,
             modifier = Modifier.align(Alignment.BottomStart).padding(CAT_CORNER_PADDING),
@@ -228,7 +204,6 @@ fun HomeScreen(
 @Composable
 private fun CatCorner(
     mood: CatMood,
-    accessories: List<CatAccessory>,
     line: String?,
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
@@ -237,7 +212,7 @@ private fun CatCorner(
         // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp 区间取 128dp），光在猫下、不压猫。
         Box(contentAlignment = Alignment.Center) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
-            CatFigure(mood = mood, accessories = accessories, onPet = onPet)
+            CatFigure(mood = mood, onPet = onPet)
         }
         PraiseLine(
             text = line,

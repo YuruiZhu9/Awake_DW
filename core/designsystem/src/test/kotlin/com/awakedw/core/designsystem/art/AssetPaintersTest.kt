@@ -36,12 +36,12 @@ class AssetPaintersTest {
 
     @Test
     fun `夜变体映射_在最后一个扩展名点前插入_night`() {
-        assertEquals("outfit/dress_01_night.webp", nightVariantOf("outfit/dress_01.webp"))
+        assertEquals("art/theme_day_night.webp", nightVariantOf("art/theme_day.webp"))
     }
 
     @Test
     fun `夜变体映射_无扩展名时直接追加_night`() {
-        assertEquals("outfit/dress_01_night", nightVariantOf("outfit/dress_01"))
+        assertEquals("art/theme_day_night", nightVariantOf("art/theme_day"))
     }
 
     // ---------- nightVariantOf(context)：存在则用之，否则原文件 ----------
@@ -62,7 +62,7 @@ class AssetPaintersTest {
     @Test
     fun `资产探测_存在为真_缺失为假`() {
         assertTrue(hasAsset(context, "arttest/dot.png"))
-        assertFalse(hasAsset(context, "outfit/__nope__.webp"))
+        assertFalse(hasAsset(context, "art/__nope__.webp"))
     }
 
     // ---------- loadAssetBitmap：缺失/解码失败回退 null，绝不抛 ----------
@@ -70,7 +70,7 @@ class AssetPaintersTest {
     @Test
     fun `装载缺失资产返回null且不抛`() =
         runBlocking {
-            assertNull(loadAssetBitmap(context, "outfit/__nope__.webp"))
+            assertNull(loadAssetBitmap(context, "art/__nope__.webp"))
         }
 
     @Test
@@ -98,7 +98,7 @@ class AssetPaintersTest {
     fun `组合缺失资产后值为null且不抛`() {
         var captured: ImageBitmap? = null
         composeRule.setContent {
-            captured = rememberAssetImageOrN("outfit/__nope__.webp")
+            captured = rememberAssetImageOrN("art/__nope__.webp")
         }
         composeRule.waitForIdle()
         assertNull(captured)

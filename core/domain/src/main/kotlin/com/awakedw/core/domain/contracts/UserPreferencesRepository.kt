@@ -32,35 +32,6 @@ interface UserPreferencesRepository {
 
     suspend fun onboardingDone(): Boolean
 
-    /** —— v0.2 画廊与音效（键名：unlocked_outfits / unseen_outfits / pinned_outfit_id / daily_outfit_day / daily_outfit_id / sound_enabled）—— */
-    val unlockedOutfits: Flow<Set<String>>
-
-    /** 幂等合并写入已解锁 outfit id 集。 */
-    suspend fun markOutfitsUnlocked(ids: Collection<String>)
-
-    /** 未看新解锁 id 集（「新裙提示」的数据源：解锁并入、进画廊清空），默认空集。 */
-    val unseenOutfits: Flow<Set<String>>
-
-    /** 幂等并入未看集：新解锁落库时由用例一并调用（重复解锁因差集过滤不会重复入集）。 */
-    suspend fun markOutfitsUnseen(ids: Collection<String>)
-
-    /** 幂等从未看集移除：进入画廊即把全部已解锁 id 标记为已看。 */
-    suspend fun markOutfitsSeen(ids: Collection<String>)
-
-    /** 用户手动指定的「今日之裙」；null = 跟随每日随机。 */
-    val pinnedOutfitId: Flow<String?>
-
-    suspend fun setPinnedOutfit(id: String?)
-
-    /** (dayKey, outfitId)；无记录返回 null。 */
-    suspend fun dailyOutfit(): Pair<String, String>?
-
-    suspend fun setDailyOutfit(
-        dayKey: String,
-        outfitId: String,
-    )
-
-    /** 音效开关，默认 true。 */
     val soundEnabled: Flow<Boolean>
 
     suspend fun setSoundEnabled(v: Boolean)

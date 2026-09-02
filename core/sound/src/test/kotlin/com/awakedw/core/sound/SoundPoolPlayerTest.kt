@@ -181,27 +181,6 @@ class SoundPoolPlayerTest {
 
         override suspend fun onboardingDone(): Boolean = throw UnsupportedOperationException()
 
-        override val unlockedOutfits: Flow<Set<String>> get() = throw UnsupportedOperationException()
-
-        override suspend fun markOutfitsUnlocked(ids: Collection<String>) = throw UnsupportedOperationException()
-
-        override val unseenOutfits: Flow<Set<String>> get() = throw UnsupportedOperationException()
-
-        override suspend fun markOutfitsUnseen(ids: Collection<String>) = throw UnsupportedOperationException()
-
-        override suspend fun markOutfitsSeen(ids: Collection<String>) = throw UnsupportedOperationException()
-
-        override val pinnedOutfitId: Flow<String?> get() = throw UnsupportedOperationException()
-
-        override suspend fun setPinnedOutfit(id: String?) = throw UnsupportedOperationException()
-
-        override suspend fun dailyOutfit(): Pair<String, String>? = throw UnsupportedOperationException()
-
-        override suspend fun setDailyOutfit(
-            dayKey: String,
-            outfitId: String,
-        ) = throw UnsupportedOperationException()
-
         override suspend fun setSoundEnabled(v: Boolean) = throw UnsupportedOperationException()
     }
 }

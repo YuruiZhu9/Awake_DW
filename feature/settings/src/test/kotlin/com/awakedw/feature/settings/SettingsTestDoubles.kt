@@ -22,6 +22,7 @@ class FakePrefsRepository(
     initialSoundEnabled: Boolean = true,
 ) : UserPreferencesRepository {
     private val _settings = MutableStateFlow(initial)
+    private val sound = MutableStateFlow(initialSoundEnabled)
 
     override val settings = _settings
 
@@ -68,44 +69,6 @@ class FakePrefsRepository(
     override suspend fun markOnboardingDone() = Unit
 
     override suspend fun onboardingDone(): Boolean = onboardingDoneValue
-
-    // —— v0.2 画廊与音效（内存版，仅满足契约加宽） ——
-    private val unlocked = MutableStateFlow(emptySet<String>())
-    private val unseen = MutableStateFlow(emptySet<String>())
-    private val pinned = MutableStateFlow<String?>(null)
-    private var daily: Pair<String, String>? = null
-    private val sound = MutableStateFlow(initialSoundEnabled)
-
-    override val unlockedOutfits: Flow<Set<String>> = unlocked
-
-    override suspend fun markOutfitsUnlocked(ids: Collection<String>) {
-        unlocked.value = unlocked.value + ids.toSet()
-    }
-
-    override val unseenOutfits: Flow<Set<String>> = unseen
-
-    override suspend fun markOutfitsUnseen(ids: Collection<String>) {
-        unseen.value = unseen.value + ids.toSet()
-    }
-
-    override suspend fun markOutfitsSeen(ids: Collection<String>) {
-        unseen.value = unseen.value - ids.toSet()
-    }
-
-    override val pinnedOutfitId: Flow<String?> = pinned
-
-    override suspend fun setPinnedOutfit(id: String?) {
-        pinned.value = id
-    }
-
-    override suspend fun dailyOutfit(): Pair<String, String>? = daily
-
-    override suspend fun setDailyOutfit(
-        dayKey: String,
-        outfitId: String,
-    ) {
-        daily = dayKey to outfitId
-    }
 
     override val soundEnabled: Flow<Boolean> = sound
 

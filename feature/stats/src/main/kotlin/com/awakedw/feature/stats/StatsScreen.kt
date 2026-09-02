@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
@@ -26,6 +25,7 @@ import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.stats.components.TodayTimeline
 import com.awakedw.feature.stats.components.WeekBarsChart
@@ -33,11 +33,7 @@ import com.awakedw.feature.stats.components.WeekBarsChart
 /** 本页漂浮粒子的随机种子：与首页/设置页各不相同，保证各屏粒子排布有别。 */
 private const val STATS_PARTICLE_SEED = 11L
 
-/**
- * 统计页（规格 §3.3）：给「坚持的痕迹」一个专属空间——
- * 徽章行（今日杯数 · 平均间隔 · 连续达标）、本周柱状图、今日时间线，三模块纵向排列。
- * 背景沿用全局渐变底座（自带柔光晕与噪点颗粒）+ 漂浮粒子，与首页同一份主题呼吸。
- */
+/** Statistics screen: current facts, weekly history, and today's timeline. */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
@@ -63,10 +59,12 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                 Text(
                     text = "统计",
                     color = spec.greetingColor,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
+                    style = MaterialTheme.typography.headlineMedium,
                 )
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(10.dp))
+            LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
+            Spacer(Modifier.height(10.dp))
             FadeUpOnce(delayMillis = 60) { StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth()) }
             Spacer(Modifier.height(28.dp))
             WeekBarsChart(bars = state.bars, goalMl = state.goalMl, modifier = Modifier.fillMaxWidth())
@@ -77,9 +75,7 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     }
 }
 
-/** 统计三徽章（规格 §3.3 第 1 条）：「今日 {n} 杯 ☀」「平均间隔 {label} ⏱」+ 连胜徽章（0 天隐藏）。
- * FlowRow 自动换行（P1-5，与首页 BadgesRow 同款参数）：360dp 窄屏上不换行 Row 的第三枚会被切出屏。
- */
+/** Current factual summaries, kept readable on narrow screens. */
 @OptIn(ExperimentalLayoutApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -95,10 +91,5 @@ private fun StatsBadgesRow(
     ) {
         BadgeChip(text = "今日 ${badges.cupCount} 杯 ☀", spec = spec)
         BadgeChip(text = "平均间隔 ${badges.avgIntervalLabel} ⏱", spec = spec)
-        if (badges.streakDays >= 2) {
-            BadgeChip(text = "连续 ${badges.streakDays} 天 🏅", spec = spec)
-        } else if (badges.streakDays == 1) {
-            BadgeChip(text = "第 1 天 ✨", spec = spec)
-        }
     }
 }

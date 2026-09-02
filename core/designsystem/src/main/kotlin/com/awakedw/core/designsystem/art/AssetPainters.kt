@@ -46,7 +46,7 @@ internal fun hasAsset(
 }
 
 /**
- * 夜变体路径映射：`outfit/dress_01.webp` → `outfit/dress_01_night.webp`。
+ * 夜变体路径映射：`art/theme_day.webp` → `art/theme_day_night.webp`。
  * 仅在最后一个 `.` 前插入 `_night` 后缀；无扩展名（或点在目录段里）则直接追加 `_night`。
  *
  * 需要按存在性解析（存在则用之，否则原文件）时用重载 [nightVariantOf]。

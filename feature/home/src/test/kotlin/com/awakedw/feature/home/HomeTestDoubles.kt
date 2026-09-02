@@ -34,12 +34,10 @@ class FakeClock(
  * 内存版水记录仓储：changes 用 replay=1 的 SharedFlow 供给，
  * 与 Room「首值即当前态」语义对齐；平均间隔算法复刻 RoomWaterRepository。
  *
- * [pastGoalMetDays] 为历史铺数：过去该天数按达标量填充 weekBars（其余过去天 0），
  * 供连胜/猫配饰类测试搭历史（缺省 0 = 无历史，与旧用例行为一致）。
  */
 class FakeWaterRepository(
     private val clock: FakeClock,
-    private val pastGoalMetDays: Int = 0,
 ) : WaterRepository {
     var addCount: Int = 0
         private set
@@ -103,7 +101,6 @@ class FakeWaterRepository(
                 totalMl =
                     when {
                         offset == 0 -> todayTotal()
-                        offset <= pastGoalMetDays -> PAST_GOAL_MET_ML
                         else -> 0
                     },
             )
@@ -137,6 +134,7 @@ class FakePrefsRepository(
     initial: UserSettings = UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD),
 ) : UserPreferencesRepository {
     private val _settings = MutableStateFlow(initial)
+    private val sound = MutableStateFlow(true)
 
     override val settings = _settings
 
@@ -179,44 +177,6 @@ class FakePrefsRepository(
     override suspend fun markOnboardingDone() = Unit
 
     override suspend fun onboardingDone(): Boolean = true
-
-    // —— v0.2 画廊与音效（内存版，仅满足契约加宽） ——
-    private val unlocked = MutableStateFlow(emptySet<String>())
-    private val unseen = MutableStateFlow(emptySet<String>())
-    private val pinned = MutableStateFlow<String?>(null)
-    private var daily: Pair<String, String>? = null
-    private val sound = MutableStateFlow(true)
-
-    override val unlockedOutfits: Flow<Set<String>> = unlocked
-
-    override suspend fun markOutfitsUnlocked(ids: Collection<String>) {
-        unlocked.value = unlocked.value + ids.toSet()
-    }
-
-    override val unseenOutfits: Flow<Set<String>> = unseen
-
-    override suspend fun markOutfitsUnseen(ids: Collection<String>) {
-        unseen.value = unseen.value + ids.toSet()
-    }
-
-    override suspend fun markOutfitsSeen(ids: Collection<String>) {
-        unseen.value = unseen.value - ids.toSet()
-    }
-
-    override val pinnedOutfitId: Flow<String?> = pinned
-
-    override suspend fun setPinnedOutfit(id: String?) {
-        pinned.value = id
-    }
-
-    override suspend fun dailyOutfit(): Pair<String, String>? = daily
-
-    override suspend fun setDailyOutfit(
-        dayKey: String,
-        outfitId: String,
-    ) {
-        daily = dayKey to outfitId
-    }
 
     override val soundEnabled: Flow<Boolean> = sound
 

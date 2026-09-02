@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.toDayKey
 import com.awakedw.core.designsystem.components.IntervalLabel
-import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.WaterRecord
@@ -32,7 +31,6 @@ private const val WEEK_DAYS = 7
 data class StatsBadges(
     val cupCount: Int,
     val avgIntervalLabel: String,
-    val streakDays: Int,
 )
 
 /**
@@ -40,17 +38,15 @@ data class StatsBadges(
  * [bars] 末列为今天（仓储契约：weekBars 含今天）；[timeline] 为空时页面展示空态文案。
  */
 data class StatsUiState(
-    val badges: StatsBadges = StatsBadges(cupCount = 0, avgIntervalLabel = DASH_LABEL, streakDays = 0),
+    val badges: StatsBadges = StatsBadges(cupCount = 0, avgIntervalLabel = DASH_LABEL),
     val bars: List<WeekBar> = emptyList(),
     val goalMl: Int = DEFAULT_GOAL_ML,
     val timeline: List<WaterRecord> = emptyList(),
 )
 
 /**
- * 统计页 ViewModel。
- *
- * 以水库变更流与设置流任一触发即整屏重算——首页打卡、设置页改目标，回到统计页都是最新值；
- * 连胜徽章经真实 [GetStreakUseCase] 穿透，尾端随今日实时达标翻转。
+ * Statistics state holder. It exposes current totals, weekly history, and today's timeline.
+ * No progression or reward state is part of the statistics screen.
  */
 @HiltViewModel
 class StatsViewModel
@@ -59,7 +55,6 @@ class StatsViewModel
         private val clock: AppClock,
         private val water: WaterRepository,
         prefs: UserPreferencesRepository,
-        private val streak: GetStreakUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(StatsUiState())
 
@@ -80,7 +75,6 @@ class StatsViewModel
                         StatsBadges(
                             cupCount = stats.cupCount,
                             avgIntervalLabel = IntervalLabel.format(stats.avgIntervalMin),
-                            streakDays = streak(),
                         ),
                     bars = water.weekBars(daysBack = WEEK_DAYS),
                     goalMl = goalMl,

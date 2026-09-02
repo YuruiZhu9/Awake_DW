@@ -15,12 +15,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
-import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.ResolveThemeUseCase
-import com.awakedw.core.domain.UnlockOutfitsUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.UserSettings
@@ -106,10 +103,6 @@ class HomeScreenOverflowTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
-                prefs = prefs,
-                unlockOutfits = UnlockOutfitsUseCase(prefs),
-                resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
-                streakOf = GetStreakUseCase(water, prefs),
                 sound = FakeSoundPlayer(),
             )
 

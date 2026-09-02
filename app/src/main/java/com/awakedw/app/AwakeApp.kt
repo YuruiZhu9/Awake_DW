@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.awakedw.core.designsystem.AwakeMaterialTheme
 import com.awakedw.core.designsystem.LocalAwakeTheme
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
@@ -55,7 +56,7 @@ fun AnimatedAwakeTheme(
             isDark = target.isDark,
         )
     CompositionLocalProvider(LocalAwakeTheme provides spec) {
-        content()
+        AwakeMaterialTheme(spec = spec, content = content)
     }
 }
 

@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -112,7 +111,7 @@ fun OnboardingScreen(
             Text(
                 text = "为了让每一次温柔准时抵达",
                 color = spec.greetingColor,
-                style = MaterialTheme.typography.headlineMedium.copy(fontFamily = FontFamily.Serif),
+                style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(12.dp))

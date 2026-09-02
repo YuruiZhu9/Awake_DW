@@ -1,12 +1,8 @@
 package com.awakedw.feature.home
 
-import com.awakedw.core.domain.GetStreakUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveDailyOutfitUseCase
 import com.awakedw.core.domain.ResolveThemeUseCase
-import com.awakedw.core.domain.UnlockOutfitsUseCase
-import com.awakedw.core.model.CatAccessory
 import com.awakedw.core.model.CatMood
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
@@ -54,11 +50,10 @@ class HomeViewModelCatTest {
         settings: UserSettings = UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD),
         clockMs: Long = BASE_TIME,
         catLineHoldMs: Long = CAT_LINE_HOLD_MS,
-        pastGoalMetDays: Int = 0,
         catLines: List<String> = listOf("喵，喝水啦"),
     ): Harness {
         val clock = FakeClock(clockMs)
-        val water = FakeWaterRepository(clock, pastGoalMetDays = pastGoalMetDays)
+        val water = FakeWaterRepository(clock)
         val prefs = FakePrefsRepository(settings)
         val copies = FakeCopyLibraryRepository(catLines = catLines)
         Dispatchers.setMain(UnconfinedTestDispatcher(scheduler))
@@ -68,10 +63,6 @@ class HomeViewModelCatTest {
                 observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
-                prefs = prefs,
-                unlockOutfits = UnlockOutfitsUseCase(prefs),
-                resolveDailyOutfit = ResolveDailyOutfitUseCase(prefs, clock),
-                streakOf = GetStreakUseCase(water, prefs),
                 sound = FakeSoundPlayer(),
                 catLineHoldMs = catLineHoldMs,
             )
@@ -202,24 +193,6 @@ class HomeViewModelCatTest {
 
             // 猫气泡按摸猫时刻起的 2.0s 收场（此刻已被覆盖经过）。
             assertNull(h.viewModel.uiState.value.catLine)
-        }
-
-    @Test
-    fun `配饰随连胜刷新——达标披上蝴蝶结`() =
-        runTest {
-            // 过去 2 天达标、目标压到 100ml：init 连胜 2（无配饰）；首杯后连胜 3 → 披上 BOW。
-            val h =
-                harness(
-                    testScheduler,
-                    settings = UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD, goalMl = 100),
-                    pastGoalMetDays = 2,
-                )
-            runCurrent()
-            assertEquals(emptyList<CatAccessory>(), h.viewModel.uiState.value.catAccessories)
-
-            h.viewModel.tapLogButton()
-            runCurrent()
-            assertEquals(listOf(CatAccessory.BOW), h.viewModel.uiState.value.catAccessories)
         }
 
     private companion object {

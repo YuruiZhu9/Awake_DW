@@ -66,7 +66,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
-    // HomeViewModelOutfitTest 的 uiState 状态序列断言（Turbine）。
     testImplementation(libs.turbine)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.robolectric)

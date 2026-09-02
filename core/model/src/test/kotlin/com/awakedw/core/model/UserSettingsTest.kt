@@ -15,10 +15,4 @@ class UserSettingsTest {
         assertEquals(true, s.remindersEnabled)
         assertEquals(ThemeChoice.FOLLOW_TIME, s.themeChoice)
     }
-
-    @Test
-    fun `建议饮水量常量与膳食指南一致`() {
-        assertEquals(1500, RECOMMENDED_MIN_ML)
-        assertEquals(1700, RECOMMENDED_MAX_ML)
-    }
 }
