@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -55,7 +56,9 @@ import kotlin.math.roundToInt
 
 // 卡形保持圆角矩形：自定义 Shape 的 outline 会干扰触摸注入的命中路径（Robolectric 实测，
 // 语义动作正常而位置点击失效）——蕾丝扇贝改为卡顶饰带绘制层实现（见 LaceTrim），观感等价且零交互风险。
-private val CARD_SHAPE: Shape = RoundedCornerShape(24.dp)
+private val CARD_CORNER_RADIUS = 24.dp
+
+private val CARD_SHAPE: Shape = RoundedCornerShape(CARD_CORNER_RADIUS)
 
 /** 分区内元素的统一行间距。 */
 private val SECTION_SPACING = 14.dp
@@ -114,7 +117,7 @@ fun SettingsScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = PagePadding),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Spacer(Modifier.height(24.dp))
@@ -218,20 +221,27 @@ private fun SettingsCard(
         shadowElevation = 2.dp,
         border = BorderStroke(width = 1.dp, color = spec.laceColor),
     ) {
-        Column(
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(SECTION_SPACING),
-        ) {
+        // P3-3：饰带层先于内边距列满幅绘制（直接触卡两缘），内容列再收 20dp 内边距——
+        // 饰带不再悬空于内边距里，首尾珠子按 24dp 圆角安全几何布点不被裁切。
+        Column {
             LaceTrim(spec = spec)
-            if (title != null) {
-                Column {
-                    Text(text = title, color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
-                    if (subtitle != null) {
-                        Text(text = subtitle, color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+            Column(
+                modifier =
+                    Modifier
+                        .padding(start = 20.dp, end = 20.dp, bottom = 14.dp)
+                        .padding(top = SECTION_SPACING),
+                verticalArrangement = Arrangement.spacedBy(SECTION_SPACING),
+            ) {
+                if (title != null) {
+                    Column {
+                        Text(text = title, color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
+                        if (subtitle != null) {
+                            Text(text = subtitle, color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
+                content()
             }
-            content()
         }
     }
 }
@@ -240,6 +250,10 @@ private fun SettingsCard(
  * 蕾丝饰带（§12 L1）：卡顶一排相切的圆弧点带，主题蕾丝线着色。
  * 绘制层实现而非卡片 Shape——自定义 outline 会干扰触摸注入的命中路径（Robolectric 实测：
  * 语义动作正常而位置点击失效），饰带观感等价且零交互风险。
+ *
+ * P3-3：Canvas 满幅触卡两缘（先于 20dp 内边距列，见 SettingsCard）；珠串按圆角安全几何布点——
+ * 珠心 y=珠半径处，圆角切点竖直列（x = 圆角半径）以内皆会被 24dp 圆角弧裁入，
+ * 故珠串落在 [CARD_CORNER_RADIUS, 宽 − CARD_CORNER_RADIUS] 区间内均布，首尾珠子完整不裁。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -249,10 +263,13 @@ private fun LaceTrim(
 ) {
     Canvas(modifier = modifier.fillMaxWidth().height(8.dp)) {
         val radius = 4.dp.toPx()
-        val count = (size.width / (radius * 2f)).roundToInt().coerceAtLeast(2)
-        val step = size.width / count
+        val corner = CARD_CORNER_RADIUS.toPx()
+        val start = corner
+        val end = size.width - corner
+        val count = ((end - start) / (radius * 2f)).roundToInt().coerceAtLeast(2)
+        val step = (end - start) / count
         repeat(count) { i ->
-            drawCircle(color = spec.laceColor, radius = radius, center = Offset(step * (i + 0.5f), radius))
+            drawCircle(color = spec.laceColor, radius = radius, center = Offset(start + step * (i + 0.5f), radius))
         }
     }
 }

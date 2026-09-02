@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.settings.SettingsValidation
@@ -41,6 +43,9 @@ import java.util.Locale
 
 /** 步进器圆形小按钮直径。 */
 private val STEPPER_BUTTON_SIZE = 32.dp
+
+/** 间隔档位 chip 的最小宽度（P1-6）：不再 weight 均分，宽度自适应且不低于此值保住「120」等三位数。 */
+private val INTERVAL_CHIP_MIN_WIDTH = 56.dp
 
 /** 主题色圆点直径。 */
 private val THEME_DOT_SIZE = 14.dp
@@ -106,7 +111,8 @@ private fun StepButton(
         enabled = enabled,
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(STEPPER_BUTTON_SIZE)) {
-            Text(text = text, color = Color.White, style = MaterialTheme.typography.titleMedium)
+            // P2-4：浅色主题主色底上白字对比不足，字色走 onPrimarySurface（深夜维持白字）。
+            Text(text = text, color = onPrimarySurface(spec), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -156,6 +162,8 @@ internal fun ToggleRow(
 
 /**
  * 清醒时段双滑杆（§3.4）：顶部「开始 HH:mm — 结束 HH:mm」标签 + 15 分钟粒度的双柄滑杆。
+ * P3-4：steps=0 去掉 71 档刻度噪点，15 分钟取整改在值变化处手动 snap
+ * （[SettingsValidation.snapToWindowGranularity]），落点行为与旧刻度档一致、视觉干净。
  * 拖动时本层保证两柄间隔 ≥ 45 分钟（15min 粒度下满足 start < end−30 的最小档），
  * 松手后按分钟数提交——VM 仍会再校验一次，双重兜底。
  */
@@ -168,9 +176,6 @@ internal fun WindowRangeSlider(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    // 300..1380 共 73 个 15 分钟刻度：RangeSlider 的 steps = 刻度间隔数 − 1。
-    val gridCount = (SettingsValidation.WINDOW_MAX - SettingsValidation.WINDOW_MIN) / SettingsValidation.WINDOW_GRANULARITY_MIN
-    val steps = gridCount - 1
     // 粒度下可持久化的最小间隔：30 分钟下限向上取一个 15 分钟刻度。
     val gapGrids = SettingsValidation.WINDOW_GAP_MIN / SettingsValidation.WINDOW_GRANULARITY_MIN + 1
     val minGap = gapGrids * SettingsValidation.WINDOW_GRANULARITY_MIN
@@ -185,18 +190,22 @@ internal fun WindowRangeSlider(
         RangeSlider(
             value = range,
             onValueChange = { next ->
+                // steps=0 后刻度停靠由本层自理：先吸附 15 分钟粒度，再维持最小间隔。
+                val snapped =
+                    SettingsValidation.snapToWindowGranularity(next.start)
+                        .toFloat()..SettingsValidation.snapToWindowGranularity(next.endInclusive).toFloat()
                 val pulledStart =
-                    if (next.start != range.start) {
-                        minOf(next.start, next.endInclusive - minGap)
+                    if (snapped.start != range.start) {
+                        minOf(snapped.start, snapped.endInclusive - minGap)
                     } else {
-                        next.start
+                        snapped.start
                     }
-                val pulledEnd = maxOf(next.endInclusive, pulledStart + minGap)
+                val pulledEnd = maxOf(snapped.endInclusive, pulledStart + minGap)
                 range = pulledStart..pulledEnd
             },
             onValueChangeFinished = { onCommit(range.start.toInt(), range.endInclusive.toInt()) },
             valueRange = SettingsValidation.WINDOW_MIN.toFloat()..SettingsValidation.WINDOW_MAX.toFloat(),
-            steps = steps,
+            steps = 0,
             colors =
                 SliderDefaults.colors(
                     activeTrackColor = spec.primary,
@@ -207,7 +216,11 @@ internal fun WindowRangeSlider(
     }
 }
 
-/** 提醒间隔档位 chips（§3.4）：候选来自 [SettingsValidation.INTERVAL_CHOICES]，点选即时生效。 */
+/**
+ * 提醒间隔档位 chips（§3.4）：候选来自 [SettingsValidation.INTERVAL_CHOICES]，点选即时生效。
+ * P1-6：七档按 4+3 拆两行——原不换行 Row + `weight(1f)` 均分在 360dp 屏每格仅 ≈33dp，
+ * 「120」以上右半被裁；改为 [INTERVAL_CHIP_MIN_WIDTH] 定宽下限、不参与均分，行内/行间 8dp 呼吸。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun IntervalChipsRow(
@@ -215,18 +228,21 @@ internal fun IntervalChipsRow(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        SettingsValidation.INTERVAL_CHOICES.forEach { min ->
-            SelectableChip(
-                label = "$min",
-                selected = min == selectedMin,
-                onClick = { onSelect(min) },
-                modifier = Modifier.weight(1f),
-            )
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsValidation.INTERVAL_CHOICES.chunked(4).forEach { rowChoices ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                rowChoices.forEach { min ->
+                    SelectableChip(
+                        label = "$min",
+                        selected = min == selectedMin,
+                        onClick = { onSelect(min) },
+                        modifier = Modifier.widthIn(min = INTERVAL_CHIP_MIN_WIDTH),
+                    )
+                }
+            }
         }
     }
 }
@@ -319,7 +335,8 @@ private fun SelectableChip(
             }
             Text(
                 text = label,
-                color = if (selected) Color.White else spec.chipText,
+                // P2-4：选中 chip 主色底上的字色走 onPrimarySurface（深夜维持白字）。
+                color = if (selected) onPrimarySurface(spec) else spec.chipText,
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
             )

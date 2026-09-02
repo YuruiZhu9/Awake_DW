@@ -86,6 +86,38 @@ class SettingsValidationTest {
 
     // endregion
 
+    // region 清醒时段滑杆：steps=0 后的 15 分钟取整（P3-4）
+
+    @Test
+    fun `滑杆取整——任意拖动值吸附到15分钟粒度`() {
+        val cases =
+            listOf(
+                300.0f to 300,
+                452.3f to 450,
+                // 恰过 450–465 中点 457.5 → 吸到上档；中点之下 → 吸到下档。
+                457.7f to 465,
+                457.3f to 450,
+                734.9f to 735,
+                // 恰在刻度上（49×15）保持不动。
+                735.0f to 735,
+                1379.9f to 1380,
+            )
+        cases.forEach { (input, expected) ->
+            assertEquals("snap($input)", expected, SettingsValidation.snapToWindowGranularity(input))
+        }
+    }
+
+    @Test
+    fun `滑杆取整——取整后全部落在合法时段粒度上`() {
+        // 全程拖动范围内（含两端附近）取整值都必须落在 15 分钟粒度上（行为与旧 steps=71 刻度档一致）。
+        (300..1380 step 7).forEach { raw ->
+            val snapped = SettingsValidation.snapToWindowGranularity(raw.toFloat())
+            assertEquals("raw=$raw", 0, snapped % SettingsValidation.WINDOW_GRANULARITY_MIN)
+        }
+    }
+
+    // endregion
+
     /** 表驱动用例条目：清醒时段（起、止、期望）。 */
     private data class WindowCase(
         val start: Int,

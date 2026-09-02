@@ -1,5 +1,7 @@
 package com.awakedw.feature.settings
 
+import kotlin.math.roundToInt
+
 /**
  * 设置项校验规则（纯逻辑，JVM 可测）。
  *
@@ -47,4 +49,10 @@ object SettingsValidation {
             startMin % WINDOW_GRANULARITY_MIN == 0 &&
             endMin % WINDOW_GRANULARITY_MIN == 0 &&
             startMin < endMin - WINDOW_GAP_MIN
+
+    /**
+     * [minutes] 四舍五入吸附到 [WINDOW_GRANULARITY_MIN] 粒度（P3-4）：
+     * 滑杆 steps=0（去 71 档刻度噪点）后，改由值变化处手动取整，落点行为与旧刻度档一致。
+     */
+    fun snapToWindowGranularity(minutes: Float): Int = (minutes / WINDOW_GRANULARITY_MIN).roundToInt() * WINDOW_GRANULARITY_MIN
 }

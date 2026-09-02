@@ -6,8 +6,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
@@ -61,11 +65,14 @@ private val RIPPLE_STROKE = 3.dp
 /** 涟漪峰值不透明度：扩散过程由 1 收敛至 0。 */
 private const val RIPPLE_MAX_ALPHA = 0.9f
 
-/** 水滴落点纵向位置：与首页占位进度环的中心观感对齐。 */
-private const val LANDING_Y_FRACTION = 0.42f
-
 /** 形序 Crossfade 时长（ms），与 SplashSequencer 的 MORPH 段一致。 */
 private const val MORPH_CROSSFADE_MS = 250
+
+/** 真首页环心上方固定布局段（HomeScreen 列）：顶距 44 + 问候行内距 6 + 问候与环间距 20 + 半环（HOME_RING_DIAMETER/2）。 */
+private val RING_CENTER_STACK_DP = 44.dp + 6.dp + 20.dp + HOME_RING_DIAMETER / 2
+
+/** 问候语行高（titleLarge 28sp）+ 日期副行行高（bodySmall 16sp），随系统字体缩放折算。 */
+private val GREETING_TEXT_HEIGHT_SP = 44.sp
 
 /** 自然放行后的交棒等待：Crossfade 已走完，只留半拍防尾帧截断。 */
 private const val NATURAL_HANDOVER_MS = 40L
@@ -97,6 +104,9 @@ fun SplashMorph(
             SplashSequencer().apply { restore(persistedElapsedMs) }
         }
     var frame by remember { mutableStateOf(sequencer.snapshot()) }
+    // P2-1：水滴落点 / 涟漪圆心 / Seed 环心统一对齐真首页环心（含状态栏 inset 折算），
+    // 交棒 Crossfade 前后环心重合，消掉「落点→Seed→真首页」的两连跳。
+    val ringCenterYpx = rememberHomeRingCenterYpx()
 
     // 帧驱动：逐帧推进状态机并把已播毫秒写入 saveable；DONE（自然/兜底/跳过）后按路径交棒。
     LaunchedEffect(sequencer) {
@@ -125,9 +135,27 @@ fun SplashMorph(
         label = "splashToHome",
     ) { showHome ->
         if (showHome) {
-            HomeSeedPreview(modifier = Modifier.fillMaxSize())
+            HomeSeedPreview(ringCenterYpx = ringCenterYpx, modifier = Modifier.fillMaxSize())
         } else {
-            SplashVisuals(frame = frame, spec = spec, modifier = Modifier.fillMaxSize())
+            SplashVisuals(frame = frame, spec = spec, ringCenterYpx = ringCenterYpx, modifier = Modifier.fillMaxSize())
+        }
+    }
+}
+
+/**
+ * 真首页（HomeScreen）进度环中心的纵向落点（像素，P2-1）：
+ * 首页由 Scaffold 内容内边距折入状态栏 inset，列布局自上而下为 44dp 顶距 + 问候行
+ * （titleLarge 28sp + 6dp + bodySmall 16sp）+ 20dp 间距 + 半环——据此推算环心，
+ * 开屏各段与 Seed 预览共用同一落点。文本行高按 M3 默认排版常量随字体缩放折算；
+ * 问候语折到两行（maxLines=2）时会带来约一行行高（28sp）的残余偏差（见任务报告）。
+ */
+@Composable
+private fun rememberHomeRingCenterYpx(): Float {
+    val density = LocalDensity.current
+    val statusTopPx = WindowInsets.statusBars.getTop(density)
+    return remember(density, statusTopPx) {
+        with(density) {
+            (statusTopPx.toDp() + RING_CENTER_STACK_DP + GREETING_TEXT_HEIGHT_SP.toDp()).toPx()
         }
     }
 }
@@ -136,11 +164,16 @@ fun SplashMorph(
  * 形序段终态的首页种子预览：真实首页（Task 10）交棒前的一瞬静态观感——
  * 渐变底座 + 漂浮粒子 + 初始进度环（[INITIAL_RING_PROGRESS]），不挂 ViewModel，
  * 交棒后由导航壳挂载真首页，Crossfade 全程无跳切。
+ * 环心对齐真首页环心（[rememberHomeRingCenterYpx]，P2-1），交棒前后位置重合。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun HomeSeedPreview(modifier: Modifier = Modifier) {
+private fun HomeSeedPreview(
+    ringCenterYpx: Float,
+    modifier: Modifier = Modifier,
+) {
     val spec = currentThemeSpec()
+    val density = LocalDensity.current
     Box(modifier) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
@@ -148,7 +181,8 @@ private fun HomeSeedPreview(modifier: Modifier = Modifier) {
             progress = INITIAL_RING_PROGRESS,
             modifier =
                 Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.TopCenter)
+                    .offset(y = with(density) { ringCenterYpx.toDp() }.coerceAtLeast(HOME_RING_DIAMETER / 2) - HOME_RING_DIAMETER / 2)
                     .size(HOME_RING_DIAMETER),
             onRingTap = null,
         ) {
@@ -164,12 +198,13 @@ private fun HomeSeedPreview(modifier: Modifier = Modifier) {
     }
 }
 
-/** 水滴+涟漪+形序的绘制层：主题渐变底座打底，交棒首页无色差。 */
+/** 水滴+涟漪+形序的绘制层：主题渐变底座打底，交棒首页无色差；落点即真首页环心（P2-1）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun SplashVisuals(
     frame: SplashFrame,
     spec: ThemeSpec,
+    ringCenterYpx: Float,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier) {
@@ -189,7 +224,7 @@ private fun SplashVisuals(
                 .matchParentSize()
                 .drawBehind {
                     val cx = size.width / 2f
-                    val landingY = size.height * LANDING_Y_FRACTION
+                    val landingY = ringCenterYpx
                     val rippleCenter = Offset(cx, landingY)
                     when (frame.phase) {
                         SplashPhase.DROPLET ->

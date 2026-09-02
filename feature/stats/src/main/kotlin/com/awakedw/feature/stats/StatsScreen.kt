@@ -3,7 +3,8 @@ package com.awakedw.feature.stats
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -30,9 +32,6 @@ import com.awakedw.feature.stats.components.WeekBarsChart
 
 /** 本页漂浮粒子的随机种子：与首页/设置页各不相同，保证各屏粒子排布有别。 */
 private const val STATS_PARTICLE_SEED = 11L
-
-/** 页面左右留白（与首页一致）。 */
-private val PAGE_HORIZONTAL_PADDING = 24.dp
 
 /**
  * 统计页（规格 §3.3）：给「坚持的痕迹」一个专属空间——
@@ -57,7 +56,7 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = PAGE_HORIZONTAL_PADDING),
+                    .padding(horizontal = PagePadding),
         ) {
             Spacer(Modifier.height(44.dp))
             FadeUpOnce {
@@ -78,7 +77,10 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     }
 }
 
-/** 统计三徽章（规格 §3.3 第 1 条）：「今日 {n} 杯 ☀」「平均间隔 {label} ⏱」+ 连胜徽章（0 天隐藏）。 */
+/** 统计三徽章（规格 §3.3 第 1 条）：「今日 {n} 杯 ☀」「平均间隔 {label} ⏱」+ 连胜徽章（0 天隐藏）。
+ * FlowRow 自动换行（P1-5，与首页 BadgesRow 同款参数）：360dp 窄屏上不换行 Row 的第三枚会被切出屏。
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun StatsBadgesRow(
@@ -86,7 +88,11 @@ private fun StatsBadgesRow(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         BadgeChip(text = "今日 ${badges.cupCount} 杯 ☀", spec = spec)
         BadgeChip(text = "平均间隔 ${badges.avgIntervalLabel} ⏱", spec = spec)
         if (badges.streakDays >= 2) {

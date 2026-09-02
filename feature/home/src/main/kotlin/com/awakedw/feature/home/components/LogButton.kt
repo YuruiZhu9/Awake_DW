@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalView
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.burst.BurstParticles
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.model.ThemeId
 
 /** 按压缩放比例：与进度环一致，轻按即有回弹（规格 §4.2 第 1 步）。 */
@@ -100,7 +100,9 @@ internal fun LogButton(
         ) {
             Text(
                 text = buttonLabel(themeId),
-                color = Color.White,
+                // P2-4：浅色主题浅暖渐变底上白字对比不足（早晨段 ≈1.8:1），字色走 onPrimarySurface；
+                // 深夜主题按钮色板按白字校准，助手同样返回白字。
+                color = onPrimarySurface(spec),
                 style = MaterialTheme.typography.titleMedium,
             )
         }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
@@ -28,7 +29,8 @@ import kotlin.math.abs
 /**
  * 全屏画卷底层（Robolectric，NATIVE 图形模式）：
  *
- * - alpha 语义与 Crop 裁切抽成纯函数直断言（0.30f/0.18f、override 优先、src 居中裁切）；
+ * - alpha 语义与 Crop 裁切抽成纯函数直断言（浅 0.30f Multiply / 深 0.22f SrcOver、
+ *   override 优先、src 居中裁切）；
  * - 组合与绘制路径用纯红底上的像素取样验证：测试资产 arttest/dot.png 为 1×1 半透明绿、
  *   dot_night.png 为 1×1 全透明，Multiply 叠上纯红底后红通道按 alpha 比例压暗——
  *   夜变体全透明则纹丝不动，一粒像素即可分辨「画了主图/画了夜变体/什么都没画」。
@@ -58,12 +60,18 @@ class DressBackdropTest {
 
     private fun centerRedChannel(): Float = android.graphics.Color.red(renderedCenterPixel()) / 255f
 
-    // ---------- backdropAlpha / resolveBackdropAlpha：纯函数 ----------
+    // ---------- backdropAlpha / backdropBlendMode / resolveBackdropAlpha：纯函数 ----------
 
     @Test
-    fun `默认alpha_浅色0点30_深色0点18`() {
+    fun `默认alpha_浅色0点30_深色0点22`() {
         assertEquals(0.30f, backdropAlpha(isDark = false))
-        assertEquals(0.18f, backdropAlpha(isDark = true))
+        assertEquals(0.22f, backdropAlpha(isDark = true))
+    }
+
+    @Test
+    fun `混合模式_浅色Multiply_深夜SrcOver`() {
+        assertEquals(BlendMode.Multiply, backdropBlendMode(isDark = false))
+        assertEquals(BlendMode.SrcOver, backdropBlendMode(isDark = true))
     }
 
     @Test
@@ -71,7 +79,7 @@ class DressBackdropTest {
         assertEquals(0.5f, resolveBackdropAlpha(isDark = false, alphaOverride = 0.5f))
         assertEquals(0.5f, resolveBackdropAlpha(isDark = true, alphaOverride = 0.5f))
         assertEquals(0.30f, resolveBackdropAlpha(isDark = false, alphaOverride = null))
-        assertEquals(0.18f, resolveBackdropAlpha(isDark = true, alphaOverride = null))
+        assertEquals(0.22f, resolveBackdropAlpha(isDark = true, alphaOverride = null))
     }
 
     // ---------- backdropCropSrc：ContentScale.Crop 语义（src 区居中裁切） ----------

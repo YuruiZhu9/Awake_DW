@@ -79,7 +79,12 @@ internal fun CopyLibrarySection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "心意文案库", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
-                Text(text = "每一句都写给自己", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+                // P3-6：删除/编辑说明一句放在分区头部，不再每条句子尾随常驻「长按删除」小字。
+                Text(
+                    text = "每一句都写给自己 · 点一下编辑，长按删除",
+                    color = spec.greetingSubColor,
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
             Text(
                 text = "恢复默认文案",
@@ -205,7 +210,7 @@ private fun CopyGroup(
     }
 }
 
-/** 单句条目：点击编辑、长按删除（规格 §3.4）。 */
+/** 单句条目：点击编辑、长按删除（规格 §3.4）；操作说明收在分区头部一句（P3-6），行内不再常驻提示。 */
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -215,18 +220,16 @@ private fun CopyItemRow(
     onLongClick: () -> Unit,
 ) {
     val spec = currentThemeSpec()
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+    Text(
+        text = text,
+        color = spec.chipText,
+        style = MaterialTheme.typography.bodyMedium,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(vertical = 7.dp),
-    ) {
-        Text(text = text, color = spec.chipText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Text(text = "长按删除", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
-    }
+    )
 }
 
 /** 句子编辑对话框：TextField 限 [COPY_MAX_CHARS] 字，空文本不可保存。 */

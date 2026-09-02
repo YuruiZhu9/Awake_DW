@@ -45,9 +45,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.feature.gallery.components.OutfitCard
 
 /** 分区页签：裙装 / 馆藏（moodboard §5.2 馆藏分区决议③）。 */
@@ -79,24 +82,28 @@ fun GalleryScreen(
     var section by rememberSaveable { mutableIntStateOf(0) }
     var selectedOutfitId by remember { mutableStateOf<String?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize().background(spec.backgroundGradient.first())) {
-        GalleryTopBar(spec = spec, onBack = onBack)
-        SectionTabs(
-            labels = SECTION_LABELS,
-            selected = section,
-            spec = spec,
-            onSelect = { section = it },
-        )
-        val items = if (section == 0) state.dresses else state.museum
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 28.dp),
-            horizontalArrangement = Arrangement.spacedBy(GRID_GAP),
-            verticalArrangement = Arrangement.spacedBy(GRID_GAP),
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            items(items, key = { it.outfit.id }) { item ->
-                OutfitCard(item = item, onClick = { selectedOutfitId = item.outfit.id })
+    // P3-7：平涂单色底改为与首页同底座的 GradientBackdrop（渐变 + 柔光晕 + 噪点），内容置于其上。
+    Box(modifier = Modifier.fillMaxSize()) {
+        GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        Column(modifier = Modifier.fillMaxSize()) {
+            GalleryTopBar(spec = spec, onBack = onBack)
+            SectionTabs(
+                labels = SECTION_LABELS,
+                selected = section,
+                spec = spec,
+                onSelect = { section = it },
+            )
+            val items = if (section == 0) state.dresses else state.museum
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(start = PagePadding, end = PagePadding, top = 16.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(GRID_GAP),
+                verticalArrangement = Arrangement.spacedBy(GRID_GAP),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(items, key = { it.outfit.id }) { item ->
+                    OutfitCard(item = item, onClick = { selectedOutfitId = item.outfit.id })
+                }
             }
         }
     }
@@ -276,6 +283,7 @@ private fun DetailActionButton(
                 .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = label, color = Color.White, style = MaterialTheme.typography.titleMedium)
+        // P2-4：与首页「记一杯」同款主色渐变底，字色同走 onPrimarySurface（深夜维持白字）。
+        Text(text = label, color = onPrimarySurface(spec), style = MaterialTheme.typography.titleMedium)
     }
 }

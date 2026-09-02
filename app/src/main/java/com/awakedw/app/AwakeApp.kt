@@ -50,6 +50,9 @@ fun AnimatedAwakeTheme(
             chipText = target.chipText.animateAnchor("awakeChipText"),
             haloColor = target.haloColor.animateAnchor("awakeHalo"),
             laceColor = target.laceColor.animateAnchor("awakeLace"),
+            // isDark 须随目标主题透传（FIX-B 修复）：此前重建 ThemeSpec 时漏带、恒为 false——
+            // 深夜主题下画卷夜变体/SrcOver 混合（P3-10）、主色底字色（P2-4）、暗色猫立绘在真机全部失联。
+            isDark = target.isDark,
         )
     CompositionLocalProvider(LocalAwakeTheme provides spec) {
         content()
