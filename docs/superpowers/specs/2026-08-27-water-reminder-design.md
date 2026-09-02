@@ -1,7 +1,7 @@
-# Awake_DW · 个人定制喝水应用 设计文档
+﻿# Awake_DW · 个人定制喝水应用 设计文档
 
 - 日期：2026-08-27
-- 状态：已实施完结（2026-08-31 终审收口——§1–§12 全部落地并随 v0.1.1 归档；v0.2 艺术方向另见 moodboard 与开发计划）
+- 状态：历史功能规格（基础喝水能力仍有效；当前产品范围与视觉边界以 `2026-09-02-v03-product-visual-direction.md` 为准）
 - 技术路线：Android 原生 · Kotlin + Jetpack Compose
 
 ## 1. 产品概述
@@ -267,3 +267,4 @@ Awake_DW 是一个随一天的时间温柔变换颜色、每一次记录都被�
 ---
 
 *附：视觉稿迭代过程存档于 `.superpowers/brainstorm/`（visual-style-v4.html 为最终确认版）。*
+

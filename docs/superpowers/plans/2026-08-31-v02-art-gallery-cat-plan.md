@@ -1,16 +1,19 @@
-# Awake_DW v0.2 实施计划：画卷·画廊·胆大王
+﻿# Awake_DW v0.2 实施计划：画卷·画廊·胆大王
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 - 日期：2026-08-31
-- 状态：待开工（风格锚点已经 moodboard 定稿）
+- 状态：历史计划（已由 v0.3 产品范围收敛取代）
 - 规格：`docs/superpowers/specs/2026-08-31-v02-art-moodboard.md`（已确认）——本计划从中 argued，执行者须同时读两份
 
-**Goal:** 把 v0.1 的「能用工具」变成「日常艺术品」：洛丽塔裙装水彩图像作全屏半透明底层，画廊收集制（达标解锁 + 每日穿搭 + 可指定），水彩猫「胆大王」常驻首页纯陪伴，声音（水滴+八音盒），四主题中国色再映射，发布 v0.2.0。
+**历史 Goal（已废止）：** 把 v0.1 的「能用工具」变成「日常艺术品」：洛丽塔裙装水彩图像作全屏半透明底层，画廊收集制（达标解锁 + 每日穿搭 + 可指定），水彩猫「胆大王」常驻首页纯陪伴，声音（水滴+八音盒），四主题中国色再映射，发布 v0.2.0。
 
 **Architecture:** 沿用现有 11 模块 MVVM 单向数据流。新增 `:feature:gallery` 与 `:core:sound` 两个模块；裙装目录为 `:core:model` 静态数据，解锁/钉选/每日选择状态存 DataStore（沿用 `UserPreferencesRepository` 契约扩展）；图像走 `:app` assets + 运行时加载、缺失优雅回退（资产可后补即生效）；猫用「静态立绘 + Compose 微动效」方案规避帧动画产能；音效用 SoundPool + res/raw，缺失 no-op。
 
 **Tech Stack:** Kotlin 2.0.21 / Compose M3 / Hilt 2.52 / Room 2.6.1（本计划不动 Room schema）/ DataStore Preferences / SoundPool / Robolectric+Turbine 测试。
+
+
+> 当前不再实施画廊、今日穿搭、解锁、收藏或养成机制；请参阅 `2026-09-02-v03-lolita-visual-refinement-plan.md`。
 
 ## Global Constraints
 
@@ -529,3 +532,4 @@ fun shouldPlay(ringerMode: Int, soundEnabled: Boolean): Boolean  // ringerMode==
 
 - moodboard §3 风味 γ → Task 14（色板）+ 附录 A（调色后缀）✓；§4 中国色 → Task 14 ✓；§5.1 呈现规范 → Task 5 ✓；§5.2 收集循环（每日随机/解锁/画廊/馆藏/pin）→ Task 1/2/3/7 ✓；§5.3 首发规模 → Task 1 目录 12 件 + 附录 A 规格 ✓；§6 猫（三态/零惩罚/配饰/气泡）→ Task 8/9/10 ✓；§7 声音 → Task 11/12 + 附录 B ✓；§8 素材授权 → 附录 A 馆藏行 ✓；§2 光袋/无失败/装饰克制 → Task 13 + Global Constraints ✓；§11 阶段五中国色与发版 → Task 14/15 ✓。里程碑数值（3/5/7/10/14/21/25/30/50/60/100 天）为首发定值，收集后可依真机体验调表——只动 Task 1 目录数据，不动机制。
 - **终审勘误（2026-09-01）**：上表「§5.1 → Task 5 ✓」系覆盖映射失真——§5.1 原文「所有主页面（首页/统计/我的）底层」，实现仅挂载首页。已裁定：v0.2 口径为首页主秀场（素材未上屏，画卷实为回退渐变，扩页无观感收益），v0.3 真实素材上屏时一并评估统计/我的页扩展。教训：覆盖映射应逐条引用 spec 原句，而非任务号。
+
