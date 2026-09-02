@@ -1,4 +1,4 @@
-﻿# Awake_DW v0.2 实施计划：画卷·画廊·胆大王
+# Awake_DW v0.2 实施计划：画卷·画廊·胆大王
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
