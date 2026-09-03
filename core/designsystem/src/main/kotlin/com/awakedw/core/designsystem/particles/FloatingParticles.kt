@@ -66,6 +66,8 @@ fun FloatingParticles(
     colors: List<Color>,
     modifier: Modifier,
     seed: Long = 7L,
+    showStars: Boolean = true,
+    showFlowers: Boolean = true,
 ) {
     val progress = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(seed) {
@@ -88,7 +90,7 @@ fun FloatingParticles(
             modifier.drawWithCache {
                 val area = size
                 // 文字排版结果仅在尺寸/样式变化时重排一次，帧间只变 alpha。
-                val starLayouts = starStyles.map { style -> textMeasurer.measure(STAR_GLYPH, style) }
+                val starLayouts = if (showStars) starStyles.map { style -> textMeasurer.measure(STAR_GLYPH, style) } else emptyList()
                 onDrawBehind {
                     val p = progress.floatValue
                     for (index in 0 until ParticleMath.DOT_COUNT) {
@@ -109,37 +111,41 @@ fun FloatingParticles(
                             center = frame.center - Offset(frame.radiusPx * 0.32f, frame.radiusPx * 0.32f),
                         )
                     }
-                    for ((index, layout) in starLayouts.withIndex()) {
-                        val twinkle =
-                            0.5f + 0.5f *
-                                sin(2f * PI.toFloat() * STAR_TURNS[index] * p + STAR_PHASES[index])
-                        val bob = sin(2f * PI.toFloat() * STAR_TURNS[index] * p + STAR_PHASES[index]) * anchorPx * BOB_AMPLITUDE
-                        val centerX = STAR_ANCHORS[index].first * area.width
-                        val centerY = STAR_ANCHORS[index].second * area.height + bob
-                        drawText(
-                            textLayoutResult = layout,
-                            color = colorAt(colors, ParticleMath.DOT_COUNT + index),
-                            alpha = STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle,
-                            topLeft =
-                                Offset(
-                                    centerX - layout.size.width / 2f,
-                                    centerY - layout.size.height / 2f,
-                                ),
-                        )
+                    if (showStars) {
+                        for ((index, layout) in starLayouts.withIndex()) {
+                            val twinkle =
+                                0.5f + 0.5f *
+                                    sin(2f * PI.toFloat() * STAR_TURNS[index] * p + STAR_PHASES[index])
+                            val bob = sin(2f * PI.toFloat() * STAR_TURNS[index] * p + STAR_PHASES[index]) * anchorPx * BOB_AMPLITUDE
+                            val centerX = STAR_ANCHORS[index].first * area.width
+                            val centerY = STAR_ANCHORS[index].second * area.height + bob
+                            drawText(
+                                textLayoutResult = layout,
+                                color = colorAt(colors, ParticleMath.DOT_COUNT + index),
+                                alpha = STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle,
+                                topLeft =
+                                    Offset(
+                                        centerX - layout.size.width / 2f,
+                                        centerY - layout.size.height / 2f,
+                                    ),
+                            )
+                        }
                     }
-                    FLOWER_ANCHORS.forEachIndexed { fi, anchor ->
-                        val flowerAlpha =
-                            FLOWER_ALPHA_BASE +
-                                FLOWER_ALPHA_AMPLITUDE * (0.5f + 0.5f * sin(2f * PI.toFloat() * p + fi * PI.toFloat() * 2f / 3f))
-                        val center = Offset(anchor.first * area.width, anchor.second * area.height)
-                        drawFlower(
-                            center = center,
-                            orbit = anchorPx * 0.5f,
-                            petalRadius = anchorPx * 0.2f,
-                            rotation = p,
-                            color = colorAt(colors, ParticleMath.DOT_COUNT + ParticleMath.STAR_COUNT + fi),
-                            alpha = flowerAlpha,
-                        )
+                    if (showFlowers) {
+                        FLOWER_ANCHORS.forEachIndexed { fi, anchor ->
+                            val flowerAlpha =
+                                FLOWER_ALPHA_BASE +
+                                    FLOWER_ALPHA_AMPLITUDE * (0.5f + 0.5f * sin(2f * PI.toFloat() * p + fi * PI.toFloat() * 2f / 3f))
+                            val center = Offset(anchor.first * area.width, anchor.second * area.height)
+                            drawFlower(
+                                center = center,
+                                orbit = anchorPx * 0.5f,
+                                petalRadius = anchorPx * 0.2f,
+                                rotation = p,
+                                color = colorAt(colors, ParticleMath.DOT_COUNT + ParticleMath.STAR_COUNT + fi),
+                                alpha = flowerAlpha,
+                            )
+                        }
                     }
                 }
             },

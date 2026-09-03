@@ -19,12 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** 弧线宽度占环最短边长的比例。 */
 private const val STROKE_FRACTION = 0.085f
@@ -103,6 +107,13 @@ fun ProgressRing(
                             x = center.x - arcBounds.width / 2f,
                             y = center.y - arcBounds.height / 2f,
                         )
+                    // A hairline lace-colored outer edge gives the ring a crafted, paper-cut finish.
+                    drawCircle(
+                        color = spec.laceColor.copy(alpha = 0.22f),
+                        radius = arcBounds.width / 2f + stroke * 0.46f,
+                        center = center,
+                        style = Stroke(width = 1.dp.toPx()),
+                    )
                     drawCircle(
                         color = spec.ringTrack,
                         radius = arcBounds.width / 2f,
@@ -110,7 +121,14 @@ fun ProgressRing(
                         style = Stroke(width = stroke, cap = StrokeCap.Round),
                     )
                     drawArc(
-                        color = spec.primary,
+                        brush =
+                            Brush.sweepGradient(
+                                listOf(
+                                    spec.primary.copy(alpha = 0.78f),
+                                    spec.primary,
+                                    spec.primary.copy(alpha = 0.90f),
+                                ),
+                            ),
                         startAngle = START_ANGLE_DEGREES,
                         sweepAngle = animatedProgress * 360f,
                         useCenter = false,
@@ -118,6 +136,19 @@ fun ProgressRing(
                         size = arcBounds,
                         style = Stroke(width = stroke, cap = StrokeCap.Round),
                     )
+                    if (animatedProgress > 0.01f) {
+                        val endAngle = Math.toRadians((START_ANGLE_DEGREES + animatedProgress * 360f).toDouble())
+                        val end =
+                            Offset(
+                                x = center.x + arcBounds.width / 2f * cos(endAngle).toFloat(),
+                                y = center.y + arcBounds.height / 2f * sin(endAngle).toFloat(),
+                            )
+                        drawCircle(
+                            color = spec.laceColor.copy(alpha = 0.76f),
+                            radius = stroke * 0.22f,
+                            center = end,
+                        )
+                    }
                 },
         contentAlignment = Alignment.Center,
     ) {

@@ -11,7 +11,6 @@ import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.model.CatMood
-import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.resolveCatMood
 import com.awakedw.core.sound.AwakeSoundPlayer
 import com.awakedw.core.sound.SoundEvent
@@ -41,7 +40,6 @@ const val CAT_LINE_HOLD_MS = 2_000L
 
 /** Immutable state for the water logging home screen. */
 data class HomeUiState(
-    val themeId: ThemeId = ThemeId.EMERALD,
     val progress: Float = 0f,
     val totalMl: Int = 0,
     val goalMl: Int = 1600,
@@ -113,7 +111,6 @@ class HomeViewModel(
             observeHome().collect { snapshot ->
                 _uiState.update {
                     it.copy(
-                        themeId = snapshot.themeId,
                         progress = (snapshot.stats.totalMl.toFloat() / snapshot.goalMl).coerceIn(0f, 1f),
                         totalMl = snapshot.stats.totalMl,
                         goalMl = snapshot.goalMl,

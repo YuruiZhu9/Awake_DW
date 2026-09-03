@@ -57,7 +57,7 @@ class MainActivityColdBootTest {
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
 
-        composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+        composeRule.onNodeWithText("记一杯").assertIsDisplayed()
     }
 
     @Test
@@ -70,7 +70,7 @@ class MainActivityColdBootTest {
         composeRule.onNodeWithText("以后再说").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
-        composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+        composeRule.onNodeWithText("记一杯").assertIsDisplayed()
 
         // 统计 → 首页一轮页签切换：栈应始终保持在 [首页] 一层
         // （回归：popUpTo 若指向已被弹出的 onboarding startDestination 会变成空操作，

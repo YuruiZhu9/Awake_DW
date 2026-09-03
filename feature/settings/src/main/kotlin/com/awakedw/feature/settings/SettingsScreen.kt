@@ -46,6 +46,7 @@ import com.awakedw.core.designsystem.SurfaceContentPadding
 import com.awakedw.core.designsystem.SurfaceCornerRadius
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.settings.components.IntervalChipsRow
 import com.awakedw.feature.settings.components.StepperRow
@@ -111,6 +112,8 @@ fun SettingsScreen(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
             seed = SETTINGS_PARTICLE_SEED,
+            showStars = false,
+            showFlowers = false,
         )
 
         Column(
@@ -127,6 +130,7 @@ fun SettingsScreen(
                 color = spec.greetingColor,
                 style = MaterialTheme.typography.headlineMedium,
             )
+            LolitaRule(modifier = Modifier.padding(horizontal = 18.dp))
 
             SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
                 // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
@@ -217,10 +221,10 @@ private fun SettingsCard(
     val spec = currentThemeSpec()
     Surface(
         shape = CARD_SHAPE,
-        color = spec.chipBg,
+        color = spec.chipBg.copy(alpha = 0.88f),
         modifier = modifier.fillMaxWidth(),
-        shadowElevation = 2.dp,
-        border = BorderStroke(width = 1.dp, color = spec.laceColor),
+        shadowElevation = 1.dp,
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.62f)),
     ) {
         // P3-3：饰带层先于内边距列满幅绘制（直接触卡两缘），内容列再收 20dp 内边距——
         // 饰带不再悬空于内边距里，首尾珠子按 24dp 圆角安全几何布点不被裁切。

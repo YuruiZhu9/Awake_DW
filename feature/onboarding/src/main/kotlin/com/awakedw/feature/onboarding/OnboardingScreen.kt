@@ -96,7 +96,11 @@ fun OnboardingScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
-        FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
+        FloatingParticles(
+            colors = spec.particleColors,
+            modifier = Modifier.matchParentSize(),
+            showFlowers = false,
+        )
 
         Column(
             modifier =

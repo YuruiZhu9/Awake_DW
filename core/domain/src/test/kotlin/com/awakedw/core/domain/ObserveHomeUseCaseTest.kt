@@ -1,7 +1,6 @@
 package com.awakedw.core.domain
 
 import com.awakedw.core.model.DailyStats
-import com.awakedw.core.model.ThemeId
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -24,7 +23,7 @@ class ObserveHomeUseCaseTest {
         clock = FakeClock(ZonedDateTime.of(2026, 8, 27, 12, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toInstant().toEpochMilli())
         water = FakeWaterRepository(clock)
         prefs = FakeUserPreferencesRepository()
-        useCase = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock))
+        useCase = ObserveHomeUseCase(water, prefs)
     }
 
     @Test
@@ -49,14 +48,13 @@ class ObserveHomeUseCaseTest {
                     stats = DailyStats(totalMl = 250, cupCount = 1, avgIntervalMin = null),
                     goalMl = 1600,
                     cupMl = 250,
-                    themeId = ThemeId.EMERALD,
                 )
             val afterGoal = expected.copy(goalMl = 240)
             assertEquals(listOf(expected, afterGoal, afterGoal), snapshots)
         }
 
     @Test
-    fun `snapshot contains current water settings and theme`() =
+    fun `snapshot contains current water settings`() =
         runTest {
             water.addCup(250)
             assertEquals(
@@ -64,7 +62,6 @@ class ObserveHomeUseCaseTest {
                     stats = DailyStats(totalMl = 250, cupCount = 1, avgIntervalMin = null),
                     goalMl = 1600,
                     cupMl = 250,
-                    themeId = ThemeId.EMERALD,
                 ),
                 useCase().first(),
             )

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -252,22 +255,28 @@ private fun AwakeBottomBar(
     currentRoute: String?,
     onSelect: (AwakeDestination) -> Unit,
 ) {
-    NavigationBar(containerColor = spec.chipBg, tonalElevation = 0.dp) {
-        BOTTOM_TABS.forEach { tab ->
-            NavigationBarItem(
-                selected = currentRoute == tab.destination.route,
-                onClick = { onSelect(tab.destination) },
-                icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                label = { Text(text = tab.label) },
-                colors =
-                    NavigationBarItemDefaults.colors(
-                        selectedIconColor = spec.primary,
-                        selectedTextColor = spec.primary,
-                        unselectedIconColor = spec.chipText,
-                        unselectedTextColor = spec.chipText,
-                        indicatorColor = spec.primary.copy(alpha = TAB_INDICATOR_ALPHA),
-                    ),
-            )
+    Surface(
+        color = spec.chipBg.copy(alpha = 0.94f),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.34f)),
+        shadowElevation = 2.dp,
+    ) {
+        NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
+            BOTTOM_TABS.forEach { tab ->
+                NavigationBarItem(
+                    selected = currentRoute == tab.destination.route,
+                    onClick = { onSelect(tab.destination) },
+                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
+                    label = { Text(text = tab.label) },
+                    colors =
+                        NavigationBarItemDefaults.colors(
+                            selectedIconColor = spec.primary,
+                            selectedTextColor = spec.primary,
+                            unselectedIconColor = spec.chipText,
+                            unselectedTextColor = spec.chipText,
+                            indicatorColor = spec.primary.copy(alpha = TAB_INDICATOR_ALPHA),
+                        ),
+                )
+            }
         }
     }
 }

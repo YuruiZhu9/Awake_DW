@@ -1,4 +1,4 @@
-package com.awakedw.feature.home.components
+﻿package com.awakedw.feature.home.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Spring
@@ -8,9 +8,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.WaterDrop
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,28 +39,20 @@ import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.burst.BurstParticles
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.onPrimarySurface
-import com.awakedw.core.model.ThemeId
 
-/** 按压缩放比例：与进度环一致，轻按即有回弹（规格 §4.2 第 1 步）。 */
+/** Button label is deliberately stable: the primary action always means one thing. */
+internal const val LOG_BUTTON_LABEL = "记一杯"
+
+/** Press scale for the primary action. */
 private const val PRESS_SCALE = 0.97f
 
-/** 主按钮文案随主题变化（规格 §3.2 第 5 条）。 */
-internal fun buttonLabel(themeId: ThemeId): String =
-    when (themeId) {
-        ThemeId.EMERALD -> "干杯一下 💧"
-        ThemeId.STRAWBERRY -> "喝一杯啦 ♡"
-        ThemeId.CARAMEL -> "来一口温暖"
-        ThemeId.NIGHT -> "轻轻抿一口 🌙"
-    }
-
 /**
- * 「记一杯」渐变胶囊大按钮（规格 §3.2 第 5 条 + §4.2 反馈编排）：
- * 主题渐变底、按压回弹，点击即打卡并从按钮中心迸出 10 颗主题色粒子（~900ms）。
+ * Primary water logging action: a calm gradient capsule with a small drop mark,
+ * pressed feedback, and a restrained burst that confirms the tap without adding a dialog.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun LogButton(
-    themeId: ThemeId,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -71,7 +69,6 @@ internal fun LogButton(
     var burstTrigger by remember { mutableIntStateOf(0) }
     val view = LocalView.current
 
-    // 外层 Box 既是迸发粒子的坐标空间（origin=按钮中心），也保证粒子可飞出按钮边界。
     Box(
         modifier =
             modifier
@@ -96,15 +93,24 @@ internal fun LogButton(
                         burstTrigger += 1
                         onTap()
                     }
-                    .padding(horizontal = 46.dp, vertical = 17.dp),
+                    .padding(horizontal = 42.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = buttonLabel(themeId),
-                // P2-4：浅色主题浅暖渐变底上白字对比不足（早晨段 ≈1.8:1），字色走 onPrimarySurface；
-                // 深夜主题按钮色板按白字校准，助手同样返回白字。
-                color = onPrimarySurface(spec),
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.WaterDrop,
+                    contentDescription = null,
+                    tint = onPrimarySurface(spec),
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = LOG_BUTTON_LABEL,
+                    color = onPrimarySurface(spec),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
         BurstParticles(
             origin = Offset(size.width / 2f, size.height / 2f),

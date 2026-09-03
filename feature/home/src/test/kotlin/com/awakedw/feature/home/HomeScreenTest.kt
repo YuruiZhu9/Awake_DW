@@ -8,7 +8,6 @@ import androidx.compose.ui.test.performClick
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveThemeUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.UserSettings
@@ -43,7 +42,7 @@ class HomeScreenTest {
             val viewModel =
                 HomeViewModel(
                     clock = clock,
-                    observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
+                    observeHome = ObserveHomeUseCase(water, prefs),
                     logWater = LogWaterUseCase(water, prefs, clock),
                     copies = FakeCopyLibraryRepository(),
                     sound = FakeSoundPlayer(),
@@ -58,17 +57,17 @@ class HomeScreenTest {
             advanceClock(FIRST_FRAME_MS)
 
             composeRule.onNodeWithText("0ml").assertIsDisplayed()
-            composeRule.onNodeWithText("干杯一下 💧").assertIsDisplayed()
+            composeRule.onNodeWithText("记一杯").assertIsDisplayed()
 
-            composeRule.onNodeWithText("干杯一下 💧").performClick()
-            composeRule.onNodeWithText("干杯一下 💧").performClick()
+            composeRule.onNodeWithText("记一杯").performClick()
+            composeRule.onNodeWithText("记一杯").performClick()
             advanceClock(RENDER_SETTLE_MS)
 
             composeRule.onNodeWithText("250ml").assertIsDisplayed()
             assertEquals(1, water.addCount)
 
             clock.ms += WINDOW_GAP_MS
-            composeRule.onNodeWithText("干杯一下 💧").performClick()
+            composeRule.onNodeWithText("记一杯").performClick()
             advanceClock(RENDER_SETTLE_MS)
 
             composeRule.onNodeWithText("500ml").assertIsDisplayed()

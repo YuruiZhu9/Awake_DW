@@ -2,7 +2,6 @@ package com.awakedw.feature.home
 
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveThemeUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.sound.SoundEvent
@@ -50,7 +49,7 @@ class HomeSoundTriggerTest {
         val viewModel =
             HomeViewModel(
                 clock = clock,
-                observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
+                observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
                 sound = sound,

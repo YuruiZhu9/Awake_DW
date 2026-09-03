@@ -24,6 +24,7 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.components.BadgeChip
+import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -66,10 +67,14 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
             Spacer(Modifier.height(10.dp))
             FadeUpOnce(delayMillis = 60) { StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth()) }
-            Spacer(Modifier.height(28.dp))
-            WeekBarsChart(bars = state.bars, goalMl = state.goalMl, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(32.dp))
-            TodayTimeline(records = state.timeline, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(24.dp))
+            PaperPanel(title = "近七日") {
+                WeekBarsChart(bars = state.bars, goalMl = state.goalMl, modifier = Modifier.fillMaxWidth())
+            }
+            Spacer(Modifier.height(20.dp))
+            PaperPanel(title = "今日记录") {
+                TodayTimeline(records = state.timeline, modifier = Modifier.fillMaxWidth())
+            }
             Spacer(Modifier.height(36.dp))
         }
     }

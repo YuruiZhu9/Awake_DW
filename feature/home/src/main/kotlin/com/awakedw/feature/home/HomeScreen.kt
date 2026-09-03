@@ -131,7 +131,11 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         // 画卷层（moodboard §5.1）：渐变之上、内容之下；今日之裙未就绪或资产缺失时不绘制。
-        FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
+        FloatingParticles(
+            colors = spec.particleColors,
+            modifier = Modifier.matchParentSize(),
+            showFlowers = false,
+        )
 
         Column(
             modifier =
@@ -177,7 +181,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             // 光袋（moodboard §2 光·遇）：按钮后方的呼吸光晕（96–160dp），绘制在按钮之下、背景之上。
             Box(contentAlignment = Alignment.Center) {
                 LightPocket(modifier = Modifier.size(width = LOG_BUTTON_POCKET_WIDTH, height = LOG_BUTTON_POCKET_HEIGHT))
-                LogButton(themeId = state.themeId, onTap = viewModel::tapLogButton)
+                LogButton(onTap = viewModel::tapLogButton)
             }
             // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供（原 Spacer(36) 随之删除）。
         }

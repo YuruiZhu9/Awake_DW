@@ -1,12 +1,16 @@
-package com.awakedw.feature.settings.components
+﻿package com.awakedw.feature.settings.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -61,6 +65,7 @@ private val CHIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
  * 点击 ± 由调用方提交 `当前值 ± [SettingsValidation.ML_STEP]`，
  * 越界候选交给 VM 校验回落——本层只做按钮可用性提示，不做夹紧。
  */
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun StepperRow(
@@ -121,6 +126,7 @@ private fun StepButton(
  * 开关行（§3.4）：标签（可选副文案 [supporting]）+ Switch。切换即持久化，无保存键。
  * 副文案收在标签下方的小字（greetingSubColor），如「音效 · 水滴与八音盒；系统静音时自动安静」。
  */
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun ToggleRow(
@@ -167,6 +173,7 @@ internal fun ToggleRow(
  * 拖动时本层保证两柄间隔 ≥ 45 分钟（15min 粒度下满足 start < end−30 的最小档），
  * 松手后按分钟数提交——VM 仍会再校验一次，双重兜底。
  */
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun WindowRangeSlider(
@@ -221,6 +228,7 @@ internal fun WindowRangeSlider(
  * P1-6：七档按 4+3 拆两行——原不换行 Row + `weight(1f)` 均分在 360dp 屏每格仅 ≈33dp，
  * 「120」以上右半被裁；改为 [INTERVAL_CHIP_MIN_WIDTH] 定宽下限、不参与均分，行内/行间 8dp 呼吸。
  */
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun IntervalChipsRow(
@@ -247,9 +255,8 @@ internal fun IntervalChipsRow(
     }
 }
 
-/** 外观主题单选 chips（§3.4）：「跟随时间 / 固定翡翠绿 / 固定草莓雾光 / 固定焦糖奶茶 / 固定深夜墨青」，
- * 每个选项带色点——跟随时间为四主题色渐变点，固定项为对应主题主色实心点。
- */
+/** Theme choices shown as compact color cards instead of a form-like list. */
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun ThemeChoiceChips(
@@ -257,20 +264,59 @@ internal fun ThemeChoiceChips(
     onSelect: (ThemeChoice) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        maxItemsInEachRow = 2,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         ThemeChoice.entries.forEach { choice ->
-            SelectableChip(
-                label = themeLabel(choice),
+            ThemeChoiceCard(
+                choice = choice,
                 selected = choice == selected,
                 onClick = { onSelect(choice) },
-                modifier = Modifier.fillMaxWidth(),
-                leading = { ThemeDot(choice) },
+                modifier = Modifier.weight(1f),
             )
         }
     }
 }
 
-/** 主题选项文案（§3.4 原文 + §10.1 深夜墨青）。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun ThemeChoiceCard(
+    choice: ThemeChoice,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val current = currentThemeSpec()
+    val accent = themePrimary(choice)
+    val cardColor = if (selected) accent.copy(alpha = 0.18f) else current.chipBg.copy(alpha = 0.26f)
+    val borderColor = if (selected) accent.copy(alpha = 0.82f) else current.laceColor.copy(alpha = 0.42f)
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = cardColor,
+        border = BorderStroke(width = 1.dp, color = borderColor),
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 54.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ThemeDot(choice = choice)
+            Text(
+                text = themeLabel(choice),
+                color = current.chipText,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 2,
+            )
+        }
+    }
+}
+
+/** Theme option label. */
 internal fun themeLabel(choice: ThemeChoice): String =
     when (choice) {
         ThemeChoice.FOLLOW_TIME -> "跟随时间"

@@ -24,6 +24,8 @@ import com.awakedw.core.designsystem.particles.buildGrainPath
 private const val GRAIN_ALPHA = 0.05f // 颗粒不透明度约 4–5%
 private const val HALO_ALPHA = 0.32f // 柔光晕：主色低透明度
 private val HALO_DIAMETER = 170.dp // 光晕团约 170px
+private val WASH_DIAMETER = 280.dp
+private const val WASH_ALPHA = 0.10f
 private const val HALO_CENTER_Y_FRACTION = 0.34f // 首页进度环大致位于纵向 1/3 处
 
 /** 光晕呼吸（设计 §9.5）：alpha 在基准上下的摆幅。 */
@@ -69,9 +71,32 @@ fun GradientBackdrop(
                 val haloColors = listOf(spec.haloColor.copy(alpha = HALO_ALPHA), Color.Transparent)
                 val haloBrush =
                     Brush.radialGradient(colors = haloColors, center = haloCenter, radius = haloRadius)
+                val washRadius = (WASH_DIAMETER / 2).toPx()
+                val topWashBrush =
+                    Brush.radialGradient(
+                        colors = listOf(spec.laceColor.copy(alpha = WASH_ALPHA), Color.Transparent),
+                        center = Offset(size.width * 0.88f, size.height * 0.16f),
+                        radius = washRadius,
+                    )
+                val bottomWashBrush =
+                    Brush.radialGradient(
+                        colors = listOf(spec.haloColor.copy(alpha = WASH_ALPHA * 0.72f), Color.Transparent),
+                        center = Offset(size.width * 0.12f, size.height * 0.86f),
+                        radius = washRadius * 0.86f,
+                    )
                 val grain = buildGrainPath(size, GRAIN_CELL.toPx(), GRAIN_DOT.toPx())
                 onDrawBehind {
                     drawRect(gradient)
+                    drawCircle(
+                        brush = topWashBrush,
+                        radius = washRadius,
+                        center = Offset(size.width * 0.88f, size.height * 0.16f),
+                    )
+                    drawCircle(
+                        brush = bottomWashBrush,
+                        radius = washRadius * 0.86f,
+                        center = Offset(size.width * 0.12f, size.height * 0.86f),
+                    )
                     drawCircle(
                         brush = haloBrush,
                         radius = haloRadius,

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
-import com.awakedw.core.domain.ResolveThemeUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.UserSettings
@@ -100,7 +99,7 @@ class HomeScreenOverflowTest {
         val viewModel =
             HomeViewModel(
                 clock = clock,
-                observeHome = ObserveHomeUseCase(water, prefs, ResolveThemeUseCase(prefs, clock)),
+                observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
                 copies = copies,
                 sound = FakeSoundPlayer(),
@@ -173,7 +172,7 @@ class HomeScreenOverflowTest {
         const val LARGE_FONT_SCALE = 1.3f
 
         /** 「记一杯」按钮文案（EMERALD 主题）。 */
-        const val BUTTON_LABEL = "干杯一下 💧"
+        const val BUTTON_LABEL = "记一杯"
 
         /** 快捷胶囊文案前缀（毫升数随杯容计算，断言走前缀匹配）。 */
         const val SMALL_SIP_PREFIX = "小口"
