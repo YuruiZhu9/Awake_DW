@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.model.CatMood
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -229,6 +230,7 @@ private fun DrawScope.drawFitted(
  * 眼睛区分三态（蓝宝石眼是布偶身份标志，三态均保蓝）：
  * IDLE 圆睁蓝瞳白高光 / HAPPY 上弯月牙（拱向上）/ SLEEPY 安睡闭眼（拱向下）——安睡不是消极。
  */
+
 private fun DrawScope.drawVectorCat(
     mood: CatMood,
     theme: ThemeSpec,
@@ -237,271 +239,390 @@ private fun DrawScope.drawVectorCat(
     val w = size.width
     val h = size.height
     val palette = catPaletteOf(theme.isDark)
+    val outline = palette.point.copy(alpha = 0.62f)
+    val softOutline = palette.point.copy(alpha = 0.22f)
+    val cheek = palette.nose.copy(alpha = 0.16f)
 
-    // 羽状尾：体侧甩出、沿右侧上扬收卷的宽笔触曲线（重点色，根部藏于身后）。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.66f, h * 0.85f)
-                cubicTo(w * 0.86f, h * 0.87f, w * 0.95f, h * 0.72f, w * 0.93f, h * 0.58f)
-                cubicTo(w * 0.915f, h * 0.47f, w * 0.85f, h * 0.42f, w * 0.80f, h * 0.44f)
-            },
-        color = palette.point,
-        style = Stroke(width = w * 0.095f, cap = StrokeCap.Round),
-        colorFilter = colorFilter,
-    )
-    // 尾尖略浅叠段：末段羽尖提亮，蓬松贵气。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.905f, h * 0.60f)
-                cubicTo(w * 0.89f, h * 0.49f, w * 0.85f, h * 0.43f, w * 0.80f, h * 0.44f)
-            },
-        color = palette.tailTip,
-        style = Stroke(width = w * 0.095f, cap = StrokeCap.Round),
+    // A small grounded shadow keeps the figure from floating above the page.
+    drawOval(
+        color = softOutline,
+        topLeft = Offset(w * 0.24f, h * 0.875f),
+        size = Size(w * 0.52f, h * 0.09f),
         colorFilter = colorFilter,
     )
 
-    // 坐姿身体：颈口收窄、臀部外扩、底缘圆润的梨形（头略大身圆的 2.5 头身）。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.395f, h * 0.53f)
-                cubicTo(w * 0.30f, h * 0.58f, w * 0.245f, h * 0.70f, w * 0.245f, h * 0.82f)
-                cubicTo(w * 0.245f, h * 0.915f, w * 0.335f, h * 0.955f, w * 0.50f, h * 0.955f)
-                cubicTo(w * 0.665f, h * 0.955f, w * 0.755f, h * 0.915f, w * 0.755f, h * 0.82f)
-                cubicTo(w * 0.755f, h * 0.70f, w * 0.70f, h * 0.58f, w * 0.605f, h * 0.53f)
-                quadraticBezierTo(w * 0.50f, h * 0.49f, w * 0.395f, h * 0.53f)
-                close()
-            },
-        color = palette.body,
-        colorFilter = colorFilter,
-    )
-
-    // 胸前围脖（ruff）：略深米色胸襟，上缘藏于头下。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.402f, h * 0.548f)
-                cubicTo(w * 0.388f, h * 0.632f, w * 0.435f, h * 0.682f, w * 0.50f, h * 0.682f)
-                cubicTo(w * 0.565f, h * 0.682f, w * 0.612f, h * 0.632f, w * 0.598f, h * 0.548f)
-                close()
-            },
-        color = palette.ruff,
-        colorFilter = colorFilter,
-    )
-    // 长毛感：几簇短弧自围脖缘甩出到奶油身上（同色于襟内隐形、出襟可见，成绒毛层次）。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.392f, h * 0.575f)
-                quadraticBezierTo(w * 0.355f, h * 0.59f, w * 0.345f, h * 0.62f)
-                moveTo(w * 0.398f, h * 0.625f)
-                quadraticBezierTo(w * 0.365f, h * 0.645f, w * 0.362f, h * 0.665f)
-                moveTo(w * 0.45f, h * 0.665f)
-                quadraticBezierTo(w * 0.44f, h * 0.69f, w * 0.452f, h * 0.705f)
-                moveTo(w * 0.608f, h * 0.575f)
-                quadraticBezierTo(w * 0.645f, h * 0.59f, w * 0.655f, h * 0.62f)
-                moveTo(w * 0.602f, h * 0.625f)
-                quadraticBezierTo(w * 0.635f, h * 0.645f, w * 0.638f, h * 0.665f)
-                moveTo(w * 0.55f, h * 0.665f)
-                quadraticBezierTo(w * 0.56f, h * 0.69f, w * 0.548f, h * 0.705f)
-            },
-        color = palette.ruff,
-        style = Stroke(width = w * 0.016f, cap = StrokeCap.Round),
-        colorFilter = colorFilter,
-    )
-
-    // 脚爪：身前两只小圆弧（奶油白），围脖色趾缝细线勾饱满。
-    drawOval(color = palette.body, topLeft = Offset(w * 0.355f, h * 0.885f), size = Size(w * 0.115f, h * 0.078f), colorFilter = colorFilter)
-    drawOval(color = palette.body, topLeft = Offset(w * 0.530f, h * 0.885f), size = Size(w * 0.115f, h * 0.078f), colorFilter = colorFilter)
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.395f, h * 0.90f)
-                quadraticBezierTo(w * 0.391f, h * 0.925f, w * 0.396f, h * 0.948f)
-                moveTo(w * 0.430f, h * 0.90f)
-                quadraticBezierTo(w * 0.429f, h * 0.925f, w * 0.433f, h * 0.948f)
-                moveTo(w * 0.570f, h * 0.90f)
-                quadraticBezierTo(w * 0.569f, h * 0.925f, w * 0.573f, h * 0.948f)
-                moveTo(w * 0.605f, h * 0.90f)
-                quadraticBezierTo(w * 0.604f, h * 0.925f, w * 0.609f, h * 0.948f)
-            },
-        color = palette.ruff,
-        style = Stroke(width = w * 0.007f, cap = StrokeCap.Round),
-        colorFilter = colorFilter,
-    )
-
-    // 双耳：圆角三角（布偶耳圆），耳外重点色、耳内浅粉；耳根由圆头盖住自然衔接。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.325f, h * 0.275f)
-                cubicTo(w * 0.272f, h * 0.21f, w * 0.262f, h * 0.115f, w * 0.302f, h * 0.068f)
-                cubicTo(w * 0.352f, h * 0.078f, w * 0.428f, h * 0.128f, w * 0.462f, h * 0.185f)
-                close()
-            },
-        color = palette.point,
-        colorFilter = colorFilter,
-    )
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.675f, h * 0.275f)
-                cubicTo(w * 0.728f, h * 0.21f, w * 0.738f, h * 0.115f, w * 0.698f, h * 0.068f)
-                cubicTo(w * 0.648f, h * 0.078f, w * 0.572f, h * 0.128f, w * 0.538f, h * 0.185f)
-                close()
-            },
-        color = palette.point,
-        colorFilter = colorFilter,
-    )
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.345f, h * 0.245f)
-                cubicTo(w * 0.312f, h * 0.196f, w * 0.305f, h * 0.128f, w * 0.328f, h * 0.098f)
-                cubicTo(w * 0.365f, h * 0.118f, w * 0.418f, h * 0.152f, w * 0.443f, h * 0.195f)
-                close()
-            },
-        color = palette.innerEar,
-        colorFilter = colorFilter,
-    )
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.655f, h * 0.245f)
-                cubicTo(w * 0.688f, h * 0.196f, w * 0.695f, h * 0.128f, w * 0.672f, h * 0.098f)
-                cubicTo(w * 0.635f, h * 0.118f, w * 0.582f, h * 0.152f, w * 0.557f, h * 0.195f)
-                close()
-            },
-        color = palette.innerEar,
-        colorFilter = colorFilter,
-    )
-
-    // 圆头：略宽的圆润椭圆（盖住耳根、颈口与围脖上缘）。
-    drawOval(color = palette.body, topLeft = Offset(w * 0.285f, h * 0.135f), size = Size(w * 0.43f, h * 0.39f), colorFilter = colorFilter)
-
-    // 重点色小面具：眼周到鼻梁的柔和 V 形（不整脸涂满，奶油脸颊大半保留，下巴奶油）。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.50f, h * 0.24f)
-                cubicTo(w * 0.60f, h * 0.245f, w * 0.635f, h * 0.30f, w * 0.635f, h * 0.36f)
-                cubicTo(w * 0.635f, h * 0.42f, w * 0.585f, h * 0.455f, w * 0.50f, h * 0.462f)
-                cubicTo(w * 0.415f, h * 0.455f, w * 0.365f, h * 0.42f, w * 0.365f, h * 0.36f)
-                cubicTo(w * 0.365f, h * 0.30f, w * 0.40f, h * 0.245f, w * 0.50f, h * 0.24f)
-                close()
-            },
-        color = palette.point,
-        colorFilter = colorFilter,
-    )
-
-    // 蓝宝石眼：IDLE 圆睁蓝瞳白高光 / HAPPY 上弯月牙 / SLEEPY 安睡闭眼下弧。
-    val irisRadius = w * 0.037f
-    val crescentHalfWidth = w * 0.045f
-    val crescentRadius = w * 0.035f
-    when (mood) {
-        CatMood.IDLE -> {
-            drawCircle(color = palette.iris, radius = irisRadius, center = Offset(w * 0.425f, h * 0.355f), colorFilter = colorFilter)
-            drawCircle(color = palette.iris, radius = irisRadius, center = Offset(w * 0.575f, h * 0.355f), colorFilter = colorFilter)
-            drawCircle(color = Color.White, radius = w * 0.012f, center = Offset(w * 0.438f, h * 0.342f), colorFilter = colorFilter)
-            drawCircle(color = Color.White, radius = w * 0.012f, center = Offset(w * 0.588f, h * 0.342f), colorFilter = colorFilter)
+    // Feathered tail, drawn first so the body naturally sits in front of it.
+    val tail =
+        Path().apply {
+            moveTo(w * 0.66f, h * 0.80f)
+            cubicTo(w * 0.82f, h * 0.88f, w * 0.95f, h * 0.78f, w * 0.91f, h * 0.61f)
+            cubicTo(w * 0.89f, h * 0.51f, w * 0.79f, h * 0.46f, w * 0.73f, h * 0.52f)
         }
-        CatMood.HAPPY -> {
-            drawArc(
-                color = palette.iris,
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(w * 0.425f - crescentHalfWidth, h * 0.355f - crescentRadius),
-                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
-                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
-                colorFilter = colorFilter,
-            )
-            drawArc(
-                color = palette.iris,
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(w * 0.575f - crescentHalfWidth, h * 0.355f - crescentRadius),
-                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
-                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
-                colorFilter = colorFilter,
-            )
+    drawPath(
+        path = tail,
+        color = palette.point,
+        style = Stroke(width = w * 0.14f, cap = StrokeCap.Round),
+        colorFilter = colorFilter,
+    )
+    val tailLight =
+        Path().apply {
+            moveTo(w * 0.70f, h * 0.80f)
+            cubicTo(w * 0.83f, h * 0.84f, w * 0.90f, h * 0.75f, w * 0.87f, h * 0.62f)
+            cubicTo(w * 0.85f, h * 0.56f, w * 0.80f, h * 0.54f, w * 0.77f, h * 0.57f)
         }
-        CatMood.SLEEPY -> {
-            drawArc(
-                color = palette.iris,
-                startAngle = 0f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(w * 0.425f - crescentHalfWidth, h * 0.355f - crescentRadius),
-                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
-                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
-                colorFilter = colorFilter,
-            )
-            drawArc(
-                color = palette.iris,
-                startAngle = 0f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(w * 0.575f - crescentHalfWidth, h * 0.355f - crescentRadius),
-                size = Size(crescentHalfWidth * 2f, crescentRadius * 2f),
-                style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
-                colorFilter = colorFilter,
-            )
+    drawPath(
+        path = tailLight,
+        color = palette.tailTip.copy(alpha = 0.66f),
+        style = Stroke(width = w * 0.055f, cap = StrokeCap.Round),
+        colorFilter = colorFilter,
+    )
+
+    // Compact sitting body: a calmer silhouette than the former segmented figure.
+    val body =
+        Path().apply {
+            moveTo(w * 0.30f, h * 0.56f)
+            cubicTo(w * 0.27f, h * 0.68f, w * 0.27f, h * 0.83f, w * 0.37f, h * 0.90f)
+            cubicTo(w * 0.44f, h * 0.95f, w * 0.56f, h * 0.95f, w * 0.63f, h * 0.90f)
+            cubicTo(w * 0.73f, h * 0.83f, w * 0.73f, h * 0.67f, w * 0.70f, h * 0.56f)
+            cubicTo(w * 0.60f, h * 0.49f, w * 0.40f, h * 0.49f, w * 0.30f, h * 0.56f)
+            close()
         }
+    drawPath(path = body, color = palette.body, colorFilter = colorFilter)
+    drawPath(
+        path = body,
+        color = outline,
+        style = Stroke(width = w * 0.012f),
+        colorFilter = colorFilter,
+    )
+
+    // Chest ruff and its scalloped hem: a fixed identity detail, not an unlockable accessory.
+    val ruff =
+        Path().apply {
+            moveTo(w * 0.35f, h * 0.54f)
+            cubicTo(w * 0.40f, h * 0.60f, w * 0.60f, h * 0.60f, w * 0.65f, h * 0.54f)
+            cubicTo(w * 0.65f, h * 0.63f, w * 0.61f, h * 0.70f, w * 0.50f, h * 0.72f)
+            cubicTo(w * 0.39f, h * 0.70f, w * 0.35f, h * 0.63f, w * 0.35f, h * 0.54f)
+            close()
+        }
+    drawPath(path = ruff, color = palette.ruff, colorFilter = colorFilter)
+    drawPath(
+        path = ruff,
+        color = softOutline,
+        style = Stroke(width = w * 0.009f),
+        colorFilter = colorFilter,
+    )
+    for (index in 0..4) {
+        drawCircle(
+            color = palette.ruff,
+            radius = w * 0.045f,
+            center = Offset(w * (0.39f + index * 0.055f), h * 0.675f),
+            colorFilter = colorFilter,
+        )
     }
 
-    // 小粉鼻：柔和圆角小三角（重点色面具内）。
-    drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.471f, h * 0.427f)
-                cubicTo(w * 0.478f, h * 0.408f, w * 0.522f, h * 0.408f, w * 0.529f, h * 0.427f)
-                cubicTo(w * 0.526f, h * 0.443f, w * 0.509f, h * 0.452f, w * 0.50f, h * 0.452f)
-                cubicTo(w * 0.491f, h * 0.452f, w * 0.474f, h * 0.443f, w * 0.471f, h * 0.427f)
-                close()
-            },
-        color = palette.nose,
+    // Two neat paws and a few restrained toe marks.
+    drawOval(
+        color = palette.body,
+        topLeft = Offset(w * 0.35f, h * 0.835f),
+        size = Size(w * 0.15f, h * 0.10f),
+        colorFilter = colorFilter,
+    )
+    drawOval(
+        color = palette.body,
+        topLeft = Offset(w * 0.50f, h * 0.835f),
+        size = Size(w * 0.15f, h * 0.10f),
+        colorFilter = colorFilter,
+    )
+    val toeStroke = Stroke(width = w * 0.008f, cap = StrokeCap.Round)
+    drawArc(
+        color = softOutline,
+        startAngle = 200f,
+        sweepAngle = 70f,
+        useCenter = false,
+        topLeft = Offset(w * 0.375f, h * 0.855f),
+        size = Size(w * 0.10f, h * 0.06f),
+        style = toeStroke,
+        colorFilter = colorFilter,
+    )
+    drawArc(
+        color = softOutline,
+        startAngle = 200f,
+        sweepAngle = 70f,
+        useCenter = false,
+        topLeft = Offset(w * 0.525f, h * 0.855f),
+        size = Size(w * 0.10f, h * 0.06f),
+        style = toeStroke,
         colorFilter = colorFilter,
     )
 
-    // 倒 Y 小嘴：鼻下短茎 + 左右分叉弧（重点色细线，落在奶油下巴上清晰）。
+    // Head with soft triangular ears and a broad, recognisable Ragdoll silhouette.
+    val head =
+        Path().apply {
+            moveTo(w * 0.24f, h * 0.24f)
+            cubicTo(w * 0.22f, h * 0.15f, w * 0.25f, h * 0.08f, w * 0.32f, h * 0.10f)
+            cubicTo(w * 0.37f, h * 0.11f, w * 0.40f, h * 0.18f, w * 0.42f, h * 0.21f)
+            cubicTo(w * 0.47f, h * 0.19f, w * 0.53f, h * 0.19f, w * 0.58f, h * 0.21f)
+            cubicTo(w * 0.60f, h * 0.18f, w * 0.63f, h * 0.11f, w * 0.68f, h * 0.10f)
+            cubicTo(w * 0.75f, h * 0.08f, w * 0.78f, h * 0.15f, w * 0.76f, h * 0.24f)
+            cubicTo(w * 0.84f, h * 0.32f, w * 0.81f, h * 0.46f, w * 0.72f, h * 0.53f)
+            cubicTo(w * 0.62f, h * 0.61f, w * 0.38f, h * 0.61f, w * 0.28f, h * 0.53f)
+            cubicTo(w * 0.19f, h * 0.46f, w * 0.16f, h * 0.32f, w * 0.24f, h * 0.24f)
+            close()
+        }
+    drawPath(path = head, color = palette.body, colorFilter = colorFilter)
     drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.50f, h * 0.452f)
-                quadraticBezierTo(w * 0.502f, h * 0.462f, w * 0.50f, h * 0.470f)
-                moveTo(w * 0.50f, h * 0.470f)
-                quadraticBezierTo(w * 0.488f, h * 0.480f, w * 0.474f, h * 0.479f)
-                moveTo(w * 0.50f, h * 0.470f)
-                quadraticBezierTo(w * 0.512f, h * 0.480f, w * 0.526f, h * 0.479f)
-            },
-        color = palette.point,
+        path = head,
+        color = outline,
+        style = Stroke(width = w * 0.012f),
+        colorFilter = colorFilter,
+    )
+
+    // Warm colourpoint ear tips sit underneath the pink inner-ear wash.
+    val leftEarPoint =
+        Path().apply {
+            moveTo(w * 0.24f, h * 0.24f)
+            cubicTo(w * 0.23f, h * 0.16f, w * 0.25f, h * 0.09f, w * 0.32f, h * 0.10f)
+            cubicTo(w * 0.35f, h * 0.12f, w * 0.37f, h * 0.17f, w * 0.38f, h * 0.21f)
+            cubicTo(w * 0.33f, h * 0.19f, w * 0.28f, h * 0.21f, w * 0.24f, h * 0.24f)
+            close()
+        }
+    drawPath(path = leftEarPoint, color = palette.point.copy(alpha = 0.86f), colorFilter = colorFilter)
+    val rightEarPoint =
+        Path().apply {
+            moveTo(w * 0.76f, h * 0.24f)
+            cubicTo(w * 0.77f, h * 0.16f, w * 0.75f, h * 0.09f, w * 0.68f, h * 0.10f)
+            cubicTo(w * 0.65f, h * 0.12f, w * 0.63f, h * 0.17f, w * 0.62f, h * 0.21f)
+            cubicTo(w * 0.67f, h * 0.19f, w * 0.72f, h * 0.21f, w * 0.76f, h * 0.24f)
+            close()
+        }
+    drawPath(path = rightEarPoint, color = palette.point.copy(alpha = 0.86f), colorFilter = colorFilter)
+
+    // Colourpoint ear inserts.
+    val leftEar =
+        Path().apply {
+            moveTo(w * 0.27f, h * 0.20f)
+            cubicTo(w * 0.27f, h * 0.15f, w * 0.29f, h * 0.13f, w * 0.32f, h * 0.17f)
+            cubicTo(w * 0.34f, h * 0.19f, w * 0.35f, h * 0.23f, w * 0.34f, h * 0.27f)
+            cubicTo(w * 0.31f, h * 0.25f, w * 0.29f, h * 0.23f, w * 0.27f, h * 0.20f)
+            close()
+        }
+    drawPath(path = leftEar, color = palette.innerEar, colorFilter = colorFilter)
+    val rightEar =
+        Path().apply {
+            moveTo(w * 0.73f, h * 0.20f)
+            cubicTo(w * 0.73f, h * 0.15f, w * 0.71f, h * 0.13f, w * 0.68f, h * 0.17f)
+            cubicTo(w * 0.66f, h * 0.19f, w * 0.65f, h * 0.23f, w * 0.66f, h * 0.27f)
+            cubicTo(w * 0.69f, h * 0.25f, w * 0.71f, h * 0.23f, w * 0.73f, h * 0.20f)
+            close()
+        }
+    drawPath(path = rightEar, color = palette.innerEar, colorFilter = colorFilter)
+
+    // Soft mask: the broad shape and clean muzzle are what make the cat read as a Ragdoll.
+    val mask =
+        Path().apply {
+            moveTo(w * 0.25f, h * 0.28f)
+            cubicTo(w * 0.31f, h * 0.23f, w * 0.39f, h * 0.24f, w * 0.45f, h * 0.29f)
+            cubicTo(w * 0.50f, h * 0.32f, w * 0.55f, h * 0.29f, w * 0.61f, h * 0.25f)
+            cubicTo(w * 0.68f, h * 0.22f, w * 0.75f, h * 0.25f, w * 0.77f, h * 0.30f)
+            cubicTo(w * 0.78f, h * 0.40f, w * 0.72f, h * 0.50f, w * 0.64f, h * 0.54f)
+            cubicTo(w * 0.57f, h * 0.57f, w * 0.54f, h * 0.51f, w * 0.50f, h * 0.48f)
+            cubicTo(w * 0.46f, h * 0.51f, w * 0.43f, h * 0.57f, w * 0.36f, h * 0.54f)
+            cubicTo(w * 0.28f, h * 0.50f, w * 0.22f, h * 0.40f, w * 0.25f, h * 0.28f)
+            close()
+        }
+    drawPath(path = mask, color = palette.point.copy(alpha = 0.90f), colorFilter = colorFilter)
+    drawOval(
+        color = Color.White.copy(alpha = 0.20f),
+        topLeft = Offset(w * 0.34f, h * 0.235f),
+        size = Size(w * 0.10f, h * 0.045f),
+        colorFilter = colorFilter,
+    )
+
+    // Warm cheek tint is intentionally almost imperceptible at normal size.
+    drawOval(
+        color = cheek,
+        topLeft = Offset(w * 0.27f, h * 0.43f),
+        size = Size(w * 0.13f, h * 0.07f),
+        colorFilter = colorFilter,
+    )
+    drawOval(
+        color = cheek,
+        topLeft = Offset(w * 0.60f, h * 0.43f),
+        size = Size(w * 0.13f, h * 0.07f),
+        colorFilter = colorFilter,
+    )
+
+    drawCatEyes(mood = mood, palette = palette, colorFilter = colorFilter)
+
+    // Two small ivory muzzle pads soften the mask and keep the expression gentle.
+    drawOval(
+        color = palette.body,
+        topLeft = Offset(w * 0.37f, h * 0.405f),
+        size = Size(w * 0.14f, h * 0.12f),
+        colorFilter = colorFilter,
+    )
+    drawOval(
+        color = palette.body,
+        topLeft = Offset(w * 0.49f, h * 0.405f),
+        size = Size(w * 0.14f, h * 0.12f),
+        colorFilter = colorFilter,
+    )
+
+    // Tiny pink nose and a fine mouth line.
+    val nose =
+        Path().apply {
+            moveTo(w * 0.47f, h * 0.435f)
+            cubicTo(w * 0.48f, h * 0.42f, w * 0.52f, h * 0.42f, w * 0.53f, h * 0.435f)
+            cubicTo(w * 0.525f, h * 0.455f, w * 0.51f, h * 0.465f, w * 0.50f, h * 0.465f)
+            cubicTo(w * 0.49f, h * 0.465f, w * 0.475f, h * 0.455f, w * 0.47f, h * 0.435f)
+            close()
+        }
+    drawPath(path = nose, color = palette.nose, colorFilter = colorFilter)
+    val mouth =
+        Path().apply {
+            moveTo(w * 0.50f, h * 0.462f)
+            cubicTo(w * 0.50f, h * 0.475f, w * 0.49f, h * 0.482f, w * 0.475f, h * 0.485f)
+            moveTo(w * 0.50f, h * 0.462f)
+            cubicTo(w * 0.50f, h * 0.475f, w * 0.51f, h * 0.482f, w * 0.525f, h * 0.485f)
+        }
+    drawPath(
+        path = mouth,
+        color = outline,
         style = Stroke(width = w * 0.008f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
 
-    // 胡须：左右各三根微曲浅色须（固定奶油白，深夜下也可见——不再随主题 chipText 变深）。
+    // Fine whiskers, kept short so the icon remains elegant rather than spiky.
+    val whiskers =
+        Path().apply {
+            moveTo(w * 0.36f, h * 0.445f)
+            cubicTo(w * 0.28f, h * 0.435f, w * 0.22f, h * 0.425f, w * 0.17f, h * 0.41f)
+            moveTo(w * 0.35f, h * 0.465f)
+            cubicTo(w * 0.27f, h * 0.468f, w * 0.22f, h * 0.475f, w * 0.17f, h * 0.49f)
+            moveTo(w * 0.64f, h * 0.445f)
+            cubicTo(w * 0.72f, h * 0.435f, w * 0.78f, h * 0.425f, w * 0.83f, h * 0.41f)
+            moveTo(w * 0.65f, h * 0.465f)
+            cubicTo(w * 0.73f, h * 0.468f, w * 0.78f, h * 0.475f, w * 0.83f, h * 0.49f)
+        }
     drawPath(
-        path =
-            Path().apply {
-                moveTo(w * 0.345f, h * 0.375f)
-                quadraticBezierTo(w * 0.24f, h * 0.362f, w * 0.155f, h * 0.352f)
-                moveTo(w * 0.348f, h * 0.400f)
-                quadraticBezierTo(w * 0.24f, h * 0.402f, w * 0.150f, h * 0.412f)
-                moveTo(w * 0.352f, h * 0.425f)
-                quadraticBezierTo(w * 0.25f, h * 0.440f, w * 0.165f, h * 0.462f)
-                moveTo(w * 0.655f, h * 0.375f)
-                quadraticBezierTo(w * 0.76f, h * 0.362f, w * 0.845f, h * 0.352f)
-                moveTo(w * 0.652f, h * 0.400f)
-                quadraticBezierTo(w * 0.76f, h * 0.402f, w * 0.850f, h * 0.412f)
-                moveTo(w * 0.648f, h * 0.425f)
-                quadraticBezierTo(w * 0.75f, h * 0.440f, w * 0.835f, h * 0.462f)
-            },
-        color = palette.whisker,
-        style = Stroke(width = w * 0.009f, cap = StrokeCap.Round),
+        path = whiskers,
+        color = palette.whisker.copy(alpha = 0.78f),
+        style = Stroke(width = w * 0.007f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
+
+    // A permanent micro bow at the collar integrates the Lolita language into the mascot itself.
+    drawMiniBow(
+        center = Offset(w * 0.50f, h * 0.585f),
+        width = w * 0.18f,
+        color = theme.primary.copy(alpha = 0.82f),
+        knotColor = GOLD_TRIM.copy(alpha = 0.92f),
+        colorFilter = colorFilter,
+    )
+}
+
+/** Draw the three eye states without changing the surrounding face geometry. */
+private fun DrawScope.drawCatEyes(
+    mood: CatMood,
+    palette: CatVectorPalette,
+    colorFilter: ColorFilter?,
+) {
+    val w = size.width
+    val h = size.height
+    val eyeColor = palette.iris
+    val eyeOutline = palette.point.copy(alpha = 0.82f)
+    val centers = listOf(w * 0.405f, w * 0.595f)
+    when (mood) {
+        CatMood.IDLE -> {
+            centers.forEach { centerX ->
+                drawOval(
+                    color = eyeOutline,
+                    topLeft = Offset(centerX - w * 0.055f, h * 0.325f),
+                    size = Size(w * 0.11f, h * 0.11f),
+                    colorFilter = colorFilter,
+                )
+                drawOval(
+                    color = eyeColor,
+                    topLeft = Offset(centerX - w * 0.040f, h * 0.337f),
+                    size = Size(w * 0.080f, h * 0.085f),
+                    colorFilter = colorFilter,
+                )
+                drawOval(
+                    color = eyeOutline,
+                    topLeft = Offset(centerX - w * 0.016f, h * 0.345f),
+                    size = Size(w * 0.032f, h * 0.070f),
+                    colorFilter = colorFilter,
+                )
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.94f),
+                    radius = w * 0.012f,
+                    center = Offset(centerX - w * 0.018f, h * 0.355f),
+                    colorFilter = colorFilter,
+                )
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.62f),
+                    radius = w * 0.006f,
+                    center = Offset(centerX + w * 0.020f, h * 0.389f),
+                    colorFilter = colorFilter,
+                )
+            }
+        }
+
+        CatMood.HAPPY -> {
+            centers.forEach { centerX ->
+                drawArc(
+                    color = eyeColor,
+                    startAngle = 200f,
+                    sweepAngle = 140f,
+                    useCenter = false,
+                    topLeft = Offset(centerX - w * 0.050f, h * 0.335f),
+                    size = Size(w * 0.10f, h * 0.075f),
+                    style = Stroke(width = w * 0.015f, cap = StrokeCap.Round),
+                    colorFilter = colorFilter,
+                )
+            }
+        }
+
+        CatMood.SLEEPY -> {
+            centers.forEach { centerX ->
+                drawArc(
+                    color = eyeColor.copy(alpha = 0.88f),
+                    startAngle = 20f,
+                    sweepAngle = 140f,
+                    useCenter = false,
+                    topLeft = Offset(centerX - w * 0.050f, h * 0.335f),
+                    size = Size(w * 0.10f, h * 0.075f),
+                    style = Stroke(width = w * 0.014f, cap = StrokeCap.Round),
+                    colorFilter = colorFilter,
+                )
+            }
+        }
+    }
+}
+
+/** Small fixed bow used as part of the mascot silhouette, not as mutable state. */
+private fun DrawScope.drawMiniBow(
+    center: Offset,
+    width: Float,
+    color: Color,
+    knotColor: Color,
+    colorFilter: ColorFilter?,
+) {
+    val left =
+        Path().apply {
+            moveTo(center.x, center.y)
+            cubicTo(center.x - width * 0.22f, center.y - width * 0.30f, center.x - width * 0.56f, center.y - width * 0.22f, center.x - width * 0.48f, center.y)
+            cubicTo(center.x - width * 0.44f, center.y + width * 0.20f, center.x - width * 0.16f, center.y + width * 0.24f, center.x, center.y + width * 0.08f)
+            close()
+        }
+    val right =
+        Path().apply {
+            moveTo(center.x, center.y)
+            cubicTo(center.x + width * 0.22f, center.y - width * 0.30f, center.x + width * 0.56f, center.y - width * 0.22f, center.x + width * 0.48f, center.y)
+            cubicTo(center.x + width * 0.44f, center.y + width * 0.20f, center.x + width * 0.16f, center.y + width * 0.24f, center.x, center.y + width * 0.08f)
+            close()
+        }
+    drawPath(path = left, color = color, colorFilter = colorFilter)
+    drawPath(path = right, color = color, colorFilter = colorFilter)
+    drawCircle(color = knotColor, radius = width * 0.12f, center = center, colorFilter = colorFilter)
 }
