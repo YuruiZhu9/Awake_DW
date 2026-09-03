@@ -49,15 +49,16 @@ fun GradientBackdrop(
     spec: ThemeSpec,
     modifier: Modifier,
 ) {
+    val reduceMotion = rememberReduceMotion()
     // 呼吸相位 -1..1：只进 draw 相，不触发重组/重缓存。
     val breath = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(Unit) {
-        var last = withFrameNanos { it }
-        while (true) {
-            val now = withFrameNanos { it }
-            last = now
-            val t = (now % (HALO_BREATH_PERIOD_MS * 1_000_000L)).toFloat() / (HALO_BREATH_PERIOD_MS * 1_000_000L)
-            breath.floatValue = kotlin.math.sin(t * 2f * kotlin.math.PI.toFloat())
+    if (!reduceMotion) {
+        LaunchedEffect(Unit) {
+            while (true) {
+                val now = withFrameNanos { it }
+                val t = (now % (HALO_BREATH_PERIOD_MS * 1_000_000L)).toFloat() / (HALO_BREATH_PERIOD_MS * 1_000_000L)
+                breath.floatValue = kotlin.math.sin(t * 2f * kotlin.math.PI.toFloat())
+            }
         }
     }
 

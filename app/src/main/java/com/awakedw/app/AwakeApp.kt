@@ -18,6 +18,8 @@ import com.awakedw.core.designsystem.AwakeMaterialTheme
 import com.awakedw.core.designsystem.LocalAwakeTheme
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.motionDurationMillis
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.ThemeId
 
 /** 换肤过渡时长（规格 §2.3：0.5s 平滑换肤）。 */
@@ -32,27 +34,28 @@ private const val THEME_TRANSITION_MS = 500
 @Composable
 fun AnimatedAwakeTheme(
     themeId: ThemeId,
+    reduceMotion: Boolean = rememberReduceMotion(),
     content: @Composable () -> Unit,
 ) {
     val target = ThemeById.getValue(themeId)
     val spec =
         ThemeSpec(
             id = target.id,
-            backgroundGradient = target.backgroundGradient.animateEach("awakeBgStop"),
-            particleColors = target.particleColors.animateEach("awakeParticle"),
-            primary = target.primary.animateAnchor("awakePrimary"),
-            ringTrack = target.ringTrack.animateAnchor("awakeRingTrack"),
-            ringValueText = target.ringValueText.animateAnchor("awakeRingValueText"),
-            greetingColor = target.greetingColor.animateAnchor("awakeGreeting"),
-            greetingSubColor = target.greetingSubColor.animateAnchor("awakeGreetingSub"),
-            buttonTop = target.buttonTop.animateAnchor("awakeButtonTop"),
-            buttonBottom = target.buttonBottom.animateAnchor("awakeButtonBottom"),
-            chipBg = target.chipBg.animateAnchor("awakeChipBg"),
-            chipText = target.chipText.animateAnchor("awakeChipText"),
-            haloColor = target.haloColor.animateAnchor("awakeHalo"),
-            laceColor = target.laceColor.animateAnchor("awakeLace"),
+            backgroundGradient = target.backgroundGradient.animateEach("awakeBgStop", reduceMotion),
+            particleColors = target.particleColors.animateEach("awakeParticle", reduceMotion),
+            primary = target.primary.animateAnchor("awakePrimary", reduceMotion),
+            ringTrack = target.ringTrack.animateAnchor("awakeRingTrack", reduceMotion),
+            ringValueText = target.ringValueText.animateAnchor("awakeRingValueText", reduceMotion),
+            greetingColor = target.greetingColor.animateAnchor("awakeGreeting", reduceMotion),
+            greetingSubColor = target.greetingSubColor.animateAnchor("awakeGreetingSub", reduceMotion),
+            buttonTop = target.buttonTop.animateAnchor("awakeButtonTop", reduceMotion),
+            buttonBottom = target.buttonBottom.animateAnchor("awakeButtonBottom", reduceMotion),
+            chipBg = target.chipBg.animateAnchor("awakeChipBg", reduceMotion),
+            chipText = target.chipText.animateAnchor("awakeChipText", reduceMotion),
+            haloColor = target.haloColor.animateAnchor("awakeHalo", reduceMotion),
+            laceColor = target.laceColor.animateAnchor("awakeLace", reduceMotion),
             // isDark 须随目标主题透传（FIX-B 修复）：此前重建 ThemeSpec 时漏带、恒为 false——
-            // 深夜主题下画卷夜变体/SrcOver 混合（P3-10）、主色底字色（P2-4）、暗色猫立绘在真机全部失联。
+            // 深夜主题下的背景混合、主色底字色与暗色猫立绘均需继续沿用目标主题。
             isDark = target.isDark,
         )
     CompositionLocalProvider(LocalAwakeTheme provides spec) {
@@ -62,13 +65,19 @@ fun AnimatedAwakeTheme(
 
 /** 色族逐位插值：停靠点数以目标主题为准，新增位从目标色起步（无历史可插）。 */
 @Composable
-private fun List<Color>.animateEach(label: String): List<Color> = List(size) { index -> get(index).animateAnchor("$label$index") }
+private fun List<Color>.animateEach(
+    label: String,
+    reduceMotion: Boolean,
+): List<Color> = List(size) { index -> get(index).animateAnchor("$label$index", reduceMotion) }
 
 @Composable
-private fun Color.animateAnchor(label: String): Color =
+private fun Color.animateAnchor(
+    label: String,
+    reduceMotion: Boolean,
+): Color =
     animateColorAsState(
         targetValue = this,
-        animationSpec = tween(durationMillis = THEME_TRANSITION_MS),
+        animationSpec = tween(durationMillis = motionDurationMillis(THEME_TRANSITION_MS, reduceMotion)),
         label = label,
     ).value
 
@@ -87,12 +96,13 @@ private fun Color.animateAnchor(label: String): Color =
 fun AwakeApp(onEntryReady: () -> Unit = {}) {
     val viewModel: MainViewModel = viewModel()
     val themeId by viewModel.themeId.collectAsState()
+    val reduceMotion = rememberReduceMotion()
 
     SideEffect(onEntryReady)
 
     SystemBarsSync(themeId = themeId)
 
-    AnimatedAwakeTheme(themeId = themeId) {
+    AnimatedAwakeTheme(themeId = themeId, reduceMotion = reduceMotion) {
         AwakeNavHost()
     }
 }

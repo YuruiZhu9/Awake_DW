@@ -16,6 +16,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -69,15 +70,18 @@ fun FloatingParticles(
     showStars: Boolean = true,
     showFlowers: Boolean = true,
 ) {
+    val reduceMotion = rememberReduceMotion()
     val progress = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(seed) {
-        var last = withFrameNanos { it }
-        var accumulated = 0L
-        while (true) {
-            val now = withFrameNanos { it }
-            accumulated += now - last
-            last = now
-            progress.floatValue = (accumulated % LOOP_NANOS).toFloat() / LOOP_NANOS
+    if (!reduceMotion) {
+        LaunchedEffect(seed) {
+            var last = withFrameNanos { it }
+            var accumulated = 0L
+            while (true) {
+                val now = withFrameNanos { it }
+                accumulated += now - last
+                last = now
+                progress.floatValue = (accumulated % LOOP_NANOS).toFloat() / LOOP_NANOS
+            }
         }
     }
 

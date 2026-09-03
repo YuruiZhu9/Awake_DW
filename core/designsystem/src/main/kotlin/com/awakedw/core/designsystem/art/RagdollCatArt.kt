@@ -24,6 +24,8 @@ internal fun DrawScope.drawVectorCat(
     val outline = palette.point.copy(alpha = 0.62f)
     val softOutline = palette.point.copy(alpha = 0.22f)
     val cheek = palette.nose.copy(alpha = 0.16f)
+    val furHighlight = Color.White.copy(alpha = 0.30f)
+    val furLine = palette.body.copy(alpha = 0.42f)
 
     // A small grounded shadow keeps the figure from floating above the page.
     drawOval(
@@ -74,6 +76,26 @@ internal fun DrawScope.drawVectorCat(
         path = body,
         color = outline,
         style = Stroke(width = w * 0.012f),
+        colorFilter = colorFilter,
+    )
+    // One broad highlight and two fine fur strokes give the cream coat a soft, illustrated finish.
+    drawOval(
+        color = furHighlight,
+        topLeft = Offset(w * 0.34f, h * 0.62f),
+        size = Size(w * 0.12f, h * 0.20f),
+        colorFilter = colorFilter,
+    )
+    val bodyFur =
+        Path().apply {
+            moveTo(w * 0.33f, h * 0.75f)
+            cubicTo(w * 0.37f, h * 0.73f, w * 0.39f, h * 0.73f, w * 0.41f, h * 0.76f)
+            moveTo(w * 0.59f, h * 0.76f)
+            cubicTo(w * 0.62f, h * 0.73f, w * 0.65f, h * 0.73f, w * 0.68f, h * 0.75f)
+        }
+    drawPath(
+        path = bodyFur,
+        color = furLine,
+        style = Stroke(width = w * 0.008f, cap = StrokeCap.Round),
         colorFilter = colorFilter,
     )
 
@@ -217,6 +239,13 @@ internal fun DrawScope.drawVectorCat(
         color = Color.White.copy(alpha = 0.20f),
         topLeft = Offset(w * 0.34f, h * 0.235f),
         size = Size(w * 0.10f, h * 0.045f),
+        colorFilter = colorFilter,
+    )
+    // A small forehead glint separates the pale face from the warm mask at icon size.
+    drawOval(
+        color = furHighlight.copy(alpha = 0.20f),
+        topLeft = Offset(w * 0.44f, h * 0.275f),
+        size = Size(w * 0.12f, h * 0.055f),
         colorFilter = colorFilter,
     )
 
@@ -432,7 +461,29 @@ private fun DrawScope.drawMiniBow(
             )
             close()
         }
+    val leftTail =
+        Path().apply {
+            moveTo(center.x - width * 0.04f, center.y + width * 0.06f)
+            lineTo(center.x - width * 0.16f, center.y + width * 0.42f)
+            lineTo(center.x - width * 0.01f, center.y + width * 0.30f)
+            close()
+        }
+    val rightTail =
+        Path().apply {
+            moveTo(center.x + width * 0.04f, center.y + width * 0.06f)
+            lineTo(center.x + width * 0.16f, center.y + width * 0.42f)
+            lineTo(center.x + width * 0.01f, center.y + width * 0.30f)
+            close()
+        }
+    drawPath(path = leftTail, color = color.copy(alpha = 0.78f), colorFilter = colorFilter)
+    drawPath(path = rightTail, color = color.copy(alpha = 0.78f), colorFilter = colorFilter)
     drawPath(path = left, color = color, colorFilter = colorFilter)
     drawPath(path = right, color = color, colorFilter = colorFilter)
     drawCircle(color = knotColor, radius = width * 0.12f, center = center, colorFilter = colorFilter)
+    drawCircle(
+        color = Color.White.copy(alpha = 0.42f),
+        radius = width * 0.035f,
+        center = Offset(center.x - width * 0.035f, center.y - width * 0.035f),
+        colorFilter = colorFilter,
+    )
 }

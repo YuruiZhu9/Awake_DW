@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 
 /** 呼吸单程时长：1.5s（升/降各一段，×2 = 3s 完整呼吸周期——与 [BREATH_LEG_MS] 同裁定「循环=完整周期」）。 */
 internal const val POCKET_LEG_MS = 1500
@@ -58,16 +59,23 @@ fun LightPocket(
     modifier: Modifier,
     color: Color = currentThemeSpec().haloColor,
 ) {
-    val transition = rememberInfiniteTransition(label = "lightPocket")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(durationMillis = POCKET_LEG_MS * 2, easing = LinearEasing),
-            ),
-        label = "lightPocketPhase",
-    )
+    val reduceMotion = rememberReduceMotion()
+    val phase =
+        if (reduceMotion) {
+            0f
+        } else {
+            val transition = rememberInfiniteTransition(label = "lightPocket")
+            val animatedPhase by transition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = POCKET_LEG_MS * 2, easing = LinearEasing),
+                    ),
+                label = "lightPocketPhase",
+            )
+            animatedPhase
+        }
     Box(
         modifier =
             modifier

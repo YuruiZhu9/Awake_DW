@@ -40,6 +40,7 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.feature.home.HOME_RING_DIAMETER
 import kotlinx.coroutines.delay
@@ -98,6 +99,11 @@ fun SplashMorph(
     onSplashFinished: () -> Unit,
 ) {
     val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
+    if (reduceMotion) {
+        LaunchedEffect(Unit) { onSplashFinished() }
+        return
+    }
     var persistedElapsedMs by rememberSaveable { mutableLongStateOf(0L) }
     val sequencer =
         remember {

@@ -32,10 +32,10 @@ const val LOG_DEBOUNCE_MS = 800L
 /** 夸夸语浮现停留时长（规格 §4.2 第 5 步：约 1.4s 后淡出）。 */
 const val PRAISE_HOLD_MS = 1_400L
 
-/** 达成庆祝横幅停留时长（任务规格：2500ms 自动收敛）。 */
+/** 达标反馈状态停留时长（2500ms 自动收敛，不产生奖励或内容解锁）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
-/** 猫语气泡停留时长（moodboard §6.2：2.0s 收场，独立于夸夸语的 1.4s）。 */
+/** 猫语气泡停留时长（2.0s 收场，独立于夸夸语的 1.4s）。 */
 const val CAT_LINE_HOLD_MS = 2_000L
 
 /** Immutable state for the water logging home screen. */
@@ -168,7 +168,7 @@ class HomeViewModel(
             )
         }
 
-        // 打卡成功即推进猫序列（moodboard §6.2）：HAPPY 一次 + 抽一句猫语，回应每次成笔。
+        // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句猫语，回应每次成笔。
         if (result != null) {
             // 声音三触发点之一（任务 12）：成笔确认即随机一声掉落音；当日首次达标再追一段旋律。
             // fire-and-forget，与动画解耦——不等夸夸语/庆祝的任何一拍。
@@ -190,7 +190,7 @@ class HomeViewModel(
     }
 
     /**
-     * 猫回应序列（moodboard §6.2）：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
+     * 猫回应序列：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
      * [catLineHoldMs] 后收场——气泡清空、心情按当前小时落回（白天 IDLE / 深夜安睡，零惩罚）。
      * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及夸夸语/庆祝的收场。
      */

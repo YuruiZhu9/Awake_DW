@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.WeekBar
 import com.awakedw.feature.stats.StatsMath
 
@@ -67,13 +68,18 @@ internal fun WeekBarsChart(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
     val values = bars.map { it.totalMl }
     val metGoals = StatsMath.metGoal(values, goalMl)
     val labels = StatsMath.columnLabels(bars.map { it.dayKey }, bars.lastOrNull()?.dayKey.orEmpty())
 
-    val grow = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        grow.animateTo(1f, animationSpec = tween(durationMillis = GROW_TOTAL_MS, easing = EaseOutCubic))
+    val grow = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            grow.snapTo(1f)
+        } else {
+            grow.animateTo(1f, animationSpec = tween(durationMillis = GROW_TOTAL_MS, easing = EaseOutCubic))
+        }
     }
 
     Column(modifier = modifier) {

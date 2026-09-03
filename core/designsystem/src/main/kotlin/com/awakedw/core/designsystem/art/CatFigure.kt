@@ -26,12 +26,16 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.CatMood
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -136,23 +140,30 @@ fun CatFigure(
 ) {
     val theme = currentThemeSpec()
     val bodyImage = rememberAssetImageOrN(catAssetFileOf(mood))
+    val reduceMotion = rememberReduceMotion()
 
-    // 呼吸缩放：1.5s 单程 ×2 = 3s 完整呼吸周期（Reverse 循环）；SLEEPY 幅度减半。key(mood) 换档即重启（从 1.00 起步，跳变 ≤2% 不可感）。
+    // 呼吸缩放：系统减少动态时保持静止；正常状态为 1.5s 单程 ×2 = 3s 完整周期。
     val breathState: State<Float> =
-        key(mood) {
-            rememberInfiniteTransition(label = "CatBreath").animateFloat(
-                initialValue = 1f,
-                targetValue = breathTargetOf(mood),
-                animationSpec = infiniteRepeatable(tween(durationMillis = BREATH_LEG_MS), RepeatMode.Reverse),
-                label = "CatBreathScale",
-            )
+        if (reduceMotion) {
+            remember { androidx.compose.runtime.mutableFloatStateOf(1f) }
+        } else {
+            key(mood) {
+                rememberInfiniteTransition(label = "CatBreath").animateFloat(
+                    initialValue = 1f,
+                    targetValue = breathTargetOf(mood),
+                    animationSpec = infiniteRepeatable(tween(durationMillis = BREATH_LEG_MS), RepeatMode.Reverse),
+                    label = "CatBreathScale",
+                )
+            }
         }
     val breathScale by breathState
 
-    // HAPPY 一次 spring 弹跳：蹲 0.92 蓄力后以 MediumBouncy 弹回 1.00（自然过冲回摆）；离开 HAPPY 复位。
+    // HAPPY 一次 spring 弹跳；系统减少动态时不蓄力、不回弹，避免装饰动作干扰主任务。
     val bounce = remember { Animatable(1f) }
-    LaunchedEffect(mood) {
-        if (mood == CatMood.HAPPY) {
+    LaunchedEffect(mood, reduceMotion) {
+        if (reduceMotion) {
+            bounce.snapTo(1f)
+        } else if (mood == CatMood.HAPPY) {
             bounce.snapTo(0.92f)
             bounce.animateTo(
                 targetValue = 1f,
@@ -186,7 +197,14 @@ fun CatFigure(
                         drawVectorCat(mood, theme, sleepyFilter)
                     }
                 }
-                .semantics { contentDescription = CAT_SEMANTICS }
+                .semantics {
+                    contentDescription = CAT_SEMANTICS
+                    role = Role.Button
+                    onClick(label = "摸摸胆大王") {
+                        onPet()
+                        true
+                    }
+                }
                 .pointerInput(Unit) { detectTapGestures { onPet() } },
     )
 }

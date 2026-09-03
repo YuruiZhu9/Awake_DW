@@ -3,7 +3,7 @@ package com.awakedw.app
 import android.os.Looper
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertTrue
@@ -78,8 +78,8 @@ class MainActivityColdBootTest {
         composeRule.onNodeWithText("统计").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
-        // 统计页真实挂载（hiltViewModel 注入 + 今日徽章渲染）。
-        composeRule.onAllNodesWithText("今日 0 杯 ☀")[0].assertIsDisplayed()
+        // 统计页真实挂载（hiltViewModel 注入 + 今日概览事实渲染）。
+        composeRule.onNodeWithContentDescription("今日记录 0 杯").assertIsDisplayed()
         composeRule.onNodeWithText("首页").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))

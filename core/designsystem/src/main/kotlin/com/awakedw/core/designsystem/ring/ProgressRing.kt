@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -62,18 +63,29 @@ fun ProgressRing(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val spec = currentThemeSpec()
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = PROGRESS_TWEEN_MS, easing = FastOutSlowInEasing),
-        label = "ringProgress",
-    )
+    val reduceMotion = rememberReduceMotion()
+    val animatedProgress =
+        if (reduceMotion) {
+            progress.coerceIn(0f, 1f)
+        } else {
+            animateFloatAsState(
+                targetValue = progress.coerceIn(0f, 1f),
+                animationSpec = tween(durationMillis = PROGRESS_TWEEN_MS, easing = FastOutSlowInEasing),
+                label = "ringProgress",
+            ).value
+        }
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed) PRESS_SCALE else 1f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-        label = "ringPressScale",
-    )
+    val pressScale =
+        if (reduceMotion) {
+            1f
+        } else {
+            animateFloatAsState(
+                targetValue = if (pressed) PRESS_SCALE else 1f,
+                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
+                label = "ringPressScale",
+            ).value
+        }
 
     val tapModifier =
         if (onRingTap != null) {

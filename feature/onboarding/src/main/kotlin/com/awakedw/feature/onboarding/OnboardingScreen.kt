@@ -56,6 +56,7 @@ import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.rememberReduceMotion
 
 /** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
 private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
@@ -81,6 +82,7 @@ fun OnboardingScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
     val context = LocalContext.current
 
     // 通知权限 result 落点：授权与否都放行进入白名单跳转序列。
@@ -110,7 +112,7 @@ fun OnboardingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.weight(0.8f))
-            DropletIllustration()
+            DropletIllustration(reduceMotion = reduceMotion)
             Spacer(Modifier.height(28.dp))
             Text(
                 text = "为了让每一次温柔准时抵达",
@@ -128,6 +130,7 @@ fun OnboardingScreen(
             Spacer(Modifier.weight(1f))
             PrimaryButton(
                 text = "去设置 ♡",
+                reduceMotion = reduceMotion,
                 onTap = {
                     if (needsNotificationPermission(context)) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -163,19 +166,26 @@ private fun startWhitelistJump(
 /** 大水滴插画：柔光晕 + 主题渐变水滴（尖端向上）+ 一点高光，整滴极缓呼吸。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun DropletIllustration(modifier: Modifier = Modifier) {
+private fun DropletIllustration(
+    reduceMotion: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val spec = currentThemeSpec()
-    val breath by
-        rememberInfiniteTransition(label = "dropletBreath").animateFloat(
-            initialValue = 0.98f,
-            targetValue = 1.02f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-            label = "dropletBreathScale",
-        )
+    val breath =
+        if (reduceMotion) {
+            1f
+        } else {
+            rememberInfiniteTransition(label = "dropletBreath").animateFloat(
+                initialValue = 0.98f,
+                targetValue = 1.02f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                label = "dropletBreathScale",
+            ).value
+        }
 
     Canvas(
         modifier =
@@ -238,17 +248,23 @@ private fun dropletPath(size: Size): Path {
 @Composable
 private fun PrimaryButton(
     text: String,
+    reduceMotion: Boolean,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-        label = "onboardingPressScale",
-    )
+    val pressScale =
+        if (reduceMotion) {
+            1f
+        } else {
+            animateFloatAsState(
+                targetValue = if (pressed) 0.97f else 1f,
+                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
+                label = "onboardingPressScale",
+            ).value
+        }
     Box(
         modifier =
             modifier

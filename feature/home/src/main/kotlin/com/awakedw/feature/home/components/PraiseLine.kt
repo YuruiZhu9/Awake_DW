@@ -3,6 +3,7 @@ package com.awakedw.feature.home.components
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 
 /** 夸夸语淡入淡出时长。 */
 private const val PRAISE_FADE_MS = 400
@@ -43,9 +45,10 @@ internal fun PraiseLine(
     multiLine: Boolean = false,
 ) {
     val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
     Crossfade(
         targetState = text,
-        animationSpec = tween(durationMillis = PRAISE_FADE_MS),
+        animationSpec = tween(durationMillis = if (reduceMotion) 0 else PRAISE_FADE_MS),
         label = "praiseLine",
         modifier = modifier,
     ) { current ->
@@ -55,7 +58,8 @@ internal fun PraiseLine(
                     modifier =
                         Modifier
                             .widthIn(max = CAT_LINE_BUBBLE_MAX_WIDTH)
-                            .background(color = spec.chipBg, shape = RoundedCornerShape(percent = 50))
+                            .background(color = spec.chipBg.copy(alpha = 0.92f), shape = RoundedCornerShape(percent = 50))
+                            .border(1.dp, spec.laceColor.copy(alpha = 0.48f), RoundedCornerShape(percent = 50))
                             .padding(CAT_LINE_BUBBLE_PADDING),
                 ) {
                     Text(

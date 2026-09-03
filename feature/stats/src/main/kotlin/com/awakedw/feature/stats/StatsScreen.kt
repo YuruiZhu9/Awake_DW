@@ -18,12 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.animation.FadeUpOnce
-import com.awakedw.core.designsystem.components.BadgeChip
 import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaRule
@@ -65,9 +67,13 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             }
             Spacer(Modifier.height(10.dp))
             LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
-            Spacer(Modifier.height(10.dp))
-            FadeUpOnce(delayMillis = 60) { StatsBadgesRow(badges = state.badges, modifier = Modifier.fillMaxWidth()) }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
+            FadeUpOnce(delayMillis = 60) {
+                PaperPanel(title = "今日概览") {
+                    StatsOverview(badges = state.badges, modifier = Modifier.fillMaxWidth())
+                }
+            }
+            Spacer(Modifier.height(20.dp))
             PaperPanel(title = "近七日") {
                 WeekBarsChart(bars = state.bars, goalMl = state.goalMl, modifier = Modifier.fillMaxWidth())
             }
@@ -80,21 +86,55 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     }
 }
 
-/** Current factual summaries, kept readable on narrow screens. */
+/**
+ * Statistics facts use the same quiet label/value treatment as the home page,
+ * so the chart and timeline remain the visual focus instead of a row of pills.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun StatsBadgesRow(
+private fun StatsOverview(
     badges: StatsBadges,
     modifier: Modifier = Modifier,
 ) {
-    val spec = currentThemeSpec()
     FlowRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(22.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        BadgeChip(text = "今日 ${badges.cupCount} 杯 ☀", spec = spec)
-        BadgeChip(text = "平均间隔 ${badges.avgIntervalLabel} ⏱", spec = spec)
+        StatsFact(
+            label = "今日记录",
+            value = "${badges.cupCount} 杯",
+            description = "今日记录 ${badges.cupCount} 杯",
+        )
+        StatsFact(
+            label = "平均间隔",
+            value = badges.avgIntervalLabel,
+            description = "平均间隔 ${badges.avgIntervalLabel}",
+        )
+    }
+}
+
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun StatsFact(
+    label: String,
+    value: String,
+    description: String,
+) {
+    Column(
+        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = label,
+            color = currentThemeSpec().greetingSubColor,
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+        )
+        Text(
+            text = value,
+            color = currentThemeSpec().chipText,
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }

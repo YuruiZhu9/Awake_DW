@@ -57,13 +57,13 @@ import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.model.CatMood
 import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.Greeting
-import com.awakedw.feature.home.components.LogButton
+import com.awakedw.feature.home.components.HomeActionDeck
 import com.awakedw.feature.home.components.PraiseLine
-import com.awakedw.feature.home.components.QuickSipsRow
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 220.dp
@@ -85,8 +85,8 @@ private val BOW_LIFT = 2.dp
 private val LOG_BUTTON_POCKET_WIDTH = 160.dp
 private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 
-/** 胆大王光袋直径（96–160dp 区间取值）：给 96dp 立绘留一圈 16dp 的呼吸光晕。 */
-private val CAT_POCKET_DIAMETER = 128.dp
+/** 胆大王光袋直径（96–160dp 区间取值）：给 96dp 立绘留一圈轻薄呼吸光晕。 */
+private val CAT_POCKET_DIAMETER = 120.dp
 
 /**
  * 胆大王落角的边距（布局审计 P1-1 + 审查修复几何重定位）：底部 leading 角，落进居中簇下方的空带——
@@ -105,9 +105,6 @@ private val PRAISE_LINE_DROP = 12.dp
  * 该值同时决定居中簇距底 112dp 起，与猫盒上缘 104dp 保持 8dp 互斥，见 [CAT_CORNER_PADDING]）。
  */
 private val CONTENT_TAIL_BREATHING = 112.dp
-
-/** 健康贴士与快捷胶囊行之间的固定空档（布局审计 P1-7）：弹性 weight 空档与滚动互斥，改为固定间距。 */
-private val TIP_TO_SIPS_GAP = 16.dp
 
 /**
  * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,
@@ -130,7 +127,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
-        // 画卷层（moodboard §5.1）：渐变之上、内容之下；今日之裙未就绪或资产缺失时不绘制。
+        // 轻量装饰层：渐变之上、内容之下；只提供主题氛围，不表达“今日内容”。
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
@@ -147,7 +144,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         ) {
             Spacer(Modifier.height(44.dp))
             // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
-            // 蝴蝶结衣橱入口叠于行顶右端，不挤占问候语的可视宽度；
+            // 装饰锚点不参与导航，也不挤占问候语的可视宽度；
             FadeUpOnce {
                 Greeting(
                     customGreeting = state.greeting,
@@ -165,28 +162,28 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 praiseLine = state.praiseLine,
                 onRingTap = viewModel::tapRing,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(18.dp))
+            // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
             FadeUpOnce(delayMillis = 80) {
+                HomeActionDeck(
+                    cupMl = state.cupMl,
+                    onLog = viewModel::tapLogButton,
+                    onQuickLog = viewModel::quickLog,
+                )
+            }
+            Spacer(Modifier.height(18.dp))
+            FadeUpOnce(delayMillis = 140) {
                 BadgesRow(
                     cupCount = state.cupCount,
                     avgIntervalLabel = state.avgIntervalLabel,
                     lastDrinkLabel = state.lastDrinkLabel,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(12.dp))
-            // P1-7：weight 弹性空档改固定间距——列已可滚，弹性空档与滚动互斥。
-            Spacer(Modifier.height(TIP_TO_SIPS_GAP))
-            QuickSipsRow(cupMl = state.cupMl, onQuickLog = viewModel::quickLog)
-            Spacer(Modifier.height(12.dp))
-            // 光袋（moodboard §2 光·遇）：按钮后方的呼吸光晕（96–160dp），绘制在按钮之下、背景之上。
-            Box(contentAlignment = Alignment.Center) {
-                LightPocket(modifier = Modifier.size(width = LOG_BUTTON_POCKET_WIDTH, height = LOG_BUTTON_POCKET_HEIGHT))
-                LogButton(onTap = viewModel::tapLogButton)
-            }
-            // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供（原 Spacer(36) 随之删除）。
+            // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供，确保窄屏滚动后操作组与猫角互不拥挤。
         }
 
-        // 胆大王常驻（moodboard §6.2）：底部 leading 角叠层挂载、不随内容滚动；
+        // 胆大王常驻：底部 leading 角叠层挂载、不随内容滚动；
         // 猫语气泡悬于猫上方（独立于环下夸夸语位置），点击立绘即摸猫（viewModel::petCat）。
         CatCorner(
             mood = state.catMood,
@@ -198,8 +195,8 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 }
 
 /**
- * 胆大王角落（moodboard §6.2 + 审查修复几何重定位）：立绘 + 立绘后方的呼吸光袋 + 猫语气泡。
- * 三者同处底部空带（y≈8–104）：光袋与立绘居中起始，气泡在猫右侧（start 92dp 起、垂直居中于猫带，
+ * 胆大王角落：立绘 + 立绘后方的呼吸光袋 + 猫语气泡。
+ * 三者同处底部空带（y≈8–104）：光袋与立绘居中起始，气泡从猫盒右缘开始（start 104dp 起，
  * 多行时上下越出的仍是空带——按钮带自 112dp 起，互斥）；气泡叠绘于猫之上（Box 后绘者在上），
  * 复用 [PraiseLine] 的 multiLine 浮现样式（宽度随内容上限 200dp、行数不限、零占位）。
  * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
@@ -213,7 +210,7 @@ private fun CatCorner(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
-        // 光袋（moodboard §2 光·遇）：立绘后方的呼吸光晕（96–160dp 区间取 128dp），光在猫下、不压猫。
+        // 光袋：立绘后方的轻呼吸光晕（96–160dp 区间取 120dp），光在猫下、不压猫。
         Box(contentAlignment = Alignment.Center) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
             CatFigure(mood = mood, onPet = onPet)
@@ -221,7 +218,8 @@ private fun CatCorner(
         PraiseLine(
             text = line,
             multiLine = true,
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 96.dp),
+            // 气泡从猫盒右缘开始，避免压住脸部与尾巴；小屏下仍留出 4dp 右侧余量。
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 104.dp),
         )
     }
 }
@@ -236,10 +234,11 @@ private fun RingBlock(
     onRingTap: (Offset?) -> Unit,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
+    val reduceMotion = rememberReduceMotion()
 
     Box(contentAlignment = Alignment.Center) {
         if (progress >= 1f) {
-            BreathingGlow()
+            BreathingGlow(reduceMotion = reduceMotion)
         }
         ProgressRing(
             progress = progress,
@@ -251,10 +250,14 @@ private fun RingBlock(
                     },
             onRingTap = { onRingTap(ringCenter) },
         ) {
-            RingCenterContent(totalMl = totalMl)
+            RingCenterContent(totalMl = totalMl, reduceMotion = reduceMotion)
         }
         Box(Modifier.matchParentSize()) {
-            RingBow(goalMet = progress >= 1f, modifier = Modifier.align(Alignment.TopCenter).offset(y = -BOW_LIFT))
+            RingBow(
+                goalMet = progress >= 1f,
+                reduceMotion = reduceMotion,
+                modifier = Modifier.align(Alignment.TopCenter).offset(y = -BOW_LIFT),
+            )
         }
         // 夸夸语改叠层挂载（布局审计 P1-2）：从环底缘垂下悬浮，不再占列内 26dp 常驻高度——
         // 无文案时零占位，浮现时不挤压下方徽章行。
@@ -273,20 +276,27 @@ private fun RingBlock(
 @Composable
 private fun RingBow(
     goalMet: Boolean,
+    reduceMotion: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    val transition = rememberInfiniteTransition(label = "bowSway")
-    val sway by transition.animateFloat(
-        initialValue = -6f,
-        targetValue = 6f,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(durationMillis = GLOW_BREATH_MS, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-        label = "bowSwayAngle",
-    )
+    val sway =
+        if (reduceMotion) {
+            0f
+        } else {
+            val transition = rememberInfiniteTransition(label = "bowSway")
+            val animatedSway by transition.animateFloat(
+                initialValue = -6f,
+                targetValue = 6f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = GLOW_BREATH_MS, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                label = "bowSwayAngle",
+            )
+            animatedSway
+        }
     Canvas(
         modifier =
             modifier
@@ -306,13 +316,21 @@ private fun RingBow(
 /** 环心：滚动到新值的总量 + 「今日已喝」小字（规格 §3.2 第 2 条）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun RingCenterContent(totalMl: Int) {
+private fun RingCenterContent(
+    totalMl: Int,
+    reduceMotion: Boolean,
+) {
     val spec = currentThemeSpec()
-    val rolledTotal by animateIntAsState(
-        targetValue = totalMl,
-        animationSpec = tween(durationMillis = NUMBER_ROLL_MS, easing = FastOutSlowInEasing),
-        label = "ringTotalMl",
-    )
+    val rolledTotal =
+        if (reduceMotion) {
+            totalMl
+        } else {
+            animateIntAsState(
+                targetValue = totalMl,
+                animationSpec = tween(durationMillis = NUMBER_ROLL_MS, easing = FastOutSlowInEasing),
+                label = "ringTotalMl",
+            ).value
+        }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "${rolledTotal}ml",
@@ -354,19 +372,25 @@ private fun PearlDot(
 /** 满环微光呼吸（规格 §4.2 第 6 步「满环微光呼吸」）：柔光晕在环后缓缓起伏。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun BreathingGlow() {
+private fun BreathingGlow(reduceMotion: Boolean) {
     val spec = currentThemeSpec()
-    val transition = rememberInfiniteTransition(label = "goalGlow")
-    val glowAlpha by transition.animateFloat(
-        initialValue = GLOW_ALPHA_MIN,
-        targetValue = GLOW_ALPHA_MAX,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(durationMillis = GLOW_BREATH_MS, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-        label = "goalGlowAlpha",
-    )
+    val glowAlpha =
+        if (reduceMotion) {
+            GLOW_ALPHA_MIN
+        } else {
+            val transition = rememberInfiniteTransition(label = "goalGlow")
+            val animatedGlowAlpha by transition.animateFloat(
+                initialValue = GLOW_ALPHA_MIN,
+                targetValue = GLOW_ALPHA_MAX,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = GLOW_BREATH_MS, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                label = "goalGlowAlpha",
+            )
+            animatedGlowAlpha
+        }
     Box(
         modifier =
             Modifier

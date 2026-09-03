@@ -124,7 +124,7 @@ fun SettingsScreen(
                     .padding(horizontal = PagePadding),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(44.dp))
             Text(
                 text = "我的",
                 color = spec.greetingColor,
@@ -221,10 +221,10 @@ private fun SettingsCard(
     val spec = currentThemeSpec()
     Surface(
         shape = CARD_SHAPE,
-        color = spec.chipBg.copy(alpha = 0.88f),
+        color = spec.chipBg.copy(alpha = 0.64f),
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 1.dp,
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.62f)),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.42f)),
     ) {
         // P3-3：饰带层先于内边距列满幅绘制（直接触卡两缘），内容列再收 20dp 内边距——
         // 饰带不再悬空于内边距里，首尾珠子按 24dp 圆角安全几何布点不被裁切。
@@ -274,7 +274,7 @@ private fun LaceTrim(
         val count = ((end - start) / (radius * 2f)).roundToInt().coerceAtLeast(2)
         val step = (end - start) / count
         repeat(count) { i ->
-            drawCircle(color = spec.laceColor, radius = radius, center = Offset(start + step * (i + 0.5f), radius))
+            drawCircle(color = spec.laceColor.copy(alpha = 0.82f), radius = radius, center = Offset(start + step * (i + 0.5f), radius))
         }
     }
 }
@@ -342,11 +342,11 @@ private fun GuideEntryRow(
     val spec = currentThemeSpec()
     Surface(
         shape = CARD_SHAPE,
-        color = spec.chipBg,
+        color = spec.chipBg.copy(alpha = 0.64f),
         onClick = onOpenWhitelistGuide,
         modifier = modifier.fillMaxWidth(),
-        shadowElevation = 2.dp,
-        border = BorderStroke(width = 1.dp, color = spec.laceColor),
+        shadowElevation = 1.dp,
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.42f)),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.rememberReduceMotion
 
 /**
  * 单次入场编排（§10.3，克制基调）：组合挂载即播一次「淡入 + 轻上移」，
@@ -26,6 +27,11 @@ fun FadeUpOnce(
     rise: Dp = 8.dp,
     content: @Composable () -> Unit,
 ) {
+    if (rememberReduceMotion()) {
+        content()
+        return
+    }
+
     val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
     val risePx = with(LocalDensity.current) { rise.roundToPx() }
     AnimatedVisibility(

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.particles.ParticleMath
+import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.random.Random
 
 /** 单次迸发粒子数：契约 8–12，取中庸的 10。 */
@@ -69,6 +70,7 @@ fun BurstParticles(
     trigger: Int,
     onFinish: () -> Unit,
 ) {
+    val reduceMotion = rememberReduceMotion()
     // travel 处于空闲完成态即无绘制；初始 idle 保证 trigger<=0 时静默。
     val travelState = remember { mutableFloatStateOf(TRAVEL_IDLE) }
     val travel by travelState
@@ -80,6 +82,10 @@ fun BurstParticles(
         }
 
     LaunchedEffect(trigger) {
+        if (reduceMotion) {
+            travelState.floatValue = TRAVEL_IDLE
+            return@LaunchedEffect
+        }
         // 守卫（终审 T8a）：非正触发立即清场复位 idle，且不误发 onFinish——
         // 防止上次迸发进行中被重置为 0 后残影冻结在半程。
         if (trigger <= 0) {

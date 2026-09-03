@@ -46,6 +46,8 @@ import androidx.navigation.compose.rememberNavController
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.motionDurationMillis
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
@@ -115,20 +117,26 @@ fun AwakeNavHost(startOnSplashDone: Boolean = false) {
 
     val viewModel: MainViewModel = viewModel()
     val onboardingDone by viewModel.onboardingDone.collectAsState()
+    val reduceMotion = rememberReduceMotion()
 
     // 局部捕获：delegated 属性无法 smart cast，分支判定走本地只读值。
     val branch = onboardingDone
     when (branch) {
         // DataStore 首读窗口：自然开屏路径下（≥1.2s）早已就绪，此分支仅兜底防白屏。
         null -> Box(modifier = Modifier.fillMaxSize().background(currentThemeSpec().backgroundGradient.first()))
-        else -> AwakeShell(onboardingDone = branch)
+        else -> AwakeShell(onboardingDone = branch, reduceMotion = reduceMotion)
     }
 }
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun AwakeShell(onboardingDone: Boolean) {
+private fun AwakeShell(
+    onboardingDone: Boolean,
+    reduceMotion: Boolean,
+) {
     val spec = currentThemeSpec()
+    val transitionMs = motionDurationMillis(TAB_TRANSITION_MS, reduceMotion)
+    val fadeOutMs = motionDurationMillis(TAB_TRANSITION_FADE_OUT_MS, reduceMotion)
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
@@ -145,7 +153,7 @@ private fun AwakeShell(onboardingDone: Boolean) {
         },
     ) { contentPadding ->
         // 页签转场（§10.2，克制基调）：淡入 + 8dp 轻上移，替代默认生硬淡入。
-        val risePx = with(LocalDensity.current) { TAB_TRANSITION_RISE_DP.toPx().toInt() }
+        val risePx = if (reduceMotion) 0 else with(LocalDensity.current) { TAB_TRANSITION_RISE_DP.toPx().toInt() }
         NavHost(
             navController = navController,
             startDestination = startDestinationFor(onboardingDone = onboardingDone),
@@ -154,15 +162,15 @@ private fun AwakeShell(onboardingDone: Boolean) {
                     .fillMaxSize()
                     .padding(contentPadding),
             enterTransition = {
-                fadeIn(animationSpec = tween(TAB_TRANSITION_MS)) +
-                    slideInVertically(animationSpec = tween(TAB_TRANSITION_MS)) { risePx }
+                fadeIn(animationSpec = tween(transitionMs)) +
+                    slideInVertically(animationSpec = tween(transitionMs)) { risePx }
             },
-            exitTransition = { fadeOut(animationSpec = tween(TAB_TRANSITION_FADE_OUT_MS)) },
+            exitTransition = { fadeOut(animationSpec = tween(fadeOutMs)) },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(TAB_TRANSITION_MS)) +
-                    slideInVertically(animationSpec = tween(TAB_TRANSITION_MS)) { risePx }
+                fadeIn(animationSpec = tween(transitionMs)) +
+                    slideInVertically(animationSpec = tween(transitionMs)) { risePx }
             },
-            popExitTransition = { fadeOut(animationSpec = tween(TAB_TRANSITION_FADE_OUT_MS)) },
+            popExitTransition = { fadeOut(animationSpec = tween(fadeOutMs)) },
         ) {
             composable(AwakeDestination.Onboarding.route) {
                 OnboardingScreen(onComplete = { navigateHomeAfterOnboarding(navController) })

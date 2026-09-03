@@ -20,7 +20,7 @@ import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.model.TimeSlot
 import java.time.LocalDateTime
 
-/** 问候语文字区右侧让位（布局审计 P1-3）：给行顶右端的蝴蝶结衣橱入口留出避让带。 */
+/** 问候语文字区右侧让位：为装饰锚点保留避让带，但不改变问候语的主层级。 */
 private val GREETING_BOW_CLEARANCE = 36.dp
 
 /** 时段问候语（规格 §3.2 第 1 条：早/午/晚分组内置）。 */
