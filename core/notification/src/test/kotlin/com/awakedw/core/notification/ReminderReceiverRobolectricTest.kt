@@ -25,8 +25,8 @@ import org.robolectric.annotation.Config
 import javax.inject.Inject
 
 /**
- * 场景 2/3：提醒到达发「温柔提醒」通知、动作按钮经 RecordingBroadcast 记一杯并把通知换成
- * 「记好啦 ♡」+ 2 秒自清。接收器经 EntryPointAccessors 手动注入（本仓 Hilt 2.52 + KSP 下
+ * 场景 2/3：提醒到达发「喝水提醒」通知、动作按钮经 RecordingBroadcast 记一杯并把通知换成
+ * 「已记一杯」+ 2 秒自清。接收器经 EntryPointAccessors 手动注入（本仓 Hilt 2.52 + KSP 下
  * @AndroidEntryPoint 广播接收器不可用，回退路线在 Robolectric 中实证），测试作用域为
  * Unconfined，goAsync 协程体在 onReceive 内同步完成后才返回。
  */
@@ -58,7 +58,7 @@ class ReminderReceiverRobolectricTest {
 
     private fun shadowAlarmManager() = shadowOf(context.getSystemService(android.app.AlarmManager::class.java))
 
-    /** 场景 2：触发时发布通知——渠道「温柔提醒」IMPORTANCE_LOW，标题按 10 点=MORNING，动作指向 RecordingBroadcast。 */
+    /** 场景 2：触发时发布通知——渠道「喝水提醒」IMPORTANCE_LOW，标题按 10 点=MORNING，动作指向 RecordingBroadcast。 */
     @Test
     fun `提醒到达_发布低重要性通知且动作指向RecordingBroadcast`() {
         ReminderReceiver().onReceive(context, Intent(context, ReminderReceiver::class.java))
@@ -66,14 +66,14 @@ class ReminderReceiverRobolectricTest {
         val channel = notificationManager().getNotificationChannel(NotifBuilder.CHANNEL_ID)
         assertNotNull(channel)
         assertEquals(NotificationManager.IMPORTANCE_LOW, channel!!.importance)
-        assertEquals("温柔提醒", channel.name.toString())
+        assertEquals("喝水提醒", channel.name.toString())
 
         val notif = postedNotification()
         assertEquals("早安 ☀", notif.extras.getString(Notification.EXTRA_TITLE))
         assertEquals("早一句", notif.extras.getString(Notification.EXTRA_TEXT))
 
         val action = notif.actions.single()
-        assertEquals("喝啦 💧", action.title.toString())
+        assertEquals("记一杯", action.title.toString())
         val savedIntent = shadowOf(action.actionIntent).savedIntent
         assertEquals(RecordingBroadcast::class.java.name, savedIntent.component!!.className)
 
@@ -83,7 +83,7 @@ class ReminderReceiverRobolectricTest {
         assertEquals(listOf(TimeSlot.MORNING), TestFakes.copies.picks)
     }
 
-    /** 场景 3：点按「喝啦 💧」→ 同步落库一杯 cupMl，通知更新为「记好啦 ♡」且 setTimeoutAfter(2000)。 */
+    /** 场景 3：点按「记一杯」→ 同步落库一杯 cupMl，通知更新为「已记一杯」且 setTimeoutAfter(2000)。 */
     @Test
     fun `点按喝啦_同步记一杯并把通知换成记好啦2秒自清`() {
         RecordingBroadcast().onReceive(context, Intent(context, RecordingBroadcast::class.java))
@@ -93,7 +93,7 @@ class ReminderReceiverRobolectricTest {
         assertEquals(250, records.single().amountMl)
 
         val notif = postedNotification()
-        assertEquals("记好啦 ♡", notif.extras.getString(Notification.EXTRA_TEXT))
+        assertEquals("已记一杯", notif.extras.getString(Notification.EXTRA_TEXT))
         assertEquals(2000L, notif.timeoutAfter)
     }
 
