@@ -193,7 +193,7 @@ class SettingsViewModel(
         viewModelScope.launch { copies.delete(slot, index) }
     }
 
-    /** 整库恢复出厂默认 30 句。 */
+    /** 整库恢复出厂默认 90 句。 */
     fun resetCopyLibrary() {
         viewModelScope.launch { copies.resetToDefaults() }
     }

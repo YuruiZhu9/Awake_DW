@@ -9,7 +9,7 @@ import org.junit.Test
  * 锚点以 ARGB Long（0xFFxxxxxx，不透明）形式保存在 [ThemePalette]，
  * 组件层的 androidx Color 由这些常量转换而来——本测试只依赖纯 JVM 常量表，
  * 防止任何色值无意漂移。四主题锚点方向：清晨天水碧系 / 午后藕荷系 /
- * 黄昏缃叶系 / 深夜青黛系。
+ * 黄昏奶茶棕褐系 / 深夜青黛系。
  */
 class ThemePaletteTest {
     @Test
@@ -73,31 +73,31 @@ class ThemePaletteTest {
     }
 
     @Test
-    fun `黄昏缃叶系全部十六进制锚点`() {
-        // 背景渐变：#FDF9EC → #FAF0D0 → #F6E7B4（缃叶浅底锚·指示值）
-        assertEquals(0xFFFDF9EC, ThemePalette.HUANGHUN_BG_1)
-        assertEquals(0xFFFAF0D0, ThemePalette.HUANGHUN_BG_2)
-        assertEquals(0xFFF6E7B4, ThemePalette.HUANGHUN_BG_3)
-        // 主色（进度环/强调）：#D9B611 秋香
-        assertEquals(0xFFD9B611, ThemePalette.HUANGHUN_PRIMARY)
-        // 进度环轨道：#F3E3B0
-        assertEquals(0xFFF3E3B0, ThemePalette.HUANGHUN_RING_TRACK)
-        // 环心数值文字：#9A7B0A
-        assertEquals(0xFF9A7B0A, ThemePalette.HUANGHUN_RING_VALUE_TEXT)
-        // 问候语文字：#6F5A12（副 #A88462 驼面锚）
-        assertEquals(0xFF6F5A12, ThemePalette.HUANGHUN_GREETING)
-        assertEquals(0xFFA88462, ThemePalette.HUANGHUN_GREETING_SUB)
-        // 按钮（线性渐变）：#C49E10 → #E2BC30
-        assertEquals(0xFFC49E10, ThemePalette.HUANGHUN_BUTTON_TOP)
-        assertEquals(0xFFE2BC30, ThemePalette.HUANGHUN_BUTTON_BOTTOM)
-        // 徽章底/字：#F0DCC8（驼淡化）/ #6F5A12
-        assertEquals(0xFFF0DCC8, ThemePalette.HUANGHUN_CHIP_BG)
-        assertEquals(0xFF6F5A12, ThemePalette.HUANGHUN_CHIP_TEXT)
-        // 粒子色族：#D9B611 #DFBF33 #E9CB61 #F2DFA4
-        assertEquals(0xFFD9B611, ThemePalette.HUANGHUN_PARTICLE_1)
-        assertEquals(0xFFDFBF33, ThemePalette.HUANGHUN_PARTICLE_2)
-        assertEquals(0xFFE9CB61, ThemePalette.HUANGHUN_PARTICLE_3)
-        assertEquals(0xFFF2DFA4, ThemePalette.HUANGHUN_PARTICLE_4)
+    fun `黄昏奶茶棕褐系全部十六进制锚点`() {
+        // 背景渐变：#FBF8F4 → #F1EAE4 → #E5D9D2（奶茶棕褐·清透纸面）
+        assertEquals(0xFFFBF8F4, ThemePalette.HUANGHUN_BG_1)
+        assertEquals(0xFFF1EAE4, ThemePalette.HUANGHUN_BG_2)
+        assertEquals(0xFFE5D9D2, ThemePalette.HUANGHUN_BG_3)
+        // 主色（进度环/强调）：#8B6654 可可棕
+        assertEquals(0xFF8B6654, ThemePalette.HUANGHUN_PRIMARY)
+        // 进度环轨道：#D7C6BC
+        assertEquals(0xFFD7C6BC, ThemePalette.HUANGHUN_RING_TRACK)
+        // 环心数值文字：#704E42
+        assertEquals(0xFF704E42, ThemePalette.HUANGHUN_RING_VALUE_TEXT)
+        // 问候语文字：#5C4840（副 #92766B）
+        assertEquals(0xFF5C4840, ThemePalette.HUANGHUN_GREETING)
+        assertEquals(0xFF92766B, ThemePalette.HUANGHUN_GREETING_SUB)
+        // 按钮（线性渐变）：#785646 → #9D7562
+        assertEquals(0xFF785646, ThemePalette.HUANGHUN_BUTTON_TOP)
+        assertEquals(0xFF9D7562, ThemePalette.HUANGHUN_BUTTON_BOTTOM)
+        // 徽章底/字：#E9DED8（奶茶纸面）/ #6A5047
+        assertEquals(0xFFE9DED8, ThemePalette.HUANGHUN_CHIP_BG)
+        assertEquals(0xFF6A5047, ThemePalette.HUANGHUN_CHIP_TEXT)
+        // 粒子色族：#8B6654 #AA826E #C19B88 #D5BBAE
+        assertEquals(0xFF8B6654, ThemePalette.HUANGHUN_PARTICLE_1)
+        assertEquals(0xFFAA826E, ThemePalette.HUANGHUN_PARTICLE_2)
+        assertEquals(0xFFC19B88, ThemePalette.HUANGHUN_PARTICLE_3)
+        assertEquals(0xFFD5BBAE, ThemePalette.HUANGHUN_PARTICLE_4)
     }
 
     @Test
@@ -135,7 +135,7 @@ class ThemePaletteTest {
         // 旧锚 #343A4C 对徽章底仅 1.3:1 不可见，提亮后 ≥1.8（对比度断言见 OnPrimarySurfaceTest）。
         assertEquals(0xFFFADCE2, ThemePalette.WUHOU_LACE)
         assertEquals(0xFFD2EDE7, ThemePalette.QINGCHEN_LACE)
-        assertEquals(0xFFFAECC9, ThemePalette.HUANGHUN_LACE)
+        assertEquals(0xFFDECAC0, ThemePalette.HUANGHUN_LACE)
         assertEquals(0xFF525C72, ThemePalette.SHENYE_LACE)
         assertEquals(0xFFD9B98A, ThemePalette.GOLD_TRIM)
     }

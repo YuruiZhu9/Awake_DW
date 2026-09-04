@@ -196,21 +196,20 @@ class FakeSoundPlayer : AwakeSoundPlayer {
 
 /**
  * 固定文案库：按时段返回固定短句，并记录被询问过的时段供断言。
- * 猫语组为构造入参 [catLines]，按游标循环抽取——连抽可断言「新的一句」；
- * 缺省单句「喵，喝水啦」，与生产缺省语料的首句语义一致。
+ * 猫交互句为构造入参 [catLines]，会写入当前时段的活动文案桶，按游标循环抽取。
+ * 缺省仓库仍使用独立的早/午/晚测试短句，避免影响其他首页测试。
  */
 class FakeCopyLibraryRepository(
-    catLines: List<String> = listOf(DEFAULT_CAT_LINE),
+    catLines: List<String>? = null,
 ) : CopyLibraryRepository {
     val requestedSlots = mutableListOf<TimeSlot>()
 
     private val _library =
         MutableStateFlow(
             CopyLibrary(
-                morning = listOf("早安短句"),
+                morning = catLines ?: listOf("早安短句"),
                 day = listOf("日间短句"),
                 evening = listOf("晚安短句"),
-                cat = catLines,
             ),
         )
 
@@ -227,8 +226,11 @@ class FakeCopyLibraryRepository(
         return _library.value.groupOf(slot).first()
     }
 
-    override suspend fun randomCatLine(avoidRecent: Int): String {
-        val lines = _library.value.cat.ifEmpty { listOf(DEFAULT_CAT_LINE) }
+    override suspend fun randomCatLine(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String {
+        val lines = _library.value.groupOf(slot).ifEmpty { listOf(DEFAULT_CAT_LINE) }
         return lines[catCursor++ % lines.size]
     }
 

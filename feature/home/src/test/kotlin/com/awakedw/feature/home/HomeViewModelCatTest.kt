@@ -27,14 +27,13 @@ internal val NIGHT_BASE_TIME: Long =
 
 /**
  * 记一杯回应编排——胆大王的反馈（moodboard §6.2 首页接线）：
- * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中 `randomCatLine` 抽句；气泡按 [CAT_LINE_HOLD_MS]（2.0s）
+ * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中当前时段心意文案；气泡按 [CAT_LINE_HOLD_MS]（2.0s）
  *   收场（独立于夸夸语 1.4s），心情按当前小时落回（白天 IDLE）；
  * - 同日已达标后再打卡（celebrated=false）猫仍 HAPPY 一次——回应每次成笔；
  * - init 按当前小时定初态：22 点后安睡（SLEEPY）；
- * - `petCat()`：摸猫即抽一句猫语，同 2.0s 收场；猫序列换代不殃及夸夸语/庆祝的收场（epoch 分家）；
- * - 猫配饰随连胜刷新：init 结算一次，打卡成功后再结算（streak 过门槛即披挂）。
+ * - `petCat()`：摸猫即抽一句当前时段心意文案，同 2.0s 收场；猫序列换代不殃及夸夸语/达标反馈的收场；
  *
- * 猫语停留时长经构造器缺省参注入（生产 [CAT_LINE_HOLD_MS]，测试缩窗）——与 logDebounceMs 同款。
+ * 猫气泡停留时长经构造器缺省参注入（生产 [CAT_LINE_HOLD_MS]，测试缩窗）——与 logDebounceMs 同款。
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelCatTest {
@@ -43,7 +42,7 @@ class HomeViewModelCatTest {
         Dispatchers.resetMain()
     }
 
-    /** 测试装配：与 HomeViewModelTest 同一条真实用例链，外加连胜用例与本任务的猫时长缩窗。 */
+    /** 测试装配：与 HomeViewModelTest 同一条真实用例链，外加猫反馈的缩窗时长。 */
     private fun harness(
         scheduler: TestCoroutineScheduler,
         settings: UserSettings = UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD),
@@ -137,7 +136,7 @@ class HomeViewModelCatTest {
         }
 
     @Test
-    fun `摸猫抽一句新猫语并按停留时长收场`() =
+    fun `摸猫抽一句心意文案并按停留时长收场`() =
         runTest {
             val h =
                 harness(

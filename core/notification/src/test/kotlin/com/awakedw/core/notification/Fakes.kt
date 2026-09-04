@@ -133,7 +133,10 @@ class FakeCopyLibraryRepository : CopyLibraryRepository {
         }
     }
 
-    override suspend fun randomCatLine(avoidRecent: Int): String = "喵一句"
+    override suspend fun randomCatLine(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String = "喵一句"
 
     override suspend fun upsert(
         slot: TimeSlot,

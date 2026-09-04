@@ -3,7 +3,7 @@ package com.awakedw.core.designsystem
 /**
  * 四主题中国色十六进制锚点表（ARGB Long，0xFFxxxxxx 表示不透明）。
  *
- * v0.2 中国色再映射（moodboard §4）：清晨天水碧系 / 午后藕荷系 / 黄昏缃叶系 /
+ * v0.2 中国色再映射（moodboard §4）：清晨天水碧系 / 午后藕荷系 / 黄昏奶茶棕褐系 /
  * 深夜青黛系，常量名为主题拼音 + 角色后缀，注释标注中国传统色名。
  * 供 [ThemePaletteTest] 做防漂移快照断言；组件层的 androidx Color 均由这些
  * 常量转换而来。纯 JVM 常量，不依赖任何 Android 类。
@@ -89,40 +89,40 @@ object ThemePalette {
     const val WUHOU_PARTICLE_5 = 0xFFFEE3D3 // 十样锦·纸白
 
     // ------------------------------------------------------------------
-    // C · 黄昏 · 缃叶系（ThemeId.CARAMEL，夜晚）
+    // C · 黄昏 · 奶茶棕褐系（ThemeId.CARAMEL，夜晚）
     // ------------------------------------------------------------------
 
-    /** 背景渐变：#FDF9EC → #FAF0D0 → #F6E7B4（缃叶浅底锚·指示值） */
-    const val HUANGHUN_BG_1 = 0xFFFDF9EC // 缃叶·纸白
-    const val HUANGHUN_BG_2 = 0xFFFAF0D0 // 缃叶·浅
-    const val HUANGHUN_BG_3 = 0xFFF6E7B4 // 缃叶浅（底锚·指示值）
+    /** 背景渐变：#FBF8F4 → #F1EAE4 → #E5D9D2（奶茶棕褐·清透纸面） */
+    const val HUANGHUN_BG_1 = 0xFFFBF8F4 // 奶茶棕褐·纸白
+    const val HUANGHUN_BG_2 = 0xFFF1EAE4 // 奶茶棕褐·浅
+    const val HUANGHUN_BG_3 = 0xFFE5D9D2 // 奶茶棕褐·底
 
-    /** 主色（进度环/强调）：#D9B611 秋香 */
-    const val HUANGHUN_PRIMARY = 0xFFD9B611 // 秋香（强调锚）
+    /** 主色（进度环/强调）：#8B6654 可可棕（低饱和、偏棕而不偏黄） */
+    const val HUANGHUN_PRIMARY = 0xFF8B6654 // 可可棕（强调锚）
 
-    /** 进度环轨道：#F3E3B0 */
-    const val HUANGHUN_RING_TRACK = 0xFFF3E3B0 // 缃叶·深
+    /** 进度环轨道：#D7C6BC */
+    const val HUANGHUN_RING_TRACK = 0xFFD7C6BC // 奶茶棕褐·浅轨道
 
-    /** 环心数值文字：#9A7B0A */
-    const val HUANGHUN_RING_VALUE_TEXT = 0xFF9A7B0A // 秋香·深
+    /** 环心数值文字：#704E42 */
+    const val HUANGHUN_RING_VALUE_TEXT = 0xFF704E42 // 可可棕·深
 
-    /** 问候语文字：#6F5A12（副 #A88462 驼面锚原值） */
-    const val HUANGHUN_GREETING = 0xFF6F5A12 // 秋香·褐
-    const val HUANGHUN_GREETING_SUB = 0xFFA88462 // 驼（面锚原值）
+    /** 问候语文字：#5C4840（副 #92766B） */
+    const val HUANGHUN_GREETING = 0xFF5C4840 // 可可棕·文字
+    const val HUANGHUN_GREETING_SUB = 0xFF92766B // 奶茶棕褐·灰
 
-    /** 按钮（线性渐变）：#C49E10 → #E2BC30 */
-    const val HUANGHUN_BUTTON_TOP = 0xFFC49E10 // 秋香·深
-    const val HUANGHUN_BUTTON_BOTTOM = 0xFFE2BC30 // 秋香·亮
+    /** 按钮（线性渐变）：#785646 → #9D7562（深棕可读、底色清透） */
+    const val HUANGHUN_BUTTON_TOP = 0xFF785646 // 可可棕·深
+    const val HUANGHUN_BUTTON_BOTTOM = 0xFF9D7562 // 奶茶棕褐·亮
 
-    /** 徽章底/字：#F0DCC8（驼淡化，明度校正见报告）/ #6F5A12 */
-    const val HUANGHUN_CHIP_BG = 0xFFF0DCC8 // 驼·淡化
-    const val HUANGHUN_CHIP_TEXT = 0xFF6F5A12 // 秋香·褐
+    /** 徽章底/字：#E9DED8（奶茶纸面）/ #6A5047 */
+    const val HUANGHUN_CHIP_BG = 0xFFE9DED8 // 奶茶棕褐·纸面
+    const val HUANGHUN_CHIP_TEXT = 0xFF6A5047 // 可可棕·文字
 
-    /** 粒子色族：#D9B611 #DFBF33 #E9CB61 #F2DFA4 */
-    const val HUANGHUN_PARTICLE_1 = 0xFFD9B611 // 秋香
-    const val HUANGHUN_PARTICLE_2 = 0xFFDFBF33 // 秋香·亮一
-    const val HUANGHUN_PARTICLE_3 = 0xFFE9CB61 // 秋香·亮二
-    const val HUANGHUN_PARTICLE_4 = 0xFFF2DFA4 // 秋香·纸白
+    /** 粒子色族：#8B6654 #AA826E #C19B88 #D5BBAE */
+    const val HUANGHUN_PARTICLE_1 = 0xFF8B6654 // 可可棕
+    const val HUANGHUN_PARTICLE_2 = 0xFFAA826E // 奶茶棕褐·亮一
+    const val HUANGHUN_PARTICLE_3 = 0xFFC19B88 // 奶茶棕褐·亮二
+    const val HUANGHUN_PARTICLE_4 = 0xFFD5BBAE // 奶茶棕褐·纸白
 
     // ------------------------------------------------------------------
     // D · 深夜 · 青黛系（ThemeId.NIGHT，深夜，治愈铁律：保持暗底）
@@ -171,8 +171,8 @@ object ThemePalette {
     /** 蕾丝线：清晨（月白薄荷）#D2EDE7 */
     const val QINGCHEN_LACE = 0xFFD2EDE7 // 月白·薄荷
 
-    /** 蕾丝线：黄昏（缃叶奶油）#FAECC9 */
-    const val HUANGHUN_LACE = 0xFFFAECC9 // 缃叶·奶油
+    /** 蕾丝线：黄昏（奶茶棕褐·米杏）#DECAC0 */
+    const val HUANGHUN_LACE = 0xFFDECAC0 // 奶茶棕褐·米杏
 
     /** 蕾丝线：深夜（暗银提亮，配描金）#525C72——旧锚 #343A4C 对徽章底仅 1.3:1 不可见（P2-5），
      * 提亮为月白·灰 #B4D0D8 按 35% 预混于鸦青暗底 #182630 的等效色，对徽章底对比 ≈2.3:1（≥1.8 目标）。
@@ -182,7 +182,7 @@ object ThemePalette {
     /** 描金：软香槟金（蝴蝶结中结），四主题共用 #D9B98A */
     const val GOLD_TRIM = 0xFFD9B98A
 
-    /** 主色底字色（P2-4）：深暖褐 #3E322B——三浅色主题（清晨/午后/黄昏）的按钮渐变与
+    /** 主色底字色（P2-4）：深暖褐 #3E322B——两浅色主题（清晨/午后）的按钮渐变与
      * 选中 chip 上原用白字仅 1.8–2.5:1，统一改此色后对各自主色渐变两端与 primary 均 ≥3:1
      * （逐项计算见 OnPrimarySurfaceTest）；深夜主题按钮色板按白字校准，不走此锚。
      */

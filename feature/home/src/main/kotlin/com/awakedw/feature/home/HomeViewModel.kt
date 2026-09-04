@@ -11,6 +11,7 @@ import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.model.CatMood
+import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.resolveCatMood
 import com.awakedw.core.sound.AwakeSoundPlayer
 import com.awakedw.core.sound.SoundEvent
@@ -35,7 +36,7 @@ const val PRAISE_HOLD_MS = 1_400L
 /** 达标反馈状态停留时长（2500ms 自动收敛，不产生奖励或内容解锁）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
-/** 猫语气泡停留时长（2.0s 收场，独立于夸夸语的 1.4s）。 */
+/** 猫气泡停留时长（2.0s 收场，独立于夸夸语的 1.4s）。 */
 const val CAT_LINE_HOLD_MS = 2_000L
 
 /** Immutable state for the water logging home screen. */
@@ -139,10 +140,10 @@ class HomeViewModel(
         scheduleLog()
     }
 
-    /** 摸猫：戳一下胆大王，抽一句猫语回应（同 [CAT_LINE_HOLD_MS] 收场，心情不动）+ 一声呼噜。 */
+    /** 摸猫：戳一下胆大王，抽一句当前时段心意文案回应（同 [CAT_LINE_HOLD_MS] 收场，心情不动）+ 一声呼噜。 */
     fun petCat() {
         sound.play(SoundEvent.PURR)
-        playCatResponse(happy = false)
+        playCatResponse(happy = false, slot = TimeSlots.slotOfHour(currentHour()))
     }
 
     /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；距上次成笔不足 [logDebounceMs] 的触发合并忽略。 */
@@ -168,13 +169,13 @@ class HomeViewModel(
             )
         }
 
-        // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句猫语，回应每次成笔。
+        // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句心意文案，回应每次成笔。
         if (result != null) {
             // 声音三触发点之一（任务 12）：成笔确认即随机一声掉落音；当日首次达标再追一段旋律。
             // fire-and-forget，与动画解耦——不等夸夸语/庆祝的任何一拍。
             sound.play(DROP_EVENTS.random())
             if (result.celebrated) sound.play(SoundEvent.GOAL_MELODY)
-            playCatResponse(happy = true)
+            playCatResponse(happy = true, slot = slot)
         }
 
         delay(PRAISE_HOLD_MS)
@@ -190,15 +191,18 @@ class HomeViewModel(
     }
 
     /**
-     * 猫回应序列：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
+     * 猫回应序列：抽一句心意文案点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
      * [catLineHoldMs] 后收场——气泡清空、心情按当前小时落回（白天 IDLE / 深夜安睡，零惩罚）。
      * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及夸夸语/庆祝的收场。
      */
-    private fun playCatResponse(happy: Boolean) {
+    private fun playCatResponse(
+        happy: Boolean,
+        slot: TimeSlot,
+    ) {
         catEpoch += 1
         val epoch = catEpoch
         viewModelScope.launch {
-            val line = copies.randomCatLine()
+            val line = copies.randomCatLine(slot = slot)
             _uiState.update {
                 it.copy(catLine = line, catMood = if (happy) CatMood.HAPPY else it.catMood)
             }

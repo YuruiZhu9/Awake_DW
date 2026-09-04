@@ -99,7 +99,10 @@ class FakeCopyLibraryRepository(
         avoidRecent: Int,
     ): String = _library.value.groupOf(slot).first()
 
-    override suspend fun randomCatLine(avoidRecent: Int): String = _library.value.cat.firstOrNull() ?: "本大王喵一声"
+    override suspend fun randomCatLine(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String = _library.value.groupOf(slot).firstOrNull() ?: "本大王喵一声"
 
     override suspend fun upsert(
         slot: TimeSlot,

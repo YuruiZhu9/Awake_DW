@@ -66,7 +66,7 @@ val StrawberryThemeSpec: ThemeSpec =
         laceColor = Color(ThemePalette.WUHOU_LACE),
     )
 
-/** C · 黄昏缃叶系（ThemeId.CARAMEL，夜晚），色值对照 moodboard §4。 */
+/** C · 黄昏奶茶棕褐系（ThemeId.CARAMEL，夜晚），色值对照 moodboard §4。 */
 val CaramelThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.CARAMEL,

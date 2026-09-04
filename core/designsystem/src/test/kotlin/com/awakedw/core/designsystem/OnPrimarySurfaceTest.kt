@@ -10,7 +10,8 @@ import kotlin.math.pow
  * 主色底字色与深夜蕾丝的对比度防漂移（P2-4 / P2-5，纯 JVM）。
  *
  * 用 WCAG 2.x 相对亮度公式逐对计算对比度：
- * - [onPrimarySurface] 三浅色主题返回深暖褐，且对**各自按钮渐变两端与 primary** 均 ≥3:1
+ * - [onPrimarySurface] 清晨/午后返回深暖褐；棕褐焦糖与深夜按钮返回白字；
+ *   各自按钮渐变两端与 primary 保持清晰对比；
  *   （白字压浅暖主色仅 1.8–2.5:1 的病灶在此固化断言，防止色板再漂移回去）；
  * - 深夜主题返回白字（其按钮色板按白字校准）；
  * - 深夜蕾丝 #525C72 对徽章底 #182630 ≥1.8:1（旧锚 #343A4C 仅 1.3:1 不可见）。
@@ -49,12 +50,14 @@ class OnPrimarySurfaceTest {
     }
 
     @Test
-    fun `三浅色主题返回深暖褐`() {
-        val lightSpecs = listOf(EmeraldThemeSpec, StrawberryThemeSpec, CaramelThemeSpec)
-        lightSpecs.forEach { spec -> assertEquals(Color(ThemePalette.ON_PRIMARY_SURFACE), onPrimarySurface(spec)) }
+    fun `焦糖棕褐主题使用白字其余浅色主题使用深暖褐`() {
+        assertEquals(Color.White, onPrimarySurface(CaramelThemeSpec))
+        listOf(EmeraldThemeSpec, StrawberryThemeSpec).forEach { spec ->
+            assertEquals(Color(ThemePalette.ON_PRIMARY_SURFACE), onPrimarySurface(spec))
+        }
     }
 
-    // ---------- P2-4：深暖褐对各浅色主题按钮渐变两端与 primary 均 ≥3:1 ----------
+    // ---------- P2-4：按钮前景色对各主题主色与渐变两端保持清晰 ----------
 
     @Test
     fun `深暖褐对清晨主题按钮渐变两端与primary对比度均不低于3`() {
@@ -88,18 +91,18 @@ class OnPrimarySurfaceTest {
     }
 
     @Test
-    fun `深暖褐对黄昏主题按钮渐变两端与primary对比度均不低于3`() {
-        val text = ThemePalette.ON_PRIMARY_SURFACE
+    fun `白字对焦糖棕褐主题按钮渐变两端与primary对比度均不低于3`() {
+        val text = 0xFFFFFFFFL
         assertTrue(
-            "buttonTop #C49E10 实际 " + contrast(text, ThemePalette.HUANGHUN_BUTTON_TOP),
+            "buttonTop #785646 实际 " + contrast(text, ThemePalette.HUANGHUN_BUTTON_TOP),
             contrast(text, ThemePalette.HUANGHUN_BUTTON_TOP) >= 3f,
         )
         assertTrue(
-            "buttonBottom #E2BC30 实际 " + contrast(text, ThemePalette.HUANGHUN_BUTTON_BOTTOM),
+            "buttonBottom #9D7562 实际 " + contrast(text, ThemePalette.HUANGHUN_BUTTON_BOTTOM),
             contrast(text, ThemePalette.HUANGHUN_BUTTON_BOTTOM) >= 3f,
         )
         assertTrue(
-            "primary #D9B611 实际 " + contrast(text, ThemePalette.HUANGHUN_PRIMARY),
+            "primary #8B6654 实际 " + contrast(text, ThemePalette.HUANGHUN_PRIMARY),
             contrast(text, ThemePalette.HUANGHUN_PRIMARY) >= 3f,
         )
     }
