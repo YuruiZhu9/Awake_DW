@@ -22,7 +22,7 @@ import org.robolectric.annotation.GraphicsMode
  *
  * - 正向路径用 src/test/assets/arttest/ 下的 1×1 PNG（dot.png / dot_night.png）验证（夹具不进生产包）；
  * - 回退路径用不存在的 `__nope__` 路径与损坏字节（broken.png）验证；
- * - 组合层 rememberAssetImageOrN 用 createComposeRule 走真实 composition（produceState + Dispatchers.IO）。
+ * - 组合层 rememberAssetImageOrN 用 createComposeRule 走真实 composition（异步 Dispatchers.IO 读取）。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")

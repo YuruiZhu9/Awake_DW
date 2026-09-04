@@ -54,9 +54,11 @@ import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
+import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.model.CatMood
@@ -85,16 +87,16 @@ private val BOW_LIFT = 2.dp
 private val LOG_BUTTON_POCKET_WIDTH = 160.dp
 private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 
-/** 胆大王光袋直径（96–160dp 区间取值）：给 96dp 立绘留一圈轻薄呼吸光晕。 */
-private val CAT_POCKET_DIAMETER = 120.dp
+/** 胆大王光袋直径（96–160dp 区间取值）：给 108dp 立绘留一圈轻薄呼吸光晕。 */
+private val CAT_POCKET_DIAMETER = 132.dp
 
 /**
  * 胆大王落角的边距（布局审计 P1-1 + 审查修复几何重定位）：底部 leading 角，落进居中簇下方的空带——
  * 内容列尾呼吸 132dp 使「记一杯」与 48dp 快捷量行整体高于猫盒；
- * bottom 8dp 使猫盒（y≈8–104）与按钮带下缘 132 保持 20dp 互斥余量，且簇距底固定、滚动任何位置都不变。
- * start 4dp，猫钉在列首不随气泡变宽右移。
+ * bottom 8dp 使猫盒（y≈8–120）与按钮带下缘 132 保持 20dp 互斥余量，且簇距底固定、滚动任何位置都不变。
+ * start 0dp，猫钉在列首不随气泡变宽右移。
  */
-private val CAT_CORNER_PADDING = PaddingValues(start = 4.dp, bottom = 8.dp)
+private val CAT_CORNER_PADDING = PaddingValues(start = 0.dp, bottom = 8.dp)
 
 /** 环下夸夸语的悬浮落差（布局审计 P1-2）：从环底缘垂下 12dp，浮在既有空档带上，不挤压徽章行。 */
 private val PRAISE_LINE_DROP = 12.dp
@@ -127,11 +129,13 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         // 轻量装饰层：渐变之上、内容之下；只提供主题氛围，不表达“今日内容”。
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
             showFlowers = false,
+            density = ParticleDensity.QUIET,
         )
 
         Column(
@@ -196,7 +200,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
 /**
  * 胆大王角落：立绘 + 立绘后方的呼吸光袋 + 猫语气泡。
- * 三者同处底部空带（y≈8–104）：光袋与立绘居中起始，气泡从猫盒右缘开始（start 104dp 起，
+ * 三者同处底部空带（y≈8–120）：光袋与立绘居中起始，气泡从猫盒右缘开始（start 116dp 起，
  * 多行时上下越出的仍是空带——按钮带自 112dp 起，互斥）；气泡叠绘于猫之上（Box 后绘者在上），
  * 复用 [PraiseLine] 的 multiLine 浮现样式（宽度随内容上限 200dp、行数不限、零占位）。
  * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
@@ -219,7 +223,7 @@ private fun CatCorner(
             text = line,
             multiLine = true,
             // 气泡从猫盒右缘开始，避免压住脸部与尾巴；小屏下仍留出 4dp 右侧余量。
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 104.dp),
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 116.dp),
         )
     }
 }

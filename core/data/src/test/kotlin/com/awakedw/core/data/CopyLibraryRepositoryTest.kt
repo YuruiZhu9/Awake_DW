@@ -18,7 +18,7 @@ import org.junit.Test
 import java.io.File
 import java.nio.file.Files
 
-/** 文案库仓储：默认 90 条、去重抽取窗口、删除兜底与重置。 */
+/** 文案库仓储：默认 108 条、去重抽取窗口、删除兜底与重置。 */
 class CopyLibraryRepositoryTest {
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var repo: DefaultCopyLibraryRepository
@@ -32,14 +32,14 @@ class CopyLibraryRepositoryTest {
     }
 
     @Test
-    fun `默认文案90条且早午晚各30条`() =
+    fun `默认文案108条且早午晚各36条`() =
         runTest {
             val lib = repo.library.first()
             assertEquals(CopyLibrary(DefaultCopies.morning, DefaultCopies.day, DefaultCopies.evening), lib)
-            assertEquals(90, lib.morning.size + lib.day.size + lib.evening.size)
-            assertEquals(30, lib.morning.size)
-            assertEquals(30, lib.day.size)
-            assertEquals(30, lib.evening.size)
+            assertEquals(108, lib.morning.size + lib.day.size + lib.evening.size)
+            assertEquals(36, lib.morning.size)
+            assertEquals(36, lib.day.size)
+            assertEquals(36, lib.evening.size)
         }
 
     @Test
@@ -58,8 +58,8 @@ class CopyLibraryRepositoryTest {
     @Test
     fun `删除到剩少数时不抛异常且回退默认组`() =
         runTest {
-            // 池从 30 删到 2（小于 avoidRecent=5 的窗口）：候选可能被近期记录耗尽，需清空去重池后仍能返回。
-            repeat(28) { repo.delete(TimeSlot.DAY, 0) }
+            // 池从 36 删到 2（小于 avoidRecent=5 的窗口）：候选可能被近期记录耗尽，需清空去重池后仍能返回。
+            repeat(34) { repo.delete(TimeSlot.DAY, 0) }
             assertEquals(2, repo.library.first().day.size)
             val shrunkenDraws = mutableListOf<String>()
             repeat(10) { shrunkenDraws += repo.randomFor(TimeSlot.DAY, avoidRecent = 5) }
@@ -77,7 +77,7 @@ class CopyLibraryRepositoryTest {
         runTest {
             val removed = repo.library.first().morning.first()
             repo.delete(TimeSlot.MORNING, 0)
-            repeat(30) { assertNotEquals(removed, repo.randomFor(TimeSlot.MORNING)) }
+            repeat(36) { assertNotEquals(removed, repo.randomFor(TimeSlot.MORNING)) }
         }
 
     @Test
@@ -86,11 +86,11 @@ class CopyLibraryRepositoryTest {
             repo.upsert(TimeSlot.EVENING, 0, "自定义晚安句")
             var lib = repo.library.first()
             assertEquals("自定义晚安句", lib.evening[0])
-            assertEquals(30, lib.evening.size)
+            assertEquals(36, lib.evening.size)
 
             repo.upsert(TimeSlot.EVENING, lib.evening.size, "追加的夜句")
             lib = repo.library.first()
-            assertEquals(31, lib.evening.size)
+            assertEquals(37, lib.evening.size)
             assertEquals("追加的夜句", lib.evening.last())
 
             repo.resetToDefaults()

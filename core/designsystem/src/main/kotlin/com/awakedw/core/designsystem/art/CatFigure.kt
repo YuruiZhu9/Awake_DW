@@ -43,8 +43,8 @@ import kotlin.math.roundToInt
 /** 立绘语义描述：测试与无障碍定位胆大王的锚点。 */
 internal const val CAT_SEMANTICS = "胆大王"
 
-/** 立绘固定边长（96dp 见方，尺寸语义：常驻首页一角）。 */
-private const val CAT_FIGURE_SIZE_DP = 96
+/** 立绘固定边长（108dp 见方，尺寸语义：常驻首页一角）。 */
+private const val CAT_FIGURE_SIZE_DP = 108
 
 /** 呼吸单程时长：1.5s（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；审查裁定「3s 循环」= 完整周期）。 */
 internal const val BREATH_LEG_MS = 1500
@@ -60,9 +60,9 @@ internal fun breathTargetOf(mood: CatMood): Float = if (mood == CatMood.SLEEPY) 
 /** 三态立绘资产路径（:app assets 相对路径；缺失由 [rememberAssetImageOrN] 回退 null）。 */
 internal fun catAssetFileOf(mood: CatMood): String =
     when (mood) {
-        CatMood.IDLE -> "cat/idle.webp"
-        CatMood.HAPPY -> "cat/happy.webp"
-        CatMood.SLEEPY -> "cat/sleepy.webp"
+        CatMood.IDLE -> "cat/beforedrink.png"
+        CatMood.HAPPY -> "cat/afterdrink.png"
+        CatMood.SLEEPY -> "cat/beforedrink.png"
     }
 
 /**
@@ -209,7 +209,7 @@ fun CatFigure(
     )
 }
 
-/** 等比适配铺绘（ContentScale.Fit 语义）：96dp 方框内居中、不变形、不裁切。 */
+/** 等比适配铺绘（ContentScale.Fit 语义）：108dp 方框内居中、不变形、不裁切。 */
 private fun DrawScope.drawFitted(
     image: ImageBitmap,
     colorFilter: ColorFilter?,

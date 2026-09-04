@@ -53,9 +53,11 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
+import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 
 /** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
@@ -65,7 +67,7 @@ private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
  * 白名单引导页（首次启动，无底栏——由导航壳/集成任务接线）：
  * 当刻主题的渐变底 + 漂浮粒子 + 大水滴插画，温柔地建议开启省电白名单。
  *
- * 主按钮「去设置 ♡」权限时序化（T13 minor 收口，杜绝对话框与跳转 Activity 竞态）：
+ * 主按钮「打开设置」权限时序化（T13 minor 收口，杜绝对话框与跳转 Activity 竞态）：
  * Android 13+ 且未授予通知权限时先弹系统权限对话框，**拿到 result 后（无论授权与否）
  * 再**进入 [BatteryIntentLauncher.bestEffortIntents] 逐个跳转序列，首个成功即置位
  * onboarding_done 并经 [onComplete] 接缝离页；已授予或低版本则直接进入跳转序列。
@@ -98,10 +100,12 @@ fun OnboardingScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
             showFlowers = false,
+            density = ParticleDensity.QUIET,
         )
 
         Column(
@@ -115,21 +119,21 @@ fun OnboardingScreen(
             DropletIllustration(reduceMotion = reduceMotion)
             Spacer(Modifier.height(28.dp))
             Text(
-                text = "为了让每一次温柔准时抵达",
+                text = "让提醒按时到达",
                 color = spec.greetingColor,
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "建议把 Awake_DW 加入电池优化白名单，提醒会更可靠。也可以先跳过。",
+                text = "建议将 Awake_DW 加入电池优化白名单，提醒会更稳定。也可以先跳过。",
                 color = spec.greetingSubColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.weight(1f))
             PrimaryButton(
-                text = "去设置 ♡",
+                text = "打开设置",
                 reduceMotion = reduceMotion,
                 onTap = {
                     if (needsNotificationPermission(context)) {

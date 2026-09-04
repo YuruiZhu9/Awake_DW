@@ -44,6 +44,15 @@ private const val FLOWER_ALPHA_BASE = 0.14f
 private const val FLOWER_ALPHA_AMPLITUDE = 0.10f
 private const val FLOWER_TURNS = 1
 
+/** 页面职责对应的粒子密度：首页/设置/引导安静，统计/开屏保留标准层次。 */
+enum class ParticleDensity(
+    internal val dotCount: Int,
+    internal val accentAlphaScale: Float,
+) {
+    QUIET(dotCount = 14, accentAlphaScale = 0.72f),
+    STANDARD(dotCount = ParticleMath.DOT_COUNT, accentAlphaScale = 1f),
+}
+
 /** 兜底粒子色：colors 为空时避免取越界（正常主题均提供非空 particleColors）。 */
 private val FALLBACK_COLOR = Color(0xFF10A87C)
 
@@ -69,6 +78,7 @@ fun FloatingParticles(
     seed: Long = 7L,
     showStars: Boolean = true,
     showFlowers: Boolean = true,
+    density: ParticleDensity = ParticleDensity.STANDARD,
 ) {
     val reduceMotion = rememberReduceMotion()
     val progress = remember { mutableFloatStateOf(0f) }
@@ -97,20 +107,24 @@ fun FloatingParticles(
                 val starLayouts = if (showStars) starStyles.map { style -> textMeasurer.measure(STAR_GLYPH, style) } else emptyList()
                 onDrawBehind {
                     val p = progress.floatValue
-                    for (index in 0 until ParticleMath.DOT_COUNT) {
+                    for (index in 0 until density.dotCount) {
                         val frame = ParticleMath.floating(index, seed, anchorPx, p, area)
                         val color = colorAt(colors, index)
                         if (frame.glow) {
                             drawCircle(
-                                color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA),
+                                color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA * density.accentAlphaScale),
                                 radius = frame.radiusPx * GLOW_RING_SCALE,
                                 center = frame.center,
                             )
                         }
-                        drawCircle(color.copy(alpha = frame.alpha), radius = frame.radiusPx, center = frame.center)
+                        drawCircle(
+                            color = color.copy(alpha = frame.alpha * density.accentAlphaScale),
+                            radius = frame.radiusPx,
+                            center = frame.center,
+                        )
                         // 珍珠高光（§12）：左上一点白，圆点即成光珠。
                         drawCircle(
-                            color = Color.White.copy(alpha = frame.alpha * 0.6f),
+                            color = Color.White.copy(alpha = frame.alpha * 0.6f * density.accentAlphaScale),
                             radius = frame.radiusPx * 0.28f,
                             center = frame.center - Offset(frame.radiusPx * 0.32f, frame.radiusPx * 0.32f),
                         )
@@ -125,8 +139,8 @@ fun FloatingParticles(
                             val centerY = STAR_ANCHORS[index].second * area.height + bob
                             drawText(
                                 textLayoutResult = layout,
-                                color = colorAt(colors, ParticleMath.DOT_COUNT + index),
-                                alpha = STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle,
+                                color = colorAt(colors, density.dotCount + index),
+                                alpha = (STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle) * density.accentAlphaScale,
                                 topLeft =
                                     Offset(
                                         centerX - layout.size.width / 2f,
@@ -146,8 +160,8 @@ fun FloatingParticles(
                                 orbit = anchorPx * 0.5f,
                                 petalRadius = anchorPx * 0.2f,
                                 rotation = p,
-                                color = colorAt(colors, ParticleMath.DOT_COUNT + ParticleMath.STAR_COUNT + fi),
-                                alpha = flowerAlpha,
+                                color = colorAt(colors, density.dotCount + ParticleMath.STAR_COUNT + fi),
+                                alpha = flowerAlpha * density.accentAlphaScale,
                             )
                         }
                     }

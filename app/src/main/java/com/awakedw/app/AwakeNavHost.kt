@@ -211,7 +211,7 @@ private fun navigateHomeAfterOnboarding(navController: NavController) {
  * 「我的」页 VM 工厂（SETTINGS_CHANGED 恰此一处触发重排）：
  * 经 EntryPoint 取真实图依赖，以主构造器装配 [SettingsViewModel]，
  * 把提醒总开关的副作用接缝接到 `scheduler.rescheduleFromNow(SETTINGS_CHANGED)`；
- * 「试一试」接缝（§11.4）发一条真实样子的提醒通知——NotifBuilder 不出 core:notification，
+ * 「测试提醒」接缝（§11.4）发一条真实样子的提醒通知——NotifBuilder 不出 core:notification，
  * 经 lambda 注入保持 feature 模块边界。双完成缝禁令：调度触发只此一处，别处不得重复调用。
  */
 @Suppress("ktlint:standard:function-naming")
@@ -230,7 +230,7 @@ private fun rememberSettingsViewModelFactory(): ViewModelProvider.Factory {
                     onRemindersChanged = { graph.scheduler().rescheduleFromNow(Reason.SETTINGS_CHANGED) },
                     onPostTestReminder = {
                         val notif = graph.notifBuilder()
-                        notif.post(notif.reminder(notif.currentSlot(), "试一试：到点的温柔提醒长这个样子 ♡"))
+                        notif.post(notif.reminder(notif.currentSlot(), "测试提醒：现在该喝水了"))
                     },
                 )
             }

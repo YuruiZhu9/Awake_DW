@@ -37,10 +37,10 @@ class CatLineTest {
     private val recentIdsKey = stringPreferencesKey(CopyPrefKeys.RECENT_COPY_IDS)
 
     @Test
-    fun `默认心意文案90句且每个时段30句`() {
-        assertEquals(30, DefaultCopies.morning.size)
-        assertEquals(30, DefaultCopies.day.size)
-        assertEquals(30, DefaultCopies.evening.size)
+    fun `默认心意文案108句且每个时段36句`() {
+        assertEquals(36, DefaultCopies.morning.size)
+        assertEquals(36, DefaultCopies.day.size)
+        assertEquals(36, DefaultCopies.evening.size)
         assertTrue(DefaultCopies.morning.all { it.isNotBlank() })
         assertTrue(DefaultCopies.day.all { it.isNotBlank() })
         assertTrue(DefaultCopies.evening.all { it.isNotBlank() })

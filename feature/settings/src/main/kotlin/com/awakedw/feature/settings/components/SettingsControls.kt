@@ -333,11 +333,12 @@ private fun ThemeChoiceCard(
 /** Theme option label. */
 internal fun themeLabel(choice: ThemeChoice): String =
     when (choice) {
-        ThemeChoice.FOLLOW_TIME -> "跟随时间"
-        ThemeChoice.FIXED_EMERALD -> "固定翡翠绿"
-        ThemeChoice.FIXED_STRAWBERRY -> "固定草莓雾光"
-        ThemeChoice.FIXED_CARAMEL -> "固定焦糖奶茶"
-        ThemeChoice.FIXED_NIGHT -> "固定深夜墨青"
+        ThemeChoice.FOLLOW_TIME -> "随时间"
+        ThemeChoice.FIXED_EMERALD -> "清晨薄荷"
+        ThemeChoice.FIXED_STRAWBERRY -> "午后藕荷"
+        ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
+        ThemeChoice.FIXED_NIGHT -> "深夜青黛"
+        ThemeChoice.FIXED_LAVENDER -> "雾紫玫瑰"
     }
 
 @Suppress("ktlint:standard:function-naming")
@@ -392,6 +393,7 @@ private fun themeIdOf(choice: ThemeChoice): ThemeId =
         ThemeChoice.FIXED_STRAWBERRY -> ThemeId.STRAWBERRY
         ThemeChoice.FIXED_CARAMEL -> ThemeId.CARAMEL
         ThemeChoice.FIXED_NIGHT -> ThemeId.NIGHT
+        ThemeChoice.FIXED_LAVENDER -> ThemeId.LAVENDER
         ThemeChoice.FOLLOW_TIME -> ThemeId.EMERALD
     }
 
@@ -401,6 +403,7 @@ private fun themePrimary(choice: ThemeChoice): Color =
         ThemeChoice.FIXED_STRAWBERRY -> ThemeById.getValue(ThemeId.STRAWBERRY).primary
         ThemeChoice.FIXED_CARAMEL -> ThemeById.getValue(ThemeId.CARAMEL).primary
         ThemeChoice.FIXED_NIGHT -> ThemeById.getValue(ThemeId.NIGHT).primary
+        ThemeChoice.FIXED_LAVENDER -> ThemeById.getValue(ThemeId.LAVENDER).primary
         ThemeChoice.FOLLOW_TIME -> ThemeById.getValue(ThemeId.EMERALD).primary
     }
 

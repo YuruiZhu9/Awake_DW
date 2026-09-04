@@ -90,9 +90,9 @@ class CatFigureTest {
 
     @Test
     fun `三态立绘资产路径映射`() {
-        assertEquals("cat/idle.webp", catAssetFileOf(CatMood.IDLE))
-        assertEquals("cat/happy.webp", catAssetFileOf(CatMood.HAPPY))
-        assertEquals("cat/sleepy.webp", catAssetFileOf(CatMood.SLEEPY))
+        assertEquals("cat/beforedrink.png", catAssetFileOf(CatMood.IDLE))
+        assertEquals("cat/afterdrink.png", catAssetFileOf(CatMood.HAPPY))
+        assertEquals("cat/beforedrink.png", catAssetFileOf(CatMood.SLEEPY))
     }
 
     // ---------- 布偶猫矢量兜底：固定色板纯函数 ----------

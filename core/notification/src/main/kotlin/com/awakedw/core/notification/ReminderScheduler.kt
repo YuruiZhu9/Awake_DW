@@ -23,7 +23,7 @@ enum class Reason {
     LOGGED,
 }
 
-/** 温柔提醒调度器：以「现在」为基准重算下一点并写 AlarmManager（null = 今日不再排程，取消收尾）。 */
+/** 喝水提醒调度器：以「现在」为基准重算下一点并写 AlarmManager（null = 今日不再排程，取消收尾）。 */
 interface ReminderScheduler {
     fun rescheduleFromNow(reason: Reason)
 

@@ -40,8 +40,8 @@ class MainActivityColdBootTest {
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
 
-        composeRule.onNodeWithText("为了让每一次温柔准时抵达").assertIsDisplayed()
-        composeRule.onNodeWithText("去设置 ♡").assertIsDisplayed()
+        composeRule.onNodeWithText("让提醒按时到达").assertIsDisplayed()
+        composeRule.onNodeWithText("打开设置").assertIsDisplayed()
     }
 
     @Test

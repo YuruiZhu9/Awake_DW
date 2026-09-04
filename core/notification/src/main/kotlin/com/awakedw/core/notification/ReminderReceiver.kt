@@ -8,7 +8,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
 
 /**
- * 闹钟到点：按当前时段抽一句文案发「温柔提醒」，随后链式排下一点
+ * 闹钟到点：按当前时段抽一句文案发「喝水提醒」，随后链式排下一点
  * （若当日已达标，重算返回 null 即短路取消）。
  *
  * goAsync 加固：落库前读设置、文案抽取与重排均在注入的接收器作用域（IO）内完成，

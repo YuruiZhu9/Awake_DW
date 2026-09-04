@@ -1,10 +1,10 @@
 package com.awakedw.core.designsystem
 
 /**
- * 四主题中国色十六进制锚点表（ARGB Long，0xFFxxxxxx 表示不透明）。
+ * 五主题视觉色板锚点表（ARGB Long，0xFFxxxxxx 表示不透明）。
  *
- * v0.2 中国色再映射（moodboard §4）：清晨天水碧系 / 午后藕荷系 / 黄昏奶茶棕褐系 /
- * 深夜青黛系，常量名为主题拼音 + 角色后缀，注释标注中国传统色名。
+ * v0.3 主题色板（moodboard §4）：清晨天水碧系 / 午后藕荷系 / 黄昏奶茶棕褐系 /
+ * 深夜青黛系 / 雾紫玫瑰系，常量名为主题拼音 + 角色后缀。
  * 供 [ThemePaletteTest] 做防漂移快照断言；组件层的 androidx Color 均由这些
  * 常量转换而来。纯 JVM 常量，不依赖任何 Android 类。
  *
@@ -161,6 +161,41 @@ object ThemePalette {
     const val SHENYE_PARTICLE_4 = 0xFF31424C // 鸦青·深
 
     // ------------------------------------------------------------------
+    // E · 雾紫玫瑰系（ThemeId.LAVENDER，固定外观主题）
+    // ------------------------------------------------------------------
+
+    /** 背景渐变：#FBF9FE → #F1ECFA → #E4D9F2（低饱和紫灰纸面） */
+    const val LAVENDER_BG_1 = 0xFFFBF9FE // 雾紫·纸白
+    const val LAVENDER_BG_2 = 0xFFF1ECFA // 雾紫·浅
+    const val LAVENDER_BG_3 = 0xFFE4D9F2 // 雾紫·底
+
+    /** 主色（进度环/强调）：#8C6BB1 柔紫 */
+    const val LAVENDER_PRIMARY = 0xFF8C6BB1 // 柔紫·强调锚
+
+    /** 进度环轨道：#D9CDEB */
+    const val LAVENDER_RING_TRACK = 0xFFD9CDEB // 雾紫·浅轨道
+
+    /** 环心数值文字：#6F548E */
+    const val LAVENDER_RING_VALUE_TEXT = 0xFF6F548E // 柔紫·深
+
+    /** 问候语文字：#5C476F（副 #9A87AB） */
+    const val LAVENDER_GREETING = 0xFF5C476F // 柔紫·文字
+    const val LAVENDER_GREETING_SUB = 0xFF9A87AB // 雾紫·灰
+
+    /** 按钮（线性渐变）：#8061A8 → #A98CC5 */
+    const val LAVENDER_BUTTON_TOP = 0xFF8061A8 // 柔紫·深
+    const val LAVENDER_BUTTON_BOTTOM = 0xFFA98CC5 // 雾紫·亮
+
+    /** 徽章底/字：#E9E0F4 / #6F548E */
+    const val LAVENDER_CHIP_BG = 0xFFE9E0F4 // 雾紫·纸面
+    const val LAVENDER_CHIP_TEXT = 0xFF6F548E // 柔紫·文字
+
+    /** 粒子色族：柔紫 → 纸白 */
+    const val LAVENDER_PARTICLE_1 = 0xFF8C6BB1
+    const val LAVENDER_PARTICLE_2 = 0xFFA388C2
+    const val LAVENDER_PARTICLE_3 = 0xFFC0ABD5
+    const val LAVENDER_PARTICLE_4 = 0xFFD4C4E5
+    // ------------------------------------------------------------------
     // 洛丽塔配饰层（§12）：蕾丝线按主题派生，描金为共享软香槟金；
     // 深夜蕾丝改锚「暗银」，与描金成暗银描金（moodboard §4）
     // ------------------------------------------------------------------
@@ -179,7 +214,10 @@ object ThemePalette {
      */
     const val SHENYE_LACE = 0xFF525C72 // 暗银·提亮
 
-    /** 描金：软香槟金（蝴蝶结中结），四主题共用 #D9B98A */
+    /** 蕾丝线：雾紫玫瑰（冷白紫）#E2D3EF */
+    const val LAVENDER_LACE = 0xFFE2D3EF // 雾紫·蕾丝
+
+    /** 描金：软香槟金（蝴蝶结中结），五主题共用 #D9B98A */
     const val GOLD_TRIM = 0xFFD9B98A
 
     /** 主色底字色（P2-4）：深暖褐 #3E322B——两浅色主题（清晨/午后）的按钮渐变与

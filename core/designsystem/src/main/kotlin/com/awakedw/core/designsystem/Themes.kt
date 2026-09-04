@@ -127,6 +127,36 @@ val NightThemeSpec: ThemeSpec =
         laceColor = Color(ThemePalette.SHENYE_LACE),
     )
 
+/** E · 雾紫玫瑰系（ThemeId.LAVENDER，固定外观主题）：低饱和紫灰与粉蓝素材相呼应。 */
+val LavenderThemeSpec: ThemeSpec =
+    ThemeSpec(
+        id = ThemeId.LAVENDER,
+        backgroundGradient =
+            listOf(
+                Color(ThemePalette.LAVENDER_BG_1),
+                Color(ThemePalette.LAVENDER_BG_2),
+                Color(ThemePalette.LAVENDER_BG_3),
+            ),
+        primary = Color(ThemePalette.LAVENDER_PRIMARY),
+        ringTrack = Color(ThemePalette.LAVENDER_RING_TRACK),
+        ringValueText = Color(ThemePalette.LAVENDER_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.LAVENDER_GREETING),
+        greetingSubColor = Color(ThemePalette.LAVENDER_GREETING_SUB),
+        buttonTop = Color(ThemePalette.LAVENDER_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.LAVENDER_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.LAVENDER_CHIP_BG),
+        chipText = Color(ThemePalette.LAVENDER_CHIP_TEXT),
+        particleColors =
+            listOf(
+                Color(ThemePalette.LAVENDER_PARTICLE_1),
+                Color(ThemePalette.LAVENDER_PARTICLE_2),
+                Color(ThemePalette.LAVENDER_PARTICLE_3),
+                Color(ThemePalette.LAVENDER_PARTICLE_4),
+            ),
+        haloColor = Color(ThemePalette.LAVENDER_PRIMARY),
+        laceColor = Color(ThemePalette.LAVENDER_LACE),
+    )
+
 /** ThemeId → 主题规格 的全覆盖查找表。 */
 val ThemeById: Map<ThemeId, ThemeSpec> =
     mapOf(
@@ -134,4 +164,5 @@ val ThemeById: Map<ThemeId, ThemeSpec> =
         StrawberryThemeSpec.id to StrawberryThemeSpec,
         CaramelThemeSpec.id to CaramelThemeSpec,
         NightThemeSpec.id to NightThemeSpec,
+        LavenderThemeSpec.id to LavenderThemeSpec,
     )

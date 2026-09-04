@@ -15,8 +15,8 @@ import java.time.Instant
 import javax.inject.Inject
 
 /**
- * 「温柔提醒」通知构建（§4.3）：低重要性渠道「温柔提醒」，时段标题映射，
- * 动作「喝啦 💧」指向 [RecordingBroadcast]；打卡后以「记好啦 ♡」+ 2 秒自清更新同 id 通知。
+ * 「喝水提醒」通知构建（§4.3）：低重要性渠道「喝水提醒」，时段标题映射，
+ * 动作「记一杯」指向 [RecordingBroadcast]；打卡后以「已记一杯」+ 2 秒自清更新同 id 通知。
  */
 class NotifBuilder
     @Inject
@@ -63,7 +63,7 @@ class NotifBuilder
                 .build()
         }
 
-        /** 打卡回执通知：同 id 更新为「记好啦 ♡」，2 秒后自动撤销。 */
+        /** 打卡回执通知：同 id 更新为「已记一杯」，2 秒后自动撤销。 */
         fun loggedAck(): Notification =
             baseBuilder()
                 .setContentTitle(titleOf(currentSlot()))
@@ -76,7 +76,7 @@ class NotifBuilder
                 .setSmallIcon(R.drawable.ic_notification_drop)
                 .setAutoCancel(true)
 
-        /** 「喝啦 💧」动作的落点：同步记一杯并更新通知。 */
+        /** 「记一杯」动作的落点：同步记一杯并更新通知。 */
         private fun logWaterIntent(): PendingIntent =
             PendingIntent.getBroadcast(
                 context,
@@ -89,12 +89,12 @@ class NotifBuilder
 
         companion object {
             const val CHANNEL_ID = "gentle_reminder"
-            const val CHANNEL_NAME = "温柔提醒"
+            const val CHANNEL_NAME = "喝水提醒"
 
             /** 全链路固定通知 id：提醒与打卡回执共用，实现「更新」而非叠加。 */
             const val NOTIFICATION_ID = 2001
-            const val ACTION_LOG_WATER = "喝啦 💧"
-            const val LOGGED_TEXT = "记好啦 ♡"
+            const val ACTION_LOG_WATER = "记一杯"
+            const val LOGGED_TEXT = "已记一杯"
             const val ACK_TIMEOUT_MS = 2_000L
             private const val ACTION_REQUEST_CODE = 2002
             private const val OPEN_APP_REQUEST_CODE = 2003
@@ -103,7 +103,7 @@ class NotifBuilder
             fun titleOf(slot: TimeSlot): String =
                 when (slot) {
                     TimeSlot.MORNING -> "早安 ☀"
-                    TimeSlot.DAY -> "午后啦 ☀"
+                    TimeSlot.DAY -> "下午好 ☀"
                     TimeSlot.EVENING -> "晚上好 🌙"
                 }
         }

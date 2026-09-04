@@ -38,6 +38,6 @@ interface CopyLibraryRepository {
         index: Int,
     )
 
-    /** 整库恢复默认 90 句并清空去重池。 */
+    /** 整库恢复默认 108 句并清空去重池。 */
     suspend fun resetToDefaults()
 }

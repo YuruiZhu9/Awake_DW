@@ -28,7 +28,7 @@ internal fun greetingFor(slot: TimeSlot): String =
     when (slot) {
         TimeSlot.MORNING -> "早安，先喝一口水"
         TimeSlot.DAY -> "今天也请清清爽爽"
-        TimeSlot.EVENING -> "晚上好，今天辛苦啦"
+        TimeSlot.EVENING -> "晚上好，今天辛苦了"
     }
 
 /** 日期副行：达标前「距离目标还有 Yml」，达标后「已完成 X%」（规格 §3.2 示例）。 */

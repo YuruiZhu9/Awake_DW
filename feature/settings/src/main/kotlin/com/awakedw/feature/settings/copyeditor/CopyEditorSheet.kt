@@ -52,15 +52,15 @@ private data class GroupMeta(
 
 private val GROUPS: List<GroupMeta> =
     listOf(
-        GroupMeta(TimeSlot.MORNING, "早安"),
-        GroupMeta(TimeSlot.DAY, "午后"),
-        GroupMeta(TimeSlot.EVENING, "晚安"),
+        GroupMeta(TimeSlot.MORNING, "早上"),
+        GroupMeta(TimeSlot.DAY, "白天"),
+        GroupMeta(TimeSlot.EVENING, "晚上"),
     )
 
 /**
  * 「心意文案库」分区卡（§3.4）：早/午/晚三个可折叠分组；条目点击弹编辑对话框
  * （TextField ≤ [COPY_MAX_CHARS] 字）、长按删除；组内「＋ 新增一句」；
- * 右上「恢复默认文案」带确认 Dialog。全部改动即时落库，无保存键。
+ * 右上「恢复默认」带确认 Dialog。全部改动即时落库，无保存键。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -83,7 +83,7 @@ internal fun CopyLibrarySection(
                 Text(text = "心意文案库", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
                 // P3-6：删除/编辑说明一句放在分区头部，不再每条句子尾随常驻「长按删除」小字。
                 Text(
-                    text = "喝水反馈与胆大王回应都从这里抽取 · 点一下编辑，长按删除",
+                    text = "喝水提示和猫咪回应都从这里取用 · 点按编辑，长按删除",
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -96,7 +96,7 @@ internal fun CopyLibrarySection(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "恢复默认文案",
+                    text = "恢复默认",
                     color = spec.primary,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -132,8 +132,8 @@ internal fun CopyLibrarySection(
 
     if (resetConfirming) {
         ConfirmDialog(
-            title = "恢复默认文案",
-            body = "会把所有句子换回出厂默认，现在改过的就不留了，确定吗？",
+            title = "恢复默认",
+            body = "现在的内容会被替换成默认文案。继续吗？",
             confirmLabel = "恢复默认",
             onConfirm = {
                 onReset()
@@ -201,7 +201,7 @@ private fun CopyGroup(
                 )
                 if (items.isEmpty()) {
                     Text(
-                        text = "这里还空着，加一句吧",
+                        text = "还没有内容，添加一句吧",
                         color = spec.greetingSubColor,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -255,7 +255,7 @@ private fun CopyEditDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = DIALOG_SHAPE, color = spec.chipBg, modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(text = "编辑这一句", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
+                Text(text = "编辑这句话", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
                 BasicTextField(
                     value = text,
                     onValueChange = { next -> if (next.length <= COPY_MAX_CHARS) text = next },
@@ -265,7 +265,7 @@ private fun CopyEditDialog(
                         Box {
                             if (text.isEmpty()) {
                                 Text(
-                                    text = "写一句温柔的话…",
+                                    text = "写一句简单的话…",
                                     color = spec.greetingSubColor,
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
@@ -301,7 +301,7 @@ private fun CopyEditDialog(
     }
 }
 
-/** 通用确认对话框（「恢复默认文案」用）。 */
+/** 通用确认对话框（「恢复默认」用）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun ConfirmDialog(

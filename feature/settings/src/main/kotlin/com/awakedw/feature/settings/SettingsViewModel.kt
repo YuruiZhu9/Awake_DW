@@ -24,7 +24,7 @@ import javax.inject.Inject
 /** 心意文案单句的最大字数（编辑对话框 TextField 同步限长）。 */
 const val COPY_MAX_CHARS = 40
 
-/** 「试一试」发送回显的停留时长。 */
+/** 「测试提醒」发送回显的停留时长。 */
 const val TEST_SENT_HOLD_MS = 2_500L
 
 /** 「我的」页一屏状态：设置快照 + 文案库快照 + 引导完成标记 + 提醒透明化状态（§11.3）。 */
@@ -36,7 +36,7 @@ data class SettingsUiState(
     val reminderStatusLabel: String = "",
     /** 当前是否有有效排程（状态行圆点取色用）。 */
     val reminderArmed: Boolean = false,
-    /** 「试一试」刚发送的短暂回显窗口。 */
+    /** 「测试提醒」刚发送的短暂回显窗口。 */
     val testReminderSent: Boolean = false,
     /** 音效总开关（任务 12，默认开）：切换即乐观更新 + prefs 落库；系统静音时播放器自行安静。 */
     val soundEnabled: Boolean = true,
@@ -198,7 +198,7 @@ class SettingsViewModel(
         viewModelScope.launch { copies.resetToDefaults() }
     }
 
-    /** 「试一试」（§11.4）：立即发一条真实样子的提醒通知；发送后短暂回显确认。 */
+    /** 「测试提醒」（§11.4）：立即发一条真实样子的提醒通知；发送后短暂回显确认。 */
     fun testReminder() {
         onPostTestReminder()
         _uiState.update { it.copy(testReminderSent = true) }
@@ -211,16 +211,16 @@ class SettingsViewModel(
     /** 提醒状态行重算（§11.3）：与调度器同一纯函数，不写闹钟。 */
     private suspend fun refreshReminderStatus(settings: UserSettings) {
         if (!settings.remindersEnabled) {
-            _uiState.update { it.copy(reminderStatusLabel = "提醒已关闭 · 到点不会打扰", reminderArmed = false) }
+            _uiState.update { it.copy(reminderStatusLabel = "提醒已关闭 · 暂时不提醒", reminderArmed = false) }
             return
         }
         val achieved = water.todayStats().totalMl >= settings.goalMl
         val fire = NextReminderCalculator.nextFire(settings, clock, achieved)
         val label =
             when {
-                fire != null -> "下一次 · 今天 " + TIME_OF_DAY.format(Instant.ofEpochMilli(fire).atZone(clock.zone()))
-                achieved -> "今日已达标 · 明天继续"
-                else -> "今日窗口已过 · 明天继续"
+                fire != null -> "下一次提醒 · 今天 " + TIME_OF_DAY.format(Instant.ofEpochMilli(fire).atZone(clock.zone()))
+                achieved -> "今天的目标已完成 · 明天继续"
+                else -> "今天的提醒时段已结束 · 明天再提醒"
             }
         _uiState.update { it.copy(reminderStatusLabel = label, reminderArmed = fire != null) }
     }

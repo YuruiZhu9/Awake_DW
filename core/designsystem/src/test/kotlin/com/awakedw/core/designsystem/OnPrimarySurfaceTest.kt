@@ -52,7 +52,7 @@ class OnPrimarySurfaceTest {
     @Test
     fun `焦糖棕褐主题使用白字其余浅色主题使用深暖褐`() {
         assertEquals(Color.White, onPrimarySurface(CaramelThemeSpec))
-        listOf(EmeraldThemeSpec, StrawberryThemeSpec).forEach { spec ->
+        listOf(EmeraldThemeSpec, StrawberryThemeSpec, LavenderThemeSpec).forEach { spec ->
             assertEquals(Color(ThemePalette.ON_PRIMARY_SURFACE), onPrimarySurface(spec))
         }
     }

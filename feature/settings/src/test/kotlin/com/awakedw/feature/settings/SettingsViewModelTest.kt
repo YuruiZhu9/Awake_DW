@@ -305,7 +305,7 @@ class SettingsViewModelTest {
         val h = harness()
 
         // 默认设置：12:00 在 08:00–22:30 窗内、间隔 90 分钟 → 下一次 13:30。
-        assertEquals("下一次 · 今天 13:30", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals("下一次提醒 · 今天 13:30", h.viewModel.uiState.value.reminderStatusLabel)
         assertEquals(true, h.viewModel.uiState.value.reminderArmed)
     }
 
@@ -315,7 +315,7 @@ class SettingsViewModelTest {
 
         h.viewModel.setRemindersEnabled(false)
 
-        assertEquals("提醒已关闭 · 到点不会打扰", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals("提醒已关闭 · 暂时不提醒", h.viewModel.uiState.value.reminderStatusLabel)
         assertEquals(false, h.viewModel.uiState.value.reminderArmed)
     }
 
@@ -327,7 +327,7 @@ class SettingsViewModelTest {
         // 设置流再发一次（任意合法变更）触发状态重算。
         h.viewModel.setIntervalMin(60)
 
-        assertEquals("今日已达标 · 明天继续", h.viewModel.uiState.value.reminderStatusLabel)
+        assertEquals("今天的目标已完成 · 明天继续", h.viewModel.uiState.value.reminderStatusLabel)
         assertEquals(false, h.viewModel.uiState.value.reminderArmed)
     }
 

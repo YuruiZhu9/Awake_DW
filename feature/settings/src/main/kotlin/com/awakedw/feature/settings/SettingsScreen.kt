@@ -47,8 +47,10 @@ import com.awakedw.core.designsystem.SurfaceContentPadding
 import com.awakedw.core.designsystem.SurfaceCornerRadius
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.feature.settings.components.IntervalChipsRow
 import com.awakedw.feature.settings.components.StepperRow
 import com.awakedw.feature.settings.components.ThemeChoiceChips
@@ -76,7 +78,7 @@ private const val SETTINGS_PARTICLE_SEED = 13L
  * 背景为全局渐变底座 + 漂浮粒子（规格 §2.2，与其他各屏同一份主题呼吸）。
  * 所有变更经 [SettingsViewModel] 即时持久化，无保存键。
  *
- * [onOpenWhitelistGuide] 为「省电白名单引导」整行点击的出口：
+ * [onOpenWhitelistGuide] 为「让提醒更稳定」整行点击的出口：
  * 路由跳转由导航壳（集成任务）接线，本层不感知 NavHost。
  */
 @Suppress("ktlint:standard:function-naming")
@@ -90,7 +92,7 @@ fun SettingsScreen(
     val spec = currentThemeSpec()
     val context = LocalContext.current
 
-    // 「试一试」的通知权限引导（§11.4）：Android 13+ 未授权先弹系统请求，授权后立即试发。
+    // 「测试提醒」的通知权限引导（§11.4）：Android 13+ 未授权先弹系统请求，授权后立即试发。
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) viewModel.testReminder()
@@ -109,12 +111,14 @@ fun SettingsScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
             seed = SETTINGS_PARTICLE_SEED,
             showStars = false,
             showFlowers = false,
+            density = ParticleDensity.QUIET,
         )
 
         Column(
@@ -133,14 +137,14 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = "目标、提醒与外观偏好",
+                    text = "喝水、提醒与外观设置",
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
             LolitaRule(modifier = Modifier.padding(horizontal = 18.dp))
 
-            SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {
+            SettingsCard(title = "目标", subtitle = "设置每天的目标量和每杯容量") {
                 // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
                 StepperRow(
                     label = "每日目标量",
@@ -162,7 +166,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsCard(title = "提醒", subtitle = "在我清醒的时间里轻轻叫一声") {
+            SettingsCard(title = "提醒", subtitle = "在清醒时段提醒我喝水") {
                 ReminderStatusRow(
                     statusLabel = state.reminderStatusLabel,
                     armed = state.reminderArmed,
@@ -170,7 +174,7 @@ fun SettingsScreen(
                     onTest = { tryTestReminder(viewModel) },
                 )
                 ToggleRow(
-                    label = "温柔提醒",
+                    label = "喝水提醒",
                     checked = settings.remindersEnabled,
                     onCheckedChange = viewModel::setRemindersEnabled,
                 )
@@ -182,7 +186,7 @@ fun SettingsScreen(
                 IntervalChipsRow(selectedMin = settings.intervalMin, onSelect = viewModel::setIntervalMin)
             }
 
-            SettingsCard(title = "外观", subtitle = "跟随时段流转，或停在最喜欢的颜色") {
+            SettingsCard(title = "外观", subtitle = "选择喜欢的颜色，或跟随时间变化") {
                 ThemeChoiceChips(
                     selected = settings.themeChoice,
                     onSelect = viewModel::setThemeChoice,
@@ -192,7 +196,7 @@ fun SettingsScreen(
             SettingsCard(title = "声音", subtitle = null) {
                 ToggleRow(
                     label = "音效",
-                    supporting = "水滴与八音盒；系统静音时自动安静",
+                    supporting = "播放轻柔提示音，系统静音时不播放",
                     checked = state.soundEnabled,
                     onCheckedChange = viewModel::setSoundEnabled,
                 )
@@ -287,7 +291,7 @@ private fun LaceTrim(
     }
 }
 
-/** 提醒透明化状态行（§11.3/11.4）：状态圆点 + 文案 + 「试一试」即时验证入口。 */
+/** 提醒透明化状态行（§11.3/11.4）：状态圆点 + 文案 + 「测试提醒」即时验证入口。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun ReminderStatusRow(
@@ -321,7 +325,7 @@ private fun ReminderStatusRow(
         )
         if (testSent) {
             Text(
-                text = "已发送，看看通知栏 ♪",
+                text = "提醒已发出 · 去通知栏看看",
                 color = spec.primary,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
@@ -338,7 +342,7 @@ private fun ReminderStatusRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "试一试",
+                    text = "测试提醒",
                     color = spec.primary,
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -369,9 +373,9 @@ private fun GuideEntryRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
             Column {
-                Text(text = "省电白名单引导", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
+                Text(text = "让提醒更稳定", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = "打开它，提醒会更可靠一点",
+                    text = "打开系统设置，允许后台提醒",
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
                 )

@@ -1,6 +1,7 @@
 package com.awakedw.core.designsystem.art
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,10 +13,14 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/** 资源装载的最长边上限：足够支撑全屏氛围图，也避免原始大图占满内存。 */
+private const val MAX_DECODE_DIMENSION_PX = 1024
+
 /**
  * 读 assets 位图；缺失/解码失败返回 null（调用方回退，绝不抛异常）。内部用 [Dispatchers.IO]。
  *
- * 供 [rememberAssetImageOrN] 在组合内调用；也可在挂起环境直接使用。
+ * 供 [rememberAssetImageOrN] 在组合内调用；也可在挂起环境直接使用。先读尺寸再按需采样，
+ * 猫咪小图和全屏 Lolita 氛围图都不会以原始超大尺寸长期驻留内存。
  */
 internal suspend fun loadAssetBitmap(
     context: Context,
@@ -23,12 +28,34 @@ internal suspend fun loadAssetBitmap(
 ): ImageBitmap? =
     withContext(Dispatchers.IO) {
         runCatching {
-            context.assets.open(assetFile).use { input ->
-                val bytes = input.readBytes()
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-            }
+            val bytes = context.assets.open(assetFile).use { it.readBytes() }
+            decodeSampled(bytes)?.asImageBitmap()
         }.getOrNull()
     }
+
+private fun decodeSampled(bytes: ByteArray): Bitmap? {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+    val options =
+        BitmapFactory.Options().apply {
+            inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight)
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+}
+
+private fun sampleSizeFor(
+    width: Int,
+    height: Int,
+): Int {
+    var sample = 1
+    while (width / (sample * 2) >= MAX_DECODE_DIMENSION_PX || height / (sample * 2) >= MAX_DECODE_DIMENSION_PX) {
+        sample *= 2
+    }
+    return sample
+}
 
 /**
  * 探测 assets 中是否存在 [assetFile]：按目录拆分后用 `assets.list()` 探测存在与否。
@@ -62,9 +89,7 @@ fun nightVariantOf(assetFile: String): String {
     }
 }
 
-/**
- * 夜变体解析：夜间图（[nightVariantOf] 映射结果）在 assets 中存在则用之，否则原文件。
- */
+/** 夜变体解析：夜间图（[nightVariantOf] 映射结果）在 assets 中存在则用之，否则原文件。 */
 fun nightVariantOf(
     context: Context,
     assetFile: String,
@@ -80,9 +105,8 @@ fun nightVariantOf(
  * 实现注记：等价于 `produceState` 的展开写法（unkeyed `remember { mutableStateOf }` +
  * keyed [LaunchedEffect]）——语义逐点一致：state 实例跨键保留（换图期间旧图保持上屏，
  * 不闪空帧）、键变化取消旧装载并重启、IO 调度、缺失回退 null。弃用 `produceState`
- * 是因为本工具链（Kotlin 2.0.21 K2 UAST）下 Compose runtime lint 的
- * ProduceStateDoesNotAssignValue 无法解析 lambda 接收者上的 `value =` 赋值
- * （多形态实测均误报，含「收 state 参数函数」的官方豁免路径），展开写法无此问题。
+ * 是因为当前工具链下 Compose runtime lint 对 lambda 接收者上的 `value =` 赋值会误报，
+ * 展开写法无此问题。
  */
 @Composable
 fun rememberAssetImageOrN(assetFile: String): ImageBitmap? {

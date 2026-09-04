@@ -28,6 +28,7 @@ import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.feature.stats.components.TodayTimeline
@@ -45,6 +46,7 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
