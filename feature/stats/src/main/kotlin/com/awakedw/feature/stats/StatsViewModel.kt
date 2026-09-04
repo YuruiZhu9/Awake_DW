@@ -29,6 +29,7 @@ private const val WEEK_DAYS = 7
 
 /** 徽章行三枚 chip 的数据（规格 §3.3 第 1 条）。 */
 data class StatsBadges(
+    val totalMl: Int,
     val cupCount: Int,
     val avgIntervalLabel: String,
 )
@@ -38,7 +39,7 @@ data class StatsBadges(
  * [bars] 末列为今天（仓储契约：weekBars 含今天）；[timeline] 为空时页面展示空态文案。
  */
 data class StatsUiState(
-    val badges: StatsBadges = StatsBadges(cupCount = 0, avgIntervalLabel = DASH_LABEL),
+    val badges: StatsBadges = StatsBadges(totalMl = 0, cupCount = 0, avgIntervalLabel = DASH_LABEL),
     val bars: List<WeekBar> = emptyList(),
     val goalMl: Int = DEFAULT_GOAL_ML,
     val timeline: List<WaterRecord> = emptyList(),
@@ -73,6 +74,7 @@ class StatsViewModel
                 it.copy(
                     badges =
                         StatsBadges(
+                            totalMl = stats.totalMl,
                             cupCount = stats.cupCount,
                             avgIntervalLabel = IntervalLabel.format(stats.avgIntervalMin),
                         ),

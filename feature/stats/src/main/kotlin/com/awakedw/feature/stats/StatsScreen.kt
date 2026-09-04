@@ -110,6 +110,11 @@ private fun StatsOverview(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         StatsFact(
+            label = "今日饮水",
+            value = "${badges.totalMl}ml",
+            description = "今日饮水 ${badges.totalMl}ml",
+        )
+        StatsFact(
             label = "今日记录",
             value = "${badges.cupCount} 杯",
             description = "今日记录 ${badges.cupCount} 杯",

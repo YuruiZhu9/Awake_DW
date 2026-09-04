@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -352,5 +352,5 @@ private val BOTTOM_TABS: List<BottomTab> =
     listOf(
         BottomTab(AwakeDestination.Home, Icons.Rounded.WaterDrop, "首页"),
         BottomTab(AwakeDestination.Stats, Icons.Rounded.BarChart, "统计"),
-        BottomTab(AwakeDestination.Settings, Icons.Rounded.Favorite, "我的"),
+        BottomTab(AwakeDestination.Settings, Icons.Rounded.Tune, "我的"),
     )

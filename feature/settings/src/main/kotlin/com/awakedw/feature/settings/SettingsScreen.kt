@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -323,18 +324,25 @@ private fun ReminderStatusRow(
                 text = "已发送，看看通知栏 ♪",
                 color = spec.primary,
                 style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
             )
         } else {
-            Text(
-                text = "试一试",
-                color = spec.primary,
-                style = MaterialTheme.typography.labelLarge,
+            Box(
                 modifier =
-                    Modifier.clickable {
-                        view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                        onTest()
-                    }.padding(start = 12.dp),
-            )
+                    Modifier
+                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                            onTest()
+                        },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "试一试",
+                    color = spec.primary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
         }
     }
 }

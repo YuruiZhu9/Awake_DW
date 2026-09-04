@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -86,12 +88,19 @@ internal fun CopyLibrarySection(
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
-            Text(
-                text = "恢复默认文案",
-                color = spec.primary,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.clickable(onClick = { resetConfirming = true }),
-            )
+            Box(
+                modifier =
+                    Modifier
+                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                        .clickable(onClick = { resetConfirming = true }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "恢复默认文案",
+                    color = spec.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
         Spacer(Modifier.padding(top = 6.dp))
         GROUPS.forEach { group ->
@@ -160,7 +169,7 @@ private fun CopyGroup(
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable(onClick = { expanded = !expanded }),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = { expanded = !expanded }),
             ) {
                 Text(text = label, color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.padding(start = 6.dp))
@@ -188,7 +197,7 @@ private fun CopyGroup(
                         Modifier
                             .fillMaxWidth()
                             .clickable(onClick = onAdd)
-                            .padding(bottom = 6.dp),
+                            .padding(vertical = 10.dp),
                 )
                 if (items.isEmpty()) {
                     Text(

@@ -90,8 +90,8 @@ private val CAT_POCKET_DIAMETER = 120.dp
 
 /**
  * 胆大王落角的边距（布局审计 P1-1 + 审查修复几何重定位）：底部 leading 角，落进居中簇下方的空带——
- * 内容列尾呼吸 112dp 使「记一杯」按钮（距底 112–170）与快捷胶囊行（182–212）整带高于猫盒；
- * bottom 8dp 使猫盒（y≈8–104）与按钮带下缘 112 保持 8dp 互斥余量，且簇距底固定、滚动任何位置都不变。
+ * 内容列尾呼吸 132dp 使「记一杯」与 48dp 快捷量行整体高于猫盒；
+ * bottom 8dp 使猫盒（y≈8–104）与按钮带下缘 132 保持 20dp 互斥余量，且簇距底固定、滚动任何位置都不变。
  * start 4dp，猫钉在列首不随气泡变宽右移。
  */
 private val CAT_CORNER_PADDING = PaddingValues(start = 4.dp, bottom = 8.dp)
@@ -102,9 +102,9 @@ private val PRAISE_LINE_DROP = 12.dp
 /**
  * 内容列尾呼吸（布局审计 P1-7 + 审查修复）：整列可滚后列尾固定留白，给「记一杯」按钮与猫角收尾
  * （≈快捷胶囊行 30 + 间距 12 + 按钮 58 + 猫带互斥余量 12 的满滚抵底 clearance——
- * 该值同时决定居中簇距底 112dp 起，与猫盒上缘 104dp 保持 8dp 互斥，见 [CAT_CORNER_PADDING]）。
+ * 该值同时为滚动到底态的操作组保留 20dp 视觉余量，与猫盒上缘保持互斥。
  */
-private val CONTENT_TAIL_BREATHING = 112.dp
+private val CONTENT_TAIL_BREATHING = 132.dp
 
 /**
  * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,

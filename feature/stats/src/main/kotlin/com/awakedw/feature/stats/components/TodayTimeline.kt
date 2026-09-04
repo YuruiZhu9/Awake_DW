@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
@@ -68,7 +70,23 @@ internal fun TodayTimeline(
         }
     } else {
         val spec = currentThemeSpec()
-        Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ROW_SPACING)) {
+        Column(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .drawBehind {
+                        if (records.size > 1) {
+                            val x = DROP_DOT_SIZE.toPx() / 2f
+                            drawLine(
+                                color = spec.laceColor.copy(alpha = 0.42f),
+                                start = Offset(x, DROP_DOT_SIZE.toPx() / 2f),
+                                end = Offset(x, size.height - DROP_DOT_SIZE.toPx() / 2f),
+                                strokeWidth = 1.dp.toPx(),
+                            )
+                        }
+                    },
+            verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
+        ) {
             records.forEachIndexed { index, record ->
                 FadeUpOnce(delayMillis = minOf(index, ROW_ENTRANCE_MAX_STAGGERED) * ROW_ENTRANCE_STAGGER_MS) {
                     TimelineRow(record = record, spec = spec)

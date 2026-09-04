@@ -89,6 +89,7 @@ class StatsViewModelTest {
             h.water.seedToday(60, 30)
             runCurrent()
             val badges = h.viewModel.uiState.value.badges
+            assertEquals(750, badges.totalMl)
             assertEquals(3, badges.cupCount)
             assertEquals("45 分钟", badges.avgIntervalLabel)
         }
