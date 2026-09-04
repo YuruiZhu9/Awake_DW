@@ -1,10 +1,18 @@
 package com.awakedw.feature.home.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,11 +50,36 @@ internal fun HomeActionDeck(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(
-                text = "记录饮水",
-                color = spec.greetingSubColor,
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .width(18.dp)
+                            .height(1.dp)
+                            .background(spec.laceColor.copy(alpha = 0.72f)),
+                )
+                Text(
+                    text = "记录饮水",
+                    color = spec.greetingSubColor,
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .size(4.dp)
+                            .background(spec.primary.copy(alpha = 0.72f), CircleShape),
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = "一杯 ${cupMl}ml",
+                    color = spec.greetingSubColor.copy(alpha = 0.84f),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             LogButton(onTap = onLog)
             QuickSipsRow(cupMl = cupMl, onQuickLog = onQuickLog)
         }

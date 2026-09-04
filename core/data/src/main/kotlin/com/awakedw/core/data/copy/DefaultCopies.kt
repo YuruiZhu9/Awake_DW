@@ -11,7 +11,7 @@ import com.awakedw.core.model.TimeSlot
 object DefaultCopies {
     val morning =
         listOf(
-            "早安，先喝一口水，把今天叫醒 ☀",
+            "早安，先喝一口水，把今天叫醒",
             "起床啦，一杯温水替我打开身体的开关",
             "新的一天，从第一口水开始温柔以待",
             "晨光照进来了，别忘了给身体补补水",
@@ -79,7 +79,7 @@ object DefaultCopies {
 
     val evening =
         listOf(
-            "今晚的水要小口慢慢喝哦 🌙",
+            "今晚的水要小口慢慢喝哦",
             "夜色渐浓，给这一天收个温柔的尾",
             "睡前一小杯水，安安稳稳到天亮",
             "灯下的一杯水，陪我写完今天的句号",

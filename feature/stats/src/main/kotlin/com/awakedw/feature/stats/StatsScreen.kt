@@ -59,11 +59,18 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
         ) {
             Spacer(Modifier.height(44.dp))
             FadeUpOnce {
-                Text(
-                    text = "统计",
-                    color = spec.greetingColor,
-                    style = MaterialTheme.typography.headlineMedium,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        text = "统计",
+                        color = spec.greetingColor,
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
+                    Text(
+                        text = "记录、趋势与今天的饮水时间线",
+                        color = spec.greetingSubColor,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
             Spacer(Modifier.height(10.dp))
             LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))

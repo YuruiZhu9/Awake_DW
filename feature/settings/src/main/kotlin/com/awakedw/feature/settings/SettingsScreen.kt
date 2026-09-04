@@ -125,11 +125,18 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Spacer(Modifier.height(44.dp))
-            Text(
-                text = "我的",
-                color = spec.greetingColor,
-                style = MaterialTheme.typography.headlineMedium,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    text = "我的",
+                    color = spec.greetingColor,
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Text(
+                    text = "目标、提醒与外观偏好",
+                    color = spec.greetingSubColor,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             LolitaRule(modifier = Modifier.padding(horizontal = 18.dp))
 
             SettingsCard(title = "目标", subtitle = "喝多少、一杯多大，慢慢调") {

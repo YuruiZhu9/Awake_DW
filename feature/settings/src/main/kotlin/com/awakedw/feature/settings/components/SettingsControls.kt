@@ -1,4 +1,4 @@
-﻿package com.awakedw.feature.settings.components
+package com.awakedw.feature.settings.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SliderDefaults
@@ -50,9 +53,6 @@ private val STEPPER_BUTTON_SIZE = 32.dp
 
 /** 间隔档位 chip 的最小宽度（P1-6）：不再 weight 均分，宽度自适应且不低于此值保住「120」等三位数。 */
 private val INTERVAL_CHIP_MIN_WIDTH = 56.dp
-
-/** 主题色圆点直径。 */
-private val THEME_DOT_SIZE = 14.dp
 
 /** 步进器小按钮形状：全圆。 */
 private val STEP_BUTTON_SHAPE: Shape = CircleShape
@@ -298,20 +298,34 @@ private fun ThemeChoiceCard(
         color = cardColor,
         border = BorderStroke(width = 1.dp, color = borderColor),
         onClick = onClick,
-        modifier = modifier.heightIn(min = 54.dp),
+        modifier = modifier.heightIn(min = 76.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ThemeDot(choice = choice)
-            Text(
-                text = themeLabel(choice),
-                color = current.chipText,
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 2,
-            )
+            ThemeSwatch(choice = choice, modifier = Modifier.fillMaxWidth())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = themeLabel(choice),
+                    color = current.chipText,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 2,
+                    modifier = Modifier.weight(1f),
+                )
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "已选择",
+                        tint = accent,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -328,22 +342,58 @@ internal fun themeLabel(choice: ThemeChoice): String =
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun ThemeDot(choice: ThemeChoice) {
-    val brush =
-        when (choice) {
-            ThemeChoice.FOLLOW_TIME ->
-                Brush.horizontalGradient(
-                    listOf(
-                        ThemeById.getValue(ThemeId.STRAWBERRY).primary,
-                        ThemeById.getValue(ThemeId.EMERALD).primary,
-                        ThemeById.getValue(ThemeId.CARAMEL).primary,
-                        ThemeById.getValue(ThemeId.NIGHT).primary,
-                    ),
-                )
-            else -> Brush.horizontalGradient(listOf(themePrimary(choice), themePrimary(choice)))
-        }
-    Box(modifier = Modifier.size(THEME_DOT_SIZE).background(brush, CircleShape))
+private fun ThemeSwatch(
+    choice: ThemeChoice,
+    modifier: Modifier = Modifier,
+) {
+    val brush = themeSwatchBrush(choice)
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = 22.dp)
+                .background(brush, RoundedCornerShape(9.dp)),
+    ) {
+        // A hairline highlight makes the swatch feel like a printed color card.
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 1.dp)
+                    .background(Color.White.copy(alpha = 0.24f), RoundedCornerShape(9.dp)),
+        )
+    }
 }
+
+private fun themeSwatchBrush(choice: ThemeChoice): Brush =
+    when (choice) {
+        ThemeChoice.FOLLOW_TIME ->
+            Brush.horizontalGradient(
+                listOf(
+                    ThemeById.getValue(ThemeId.STRAWBERRY).primary,
+                    ThemeById.getValue(ThemeId.EMERALD).primary,
+                    ThemeById.getValue(ThemeId.CARAMEL).primary,
+                    ThemeById.getValue(ThemeId.NIGHT).primary,
+                ),
+            )
+        else -> {
+            val theme = ThemeById.getValue(themeIdOf(choice))
+            Brush.horizontalGradient(
+                listOf(
+                    theme.primary.copy(alpha = 0.72f),
+                    theme.buttonBottom,
+                ),
+            )
+        }
+    }
+
+private fun themeIdOf(choice: ThemeChoice): ThemeId =
+    when (choice) {
+        ThemeChoice.FIXED_EMERALD -> ThemeId.EMERALD
+        ThemeChoice.FIXED_STRAWBERRY -> ThemeId.STRAWBERRY
+        ThemeChoice.FIXED_CARAMEL -> ThemeId.CARAMEL
+        ThemeChoice.FIXED_NIGHT -> ThemeId.NIGHT
+        ThemeChoice.FOLLOW_TIME -> ThemeId.EMERALD
+    }
 
 private fun themePrimary(choice: ThemeChoice): Color =
     when (choice) {

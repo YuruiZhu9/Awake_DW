@@ -5,9 +5,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
@@ -28,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -268,24 +273,54 @@ private fun AwakeBottomBar(
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.34f)),
         shadowElevation = 2.dp,
     ) {
-        NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
-            BOTTOM_TABS.forEach { tab ->
-                NavigationBarItem(
-                    selected = currentRoute == tab.destination.route,
-                    onClick = { onSelect(tab.destination) },
-                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                    label = { Text(text = tab.label) },
-                    colors =
-                        NavigationBarItemDefaults.colors(
-                            selectedIconColor = spec.primary,
-                            selectedTextColor = spec.primary,
-                            unselectedIconColor = spec.chipText,
-                            unselectedTextColor = spec.chipText,
-                            indicatorColor = spec.primary.copy(alpha = TAB_INDICATOR_ALPHA),
-                        ),
-                )
+        Column {
+            BottomBarTrim(spec = spec)
+            NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
+                BOTTOM_TABS.forEach { tab ->
+                    NavigationBarItem(
+                        selected = currentRoute == tab.destination.route,
+                        onClick = { onSelect(tab.destination) },
+                        icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
+                        label = { Text(text = tab.label) },
+                        colors =
+                            NavigationBarItemDefaults.colors(
+                                selectedIconColor = spec.primary,
+                                selectedTextColor = spec.primary,
+                                unselectedIconColor = spec.chipText,
+                                unselectedTextColor = spec.chipText,
+                                indicatorColor = spec.primary.copy(alpha = TAB_INDICATOR_ALPHA),
+                            ),
+                    )
+                }
             }
         }
+    }
+}
+
+/** A restrained pearl rail keeps the bottom surface tied to the same paper language as the pages. */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun BottomBarTrim(spec: ThemeSpec) {
+    Canvas(modifier = Modifier.fillMaxWidth().height(7.dp)) {
+        val centerY = size.height / 2f
+        val centerX = size.width / 2f
+        val sideInset = 28.dp.toPx()
+        val gap = 18.dp.toPx()
+        drawLine(
+            color = spec.laceColor.copy(alpha = 0.26f),
+            start = Offset(sideInset, centerY),
+            end = Offset(centerX - gap, centerY),
+            strokeWidth = 1.dp.toPx(),
+        )
+        drawLine(
+            color = spec.laceColor.copy(alpha = 0.26f),
+            start = Offset(centerX + gap, centerY),
+            end = Offset(size.width - sideInset, centerY),
+            strokeWidth = 1.dp.toPx(),
+        )
+        drawCircle(color = spec.primary.copy(alpha = 0.70f), radius = 2.dp.toPx(), center = Offset(centerX, centerY))
+        drawCircle(color = spec.laceColor.copy(alpha = 0.60f), radius = 1.2.dp.toPx(), center = Offset(centerX - 8.dp.toPx(), centerY))
+        drawCircle(color = spec.laceColor.copy(alpha = 0.60f), radius = 1.2.dp.toPx(), center = Offset(centerX + 8.dp.toPx(), centerY))
     }
 }
 

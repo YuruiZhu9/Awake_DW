@@ -26,9 +26,9 @@ private val GREETING_BOW_CLEARANCE = 36.dp
 /** 时段问候语（规格 §3.2 第 1 条：早/午/晚分组内置）。 */
 internal fun greetingFor(slot: TimeSlot): String =
     when (slot) {
-        TimeSlot.MORNING -> "早安呀，今天也要甜甜的 ☀"
-        TimeSlot.DAY -> "今天也请清清爽爽哦 🍃"
-        TimeSlot.EVENING -> "晚上好，今天辛苦啦 🌙"
+        TimeSlot.MORNING -> "早安，先喝一口水"
+        TimeSlot.DAY -> "今天也请清清爽爽"
+        TimeSlot.EVENING -> "晚上好，今天辛苦啦"
     }
 
 /** 日期副行：达标前「距离目标还有 Yml」，达标后「已完成 X%」（规格 §3.2 示例）。 */
