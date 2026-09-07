@@ -4,6 +4,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,12 +48,13 @@ internal fun QuickSipsRow(
     val spec = currentThemeSpec()
     val view = LocalView.current
     Row(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         QuickSipChip(
             label = "小口 ${sipAmount(cupMl)}ml",
             spec = spec,
+            modifier = Modifier.weight(1f),
             onClick = {
                 view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                 onQuickLog(sipAmount(cupMl))
@@ -61,6 +63,7 @@ internal fun QuickSipsRow(
         QuickSipChip(
             label = "满杯 ${fullAmount(cupMl)}ml",
             spec = spec,
+            modifier = Modifier.weight(1f),
             onClick = {
                 view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                 onQuickLog(fullAmount(cupMl))
@@ -99,6 +102,7 @@ private fun QuickSipChip(
                 text = label,
                 color = spec.chipText,
                 style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
                 modifier = Modifier.padding(start = 6.dp),
             )
         }

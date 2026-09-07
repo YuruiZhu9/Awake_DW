@@ -18,6 +18,11 @@ import com.awakedw.core.model.ThemeId
 import kotlin.math.max
 
 /** 主题 → 用户提供的 Lolita 氛围素材。文件放在 app/src/main/assets/lolita/。 */
+private const val LIGHT_ART_ALPHA = 0.18f
+private const val DARK_ART_ALPHA = 0.20f
+private const val LIGHT_CENTER_WASH_ALPHA = 0.14f
+private const val DARK_CENTER_WASH_ALPHA = 0.10f
+
 internal fun lolitaAssetFileOf(themeId: ThemeId): String =
     when (themeId) {
         ThemeId.EMERALD -> "lolita/green.jpg"
@@ -67,7 +72,9 @@ fun LolitaBackdrop(
                             Brush.radialGradient(
                                 colors =
                                     listOf(
-                                        spec.backgroundGradient.first().copy(alpha = if (spec.isDark) 0.12f else 0.20f),
+                                        spec.backgroundGradient.first().copy(
+                                            alpha = if (spec.isDark) DARK_CENTER_WASH_ALPHA else LIGHT_CENTER_WASH_ALPHA,
+                                        ),
                                         Color.Transparent,
                                     ),
                                 center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height * 0.48f),
@@ -78,7 +85,7 @@ fun LolitaBackdrop(
                                 image = source,
                                 dstOffset = androidx.compose.ui.unit.IntOffset(dstOffsetX, dstOffsetY),
                                 dstSize = androidx.compose.ui.unit.IntSize(dstWidth, dstHeight),
-                                alpha = reveal * if (spec.isDark) 0.16f else 0.13f,
+                                alpha = reveal * if (spec.isDark) DARK_ART_ALPHA else LIGHT_ART_ALPHA,
                                 blendMode = BlendMode.Multiply,
                             )
                             drawRect(brush = centerWash)

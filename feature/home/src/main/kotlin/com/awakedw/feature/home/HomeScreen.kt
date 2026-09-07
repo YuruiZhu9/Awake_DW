@@ -13,7 +13,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -90,23 +89,14 @@ private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 /** 胆大王光袋直径（96–160dp 区间取值）：给 108dp 立绘留一圈轻薄呼吸光晕。 */
 private val CAT_POCKET_DIAMETER = 132.dp
 
-/**
- * 胆大王落角的边距（布局审计 P1-1 + 审查修复几何重定位）：底部 leading 角，落进居中簇下方的空带——
- * 内容列尾呼吸 132dp 使「记一杯」与 48dp 快捷量行整体高于猫盒；
- * bottom 8dp 使猫盒（y≈8–120）与按钮带下缘 132 保持 20dp 互斥余量，且簇距底固定、滚动任何位置都不变。
- * start 0dp，猫钉在列首不随气泡变宽右移。
- */
-private val CAT_CORNER_PADDING = PaddingValues(start = 0.dp, bottom = 8.dp)
-
-/** 环下夸夸语的悬浮落差（布局审计 P1-2）：从环底缘垂下 12dp，浮在既有空档带上，不挤压徽章行。 */
+/** Ring praise floats below the ring without adding permanent layout height. */
 private val PRAISE_LINE_DROP = 12.dp
 
-/**
- * 内容列尾呼吸（布局审计 P1-7 + 审查修复）：整列可滚后列尾固定留白，给「记一杯」按钮与猫角收尾
- * （≈快捷胶囊行 30 + 间距 12 + 按钮 58 + 猫带互斥余量 12 的满滚抵底 clearance——
- * 该值同时为滚动到底态的操作组保留 20dp 视觉余量，与猫盒上缘保持互斥。
- */
-private val CONTENT_TAIL_BREATHING = 132.dp
+/** Mascot gets its own flow row after the factual summary, so it never covers statistics. */
+private val CAT_RAIL_HEIGHT = 148.dp
+
+/** Small end spacing; the mascot row itself provides the required breathing room. */
+private val CONTENT_TAIL_BREATHING = 24.dp
 
 /**
  * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,
@@ -184,47 +174,50 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            // 列尾呼吸由 padding(bottom = CONTENT_TAIL_BREATHING) 提供，确保窄屏滚动后操作组与猫角互不拥挤。
+            Spacer(Modifier.height(14.dp))
+            // The mascot occupies normal flow after the statistics row; it no longer covers factual text.
+            FadeUpOnce(delayMillis = 180) {
+                CatRail(
+                    mood = state.catMood,
+                    line = state.catLine,
+                    onPet = viewModel::petCat,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
-
-        // 胆大王常驻：底部 leading 角叠层挂载、不随内容滚动；
-        // 猫语气泡悬于猫上方（独立于环下夸夸语位置），点击立绘即摸猫（viewModel::petCat）。
-        CatCorner(
-            mood = state.catMood,
-            line = state.catLine,
-            onPet = viewModel::petCat,
-            modifier = Modifier.align(Alignment.BottomStart).padding(CAT_CORNER_PADDING),
-        )
     }
 }
 
 /**
- * 胆大王角落：立绘 + 立绘后方的呼吸光袋 + 猫语气泡。
- * 三者同处底部空带（y≈8–120）：光袋与立绘居中起始，气泡从猫盒右缘开始（start 116dp 起，
- * 多行时上下越出的仍是空带——按钮带自 112dp 起，互斥）；气泡叠绘于猫之上（Box 后绘者在上），
- * 复用 [PraiseLine] 的 multiLine 浮现样式（宽度随内容上限 200dp、行数不限、零占位）。
- * 立绘常驻不缺席（治愈铁律：mood 任何状态都渲染），点击任意处触发 [onPet]（摸猫）。
+ * Flow-based mascot row. It follows the factual summary, keeping the cat and its bubble
+ * visually separate from cup count, latest drink, and average interval text.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun CatCorner(
+private fun CatRail(
     mood: CatMood,
     line: String?,
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
-        // 光袋：立绘后方的轻呼吸光晕（96–160dp 区间取 120dp），光在猫下、不压猫。
-        Box(contentAlignment = Alignment.Center) {
-            LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
-            CatFigure(mood = mood, onPet = onPet)
-        }
+    Box(
+        modifier = modifier.height(CAT_RAIL_HEIGHT),
+    ) {
         PraiseLine(
             text = line,
             multiLine = true,
-            // 气泡从猫盒右缘开始，避免压住脸部与尾巴；小屏下仍留出 4dp 右侧余量。
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 116.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 4.dp, end = 116.dp),
         )
+        Box(
+            modifier = Modifier.align(Alignment.BottomEnd),
+            contentAlignment = Alignment.Center,
+        ) {
+            LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
+            CatFigure(mood = mood, onPet = onPet)
+        }
     }
 }
 
