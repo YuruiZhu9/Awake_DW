@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 
 /**
  * 首页事实摘要：把原先三枚高频胶囊收敛成一张安静的纸面数据条。
@@ -35,7 +36,7 @@ internal fun BadgesRow(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = spec.chipBg.copy(alpha = 0.26f),
+        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.26f)),
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.34f)),
         tonalElevation = 0.dp,
     ) {

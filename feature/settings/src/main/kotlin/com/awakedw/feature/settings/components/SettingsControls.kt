@@ -1,6 +1,7 @@
 package com.awakedw.feature.settings.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,9 +34,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -43,7 +47,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
@@ -364,11 +370,23 @@ private fun ThemeSwatch(
     Box(
         modifier =
             modifier
-                .heightIn(min = 30.dp)
+                .heightIn(min = 44.dp)
                 .background(brush, RoundedCornerShape(9.dp)),
     ) {
         if (choice != ThemeChoice.FOLLOW_TIME) {
             val theme = ThemeById.getValue(themeIdOf(choice))
+            val artwork = themeArtworkOf(theme.id)
+            val image = if (artwork.framed) rememberAssetImageOrN(artwork.asset, retainPreviousImage = false) else null
+            if (image != null) {
+                Image(
+                    bitmap = image,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.TopCenter,
+                    alpha = 0.82f,
+                    modifier = Modifier.matchParentSize().clip(RoundedCornerShape(9.dp)).testTag("theme-art-${theme.id.name}"),
+                )
+            }
             Box(
                 modifier =
                     Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)

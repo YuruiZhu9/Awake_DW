@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 
 /**
  * A quiet paper surface for secondary information such as charts and timelines.
@@ -39,7 +40,7 @@ fun PaperPanel(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = spec.chipBg.copy(alpha = 0.58f),
+        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.58f)),
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.36f)),
         shadowElevation = 1.dp,
         tonalElevation = 0.dp,

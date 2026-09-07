@@ -49,6 +49,7 @@ import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
+import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.feature.settings.components.IntervalChipsRow
@@ -233,7 +234,7 @@ private fun SettingsCard(
     val spec = currentThemeSpec()
     Surface(
         shape = CARD_SHAPE,
-        color = spec.chipBg.copy(alpha = 0.64f),
+        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.64f)),
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 1.dp,
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.42f)),
@@ -361,7 +362,7 @@ private fun GuideEntryRow(
     val spec = currentThemeSpec()
     Surface(
         shape = CARD_SHAPE,
-        color = spec.chipBg.copy(alpha = 0.64f),
+        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.64f)),
         onClick = onOpenWhitelistGuide,
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 1.dp,

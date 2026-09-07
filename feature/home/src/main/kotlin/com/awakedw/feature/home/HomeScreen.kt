@@ -54,8 +54,7 @@ import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
-import com.awakedw.core.designsystem.lolita.drawBow
-import com.awakedw.core.designsystem.ornamentColor
+import com.awakedw.core.designsystem.lolita.drawThemeOrnament
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -286,11 +285,10 @@ private fun RingBow(
                 .size(BOW_WIDTH, BOW_HEIGHT)
                 .graphicsLayer { rotationZ = if (goalMet) sway else 0f },
     ) {
-        drawBow(
+        drawThemeOrnament(
             center = Offset(size.width / 2f, size.height / 2f),
             width = size.width * 0.72f,
-            color = spec.primary,
-            knotColor = ornamentColor(spec),
+            spec = spec,
             withTails = goalMet,
         )
     }

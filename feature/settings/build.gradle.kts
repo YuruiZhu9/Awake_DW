@@ -28,6 +28,8 @@ android {
         jvmTarget = "17"
     }
 
+    sourceSets.getByName("test").assets.srcDir("../../app/src/main/assets")
+
     testOptions {
         unitTests {
             // compose-ui 测试走 Robolectric 路线：需要应用资源与真实组件生命周期。
@@ -35,6 +37,7 @@ android {
             all { test ->
                 // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
                 test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                test.systemProperty("awake.visualVariant", test.name)
             }
         }
     }

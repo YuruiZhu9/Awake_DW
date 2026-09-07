@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 
 /** 快捷胶囊圆角：全圆，与徽章/按钮同一语言。 */
 private val QUICK_SIP_SHAPE: Shape = RoundedCornerShape(16.dp)
@@ -82,7 +83,7 @@ private fun QuickSipChip(
 ) {
     Surface(
         shape = QUICK_SIP_SHAPE,
-        color = spec.chipBg.copy(alpha = 0.72f),
+        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.72f)),
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),

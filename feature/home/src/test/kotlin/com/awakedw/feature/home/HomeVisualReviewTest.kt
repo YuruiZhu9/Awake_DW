@@ -74,7 +74,7 @@ class HomeVisualReviewTest {
             val image = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
             composeRule.runOnIdle { rootView.draw(Canvas(image)) }
             val output =
-                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha9-${id.name.lowercase()}.png")
+                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha10-${id.name.lowercase()}.png")
             output.parentFile?.mkdirs()
             output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }

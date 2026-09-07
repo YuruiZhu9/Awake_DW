@@ -26,6 +26,8 @@ android {
         jvmTarget = "17"
     }
 
+    sourceSets.getByName("test").assets.srcDir("../../app/src/main/assets")
+
     testOptions {
         unitTests {
             // assets 装载的 Robolectric 测试需要应用资源（含 src/main/assets）。

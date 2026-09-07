@@ -1,8 +1,10 @@
 package com.awakedw.core.designsystem.art
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -11,10 +13,30 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** 资源装载的最长边上限：足够支撑全屏氛围图，也避免原始大图占满内存。 */
 private const val MAX_DECODE_DIMENSION_PX = 1024
+
+/** Shared bounded cache: home art and theme previews must not decode the same large image twice. */
+private data class AssetImageKey(val assets: AssetManager, val path: String)
+
+private val imageLoadMutex = Mutex()
+
+private val assetImages =
+    object : LruCache<AssetImageKey, ImageBitmap>(16 * 1024 * 1024) {
+        override fun sizeOf(
+            key: AssetImageKey,
+            value: ImageBitmap,
+        ): Int = value.width * value.height * 4
+    }
+
+private fun cachedAssetImage(
+    context: Context,
+    assetFile: String?,
+): ImageBitmap? = assetFile?.let { assetImages.get(AssetImageKey(context.applicationContext.assets, it)) }
 
 /**
  * 读 assets 位图；缺失/解码失败返回 null（调用方回退，绝不抛异常）。内部用 [Dispatchers.IO]。
@@ -22,15 +44,18 @@ private const val MAX_DECODE_DIMENSION_PX = 1024
  * 供 [rememberAssetImageOrN] 在组合内调用；也可在挂起环境直接使用。先读尺寸再按需采样，
  * 猫咪小图和全屏 Lolita 氛围图都不会以原始超大尺寸长期驻留内存。
  */
-internal suspend fun loadAssetBitmap(
+suspend fun loadAssetBitmap(
     context: Context,
     assetFile: String,
 ): ImageBitmap? =
     withContext(Dispatchers.IO) {
-        runCatching {
-            val bytes = context.assets.open(assetFile).use { it.readBytes() }
-            decodeSampled(bytes)?.asImageBitmap()
-        }.getOrNull()
+        val key = AssetImageKey(context.applicationContext.assets, assetFile)
+        assetImages.get(key) ?: imageLoadMutex.withLock {
+            assetImages.get(key) ?: runCatching {
+                val bytes = context.assets.open(assetFile).use { it.readBytes() }
+                decodeSampled(bytes)?.asImageBitmap()?.also { assetImages.put(key, it) }
+            }.getOrNull()
+        }
     }
 
 private fun decodeSampled(bytes: ByteArray): Bitmap? {
@@ -111,9 +136,10 @@ fun rememberAssetImageOrN(
     retainPreviousImage: Boolean = true,
 ): ImageBitmap? {
     val context = LocalContext.current
-    val state = remember(if (retainPreviousImage) null else assetFile) { mutableStateOf<ImageBitmap?>(null) }
+    val cached = cachedAssetImage(context, assetFile)
+    val state = remember(context, if (retainPreviousImage) null else assetFile) { mutableStateOf(cached) }
     LaunchedEffect(assetFile) {
         state.value = assetFile?.let { withContext(Dispatchers.IO) { loadAssetBitmap(context, it) } }
     }
-    return if (assetFile == null) null else state.value
+    return if (assetFile == null) null else cached ?: state.value
 }

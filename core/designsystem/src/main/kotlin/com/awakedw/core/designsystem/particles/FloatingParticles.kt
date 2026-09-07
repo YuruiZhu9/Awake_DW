@@ -16,6 +16,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.math.PI
 import kotlin.math.cos
@@ -82,6 +83,7 @@ fun FloatingParticles(
     density: ParticleDensity = ParticleDensity.STANDARD,
 ) {
     val reduceMotion = rememberReduceMotion()
+    val style = particleStyleOf(currentThemeSpec().id)
     val progress = remember { mutableFloatStateOf(0f) }
     if (!reduceMotion) {
         LaunchedEffect(seed) {
@@ -105,30 +107,43 @@ fun FloatingParticles(
             modifier.drawWithCache {
                 val area = size
                 // 文字排版结果仅在尺寸/样式变化时重排一次，帧间只变 alpha。
-                val starLayouts = if (showStars) starStyles.map { style -> textMeasurer.measure(STAR_GLYPH, style) } else emptyList()
+                val starLayouts =
+                    if (showStars && style == ParticleStyle.CLASSIC) {
+                        starStyles.map {
+                                style ->
+                            textMeasurer.measure(STAR_GLYPH, style)
+                        }
+                    } else {
+                        emptyList()
+                    }
                 onDrawBehind {
                     val p = progress.floatValue
                     for (index in 0 until density.dotCount) {
                         val frame = ParticleMath.floating(index, seed, anchorPx, p, area)
                         val radius = frame.radiusPx * density.radiusScale
                         val color = colorAt(colors, index)
-                        if (frame.glow) {
+                        val focusAlpha =
+                            if (style == ParticleStyle.CLASSIC) {
+                                1f
+                            } else {
+                                readingColumnAlpha(
+                                    frame.center.x / area.width.coerceAtLeast(1f),
+                                )
+                            }
+                        if (frame.glow && style != ParticleStyle.SILVER) {
                             drawCircle(
-                                color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA * density.accentAlphaScale),
+                                color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA * density.accentAlphaScale * focusAlpha),
                                 radius = radius * GLOW_RING_SCALE,
                                 center = frame.center,
                             )
                         }
-                        drawCircle(
-                            color = color.copy(alpha = frame.alpha * density.accentAlphaScale),
-                            radius = radius,
+                        drawThemeMote(
                             center = frame.center,
-                        )
-                        // 珍珠高光（§12）：左上一点白，圆点即成光珠。
-                        drawCircle(
-                            color = Color.White.copy(alpha = frame.alpha * 0.6f * density.accentAlphaScale),
-                            radius = radius * 0.28f,
-                            center = frame.center - Offset(radius * 0.32f, radius * 0.32f),
+                            radius = radius,
+                            color = color,
+                            alpha = frame.alpha * density.accentAlphaScale * focusAlpha,
+                            style = style,
+                            rotation = p * 360f + index * 23f,
                         )
                     }
                     if (showStars) {
@@ -151,7 +166,7 @@ fun FloatingParticles(
                             )
                         }
                     }
-                    if (showFlowers) {
+                    if (showFlowers && style == ParticleStyle.CLASSIC) {
                         FLOWER_ANCHORS.forEachIndexed { fi, anchor ->
                             val flowerAlpha =
                                 FLOWER_ALPHA_BASE +

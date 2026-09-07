@@ -15,7 +15,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.ParticleMath
+import com.awakedw.core.designsystem.particles.drawThemeMote
+import com.awakedw.core.designsystem.particles.particleStyleOf
 import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.random.Random
 
@@ -71,17 +74,18 @@ fun BurstParticles(
     onFinish: () -> Unit,
 ) {
     val reduceMotion = rememberReduceMotion()
+    val style = particleStyleOf(currentThemeSpec().id)
     // travel 处于空闲完成态即无绘制；初始 idle 保证 trigger<=0 时静默。
     val travelState = remember { mutableFloatStateOf(TRAVEL_IDLE) }
     val travel by travelState
 
     val anchorPx = with(LocalDensity.current) { DISTANCE_ANCHOR.toPx() }
     val plan =
-        remember(trigger) {
+        remember(trigger, colors, anchorPx) {
             buildBurstPlan(trigger, colors, anchorPx)
         }
 
-    LaunchedEffect(trigger) {
+    LaunchedEffect(trigger, reduceMotion) {
         if (reduceMotion) {
             travelState.floatValue = TRAVEL_IDLE
             return@LaunchedEffect
@@ -124,11 +128,18 @@ fun BurstParticles(
                         if (frame.glow) {
                             drawCircle(
                                 color = spec.color.copy(alpha = frame.alpha * GLOW_RING_ALPHA),
-                                radius = frame.radiusPx * GLOW_RING_SCALE,
+                                radius = frame.radiusPx * 0.60f * GLOW_RING_SCALE,
                                 center = frame.center,
                             )
                         }
-                        drawCircle(spec.color.copy(alpha = frame.alpha), radius = frame.radiusPx, center = frame.center)
+                        drawThemeMote(
+                            frame.center,
+                            frame.radiusPx * 0.60f,
+                            spec.color,
+                            frame.alpha * 0.85f,
+                            style,
+                            rotation = travel * 110f,
+                        )
                     }
                 },
     )

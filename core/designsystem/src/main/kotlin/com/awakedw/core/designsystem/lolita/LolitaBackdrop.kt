@@ -18,31 +18,16 @@ import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.ThemeId
 import kotlin.math.max
+import kotlin.math.min
 
-/** 主题 → 用户提供的 Lolita 氛围素材。文件放在 app/src/main/assets/lolita/。 */
-private const val LIGHT_ART_ALPHA = 0.18f
-private const val DARK_ART_ALPHA = 0.20f
-private const val LIGHT_CENTER_WASH_ALPHA = 0.14f
-private const val DARK_CENTER_WASH_ALPHA = 0.10f
-
-internal fun lolitaAssetFileOf(themeId: ThemeId): String? =
-    when (themeId) {
-        ThemeId.EMERALD -> "lolita/green.jpg"
-        ThemeId.STRAWBERRY -> "lolita/rose.jpg"
-        ThemeId.CARAMEL -> "lolita/warm.jpg"
-        ThemeId.NIGHT -> "lolita/gothic.jpg"
-        ThemeId.LAVENDER -> "lolita/blue.jpg"
-        ThemeId.GOTHIC -> "lolita/gothic.jpg"
-        ThemeId.CLERIC -> null
-        ThemeId.THIN_MINT -> "lolita/green.jpg"
-    }
+/** Compatibility helper retained for mapping tests. */
+internal fun lolitaAssetFileOf(themeId: ThemeId): String = themeArtworkOf(themeId).asset
 
 /**
  * 低存在感的 Lolita 纸面氛围层：只停留在页面背景，不承载任何内容语义。
  *
- * 用户素材本身带有大面积留白，因此使用乘法混合叠在主题渐变上：白色背景不会把页面
- * 洗成一整块，蕾丝、蝴蝶结和花朵只在边缘留下轻微的纸面印记。中心再加一层主题色
- * 留白，确保进度环、按钮、图表和设置文字始终是第一信息层级。
+ * 浅色插画保留纸面乘法混合，已排版的哥特图正常叠加，只有旧深夜墨线需要反相。
+ * 竖屏等比铺满避免两侧露出硬边，横屏完整适配避免极端裁切；中央遮罩保护读数。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -50,7 +35,8 @@ fun LolitaBackdrop(
     spec: ThemeSpec,
     modifier: Modifier = Modifier,
 ) {
-    val image = rememberAssetImageOrN(lolitaAssetFileOf(spec.id), retainPreviousImage = false)
+    val art = themeArtworkOf(spec.id)
+    val image = rememberAssetImageOrN(art.asset, retainPreviousImage = false)
     val reduceMotion = rememberReduceMotion()
     val reveal =
         animateFloatAsState(
@@ -68,7 +54,12 @@ fun LolitaBackdrop(
                     if (source == null) {
                         onDrawBehind { }
                     } else {
-                        val scale = max(size.width / source.width, size.height / source.height)
+                        val scale =
+                            if (art.framed && size.width > size.height) {
+                                min(size.width / source.width, size.height / source.height)
+                            } else {
+                                max(size.width / source.width, size.height / source.height)
+                            }
                         val dstWidth = (source.width * scale).toInt().coerceAtLeast(1)
                         val dstHeight = (source.height * scale).toInt().coerceAtLeast(1)
                         val dstOffsetX = ((size.width - dstWidth) / 2f).toInt()
@@ -78,16 +69,27 @@ fun LolitaBackdrop(
                                 colors =
                                     listOf(
                                         spec.backgroundGradient.first().copy(
-                                            alpha = if (spec.isDark) DARK_CENTER_WASH_ALPHA else LIGHT_CENTER_WASH_ALPHA,
+                                            alpha = if (art.framed) 0.30f else 0.14f,
                                         ),
                                         Color.Transparent,
                                     ),
                                 center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height * 0.48f),
                                 radius = max(size.width, size.height) * 0.66f,
                             )
+                        // Frame detail remains at the sides; only the reading column receives a veil.
+                        val paper = spec.backgroundGradient[1]
+                        val readingVeil =
+                            Brush.horizontalGradient(
+                                0f to paper.copy(alpha = 0f),
+                                0.18f to paper.copy(alpha = 0.08f),
+                                0.34f to paper.copy(alpha = 0.70f),
+                                0.66f to paper.copy(alpha = 0.70f),
+                                0.82f to paper.copy(alpha = 0.08f),
+                                1f to paper.copy(alpha = 0f),
+                            )
                         // Invert white-paper art into light ink before screening on a dark surface.
                         val darkInk =
-                            if (spec.isDark) {
+                            if (art.treatment == ArtworkTreatment.INVERTED_INK) {
                                 ColorFilter.colorMatrix(
                                     ColorMatrix(
                                         floatArrayOf(
@@ -106,11 +108,19 @@ fun LolitaBackdrop(
                                 image = source,
                                 dstOffset = androidx.compose.ui.unit.IntOffset(dstOffsetX, dstOffsetY),
                                 dstSize = androidx.compose.ui.unit.IntSize(dstWidth, dstHeight),
-                                alpha = reveal * if (spec.isDark) DARK_ART_ALPHA else LIGHT_ART_ALPHA,
+                                alpha = reveal * art.opacity,
                                 colorFilter = darkInk,
-                                blendMode = if (spec.isDark) BlendMode.Screen else BlendMode.Multiply,
+                                blendMode =
+                                    when (art.treatment) {
+                                        ArtworkTreatment.PRINTED_INK -> BlendMode.Multiply
+                                        ArtworkTreatment.INVERTED_INK -> BlendMode.Screen
+                                        ArtworkTreatment.PAINTED -> BlendMode.SrcOver
+                                    },
                             )
                             drawRect(brush = centerWash)
+                            if (art.framed) {
+                                drawRect(brush = readingVeil)
+                            }
                         }
                     }
                 },
