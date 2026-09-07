@@ -32,7 +32,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /** 弧线宽度占环最短边长的比例。 */
-private const val STROKE_FRACTION = 0.085f
+const val RING_STROKE_FRACTION = 0.055f
 
 /** 进度弧起点：正上方（12 点方向）。 */
 private const val START_ANGLE_DEGREES = -90f
@@ -112,7 +112,7 @@ fun ProgressRing(
                 }
                 .drawBehind {
                     val minSide = minOf(size.width, size.height)
-                    val stroke = STROKE_FRACTION * minSide
+                    val stroke = RING_STROKE_FRACTION * minSide
                     val arcBounds = Size(minSide - stroke, minSide - stroke)
                     val topLeft =
                         Offset(

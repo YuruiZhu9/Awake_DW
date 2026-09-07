@@ -48,9 +48,10 @@ private const val FLOWER_TURNS = 1
 enum class ParticleDensity(
     internal val dotCount: Int,
     internal val accentAlphaScale: Float,
+    internal val radiusScale: Float,
 ) {
-    QUIET(dotCount = 14, accentAlphaScale = 0.72f),
-    STANDARD(dotCount = ParticleMath.DOT_COUNT, accentAlphaScale = 1f),
+    QUIET(dotCount = 14, accentAlphaScale = 0.42f, radiusScale = 0.30f),
+    STANDARD(dotCount = ParticleMath.DOT_COUNT, accentAlphaScale = 0.65f, radiusScale = 0.65f),
 }
 
 /** 兜底粒子色：colors 为空时避免取越界（正常主题均提供非空 particleColors）。 */
@@ -109,24 +110,25 @@ fun FloatingParticles(
                     val p = progress.floatValue
                     for (index in 0 until density.dotCount) {
                         val frame = ParticleMath.floating(index, seed, anchorPx, p, area)
+                        val radius = frame.radiusPx * density.radiusScale
                         val color = colorAt(colors, index)
                         if (frame.glow) {
                             drawCircle(
                                 color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA * density.accentAlphaScale),
-                                radius = frame.radiusPx * GLOW_RING_SCALE,
+                                radius = radius * GLOW_RING_SCALE,
                                 center = frame.center,
                             )
                         }
                         drawCircle(
                             color = color.copy(alpha = frame.alpha * density.accentAlphaScale),
-                            radius = frame.radiusPx,
+                            radius = radius,
                             center = frame.center,
                         )
                         // 珍珠高光（§12）：左上一点白，圆点即成光珠。
                         drawCircle(
                             color = Color.White.copy(alpha = frame.alpha * 0.6f * density.accentAlphaScale),
-                            radius = frame.radiusPx * 0.28f,
-                            center = frame.center - Offset(frame.radiusPx * 0.32f, frame.radiusPx * 0.32f),
+                            radius = radius * 0.28f,
+                            center = frame.center - Offset(radius * 0.32f, radius * 0.32f),
                         )
                     }
                     if (showStars) {

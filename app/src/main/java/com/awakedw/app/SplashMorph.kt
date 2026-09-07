@@ -4,15 +4,12 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,9 +37,13 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.particles.FloatingParticles
+import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.core.designsystem.ring.RING_STROKE_FRACTION
+import com.awakedw.feature.home.HOME_CONTENT_TOP_PADDING
 import com.awakedw.feature.home.HOME_RING_DIAMETER
+import com.awakedw.feature.home.RingCenterContent
 import kotlinx.coroutines.delay
 
 /** 水滴直径。 */
@@ -53,9 +54,6 @@ private val DROPLET_FALL_DISTANCE = 80.dp
 
 /** 涟漪起始半径（贴着水滴）。 */
 private val RIPPLE_START_RADIUS = 14.dp
-
-/** 形序段笔触占环半径比例（与 ProgressRing 的 0.085×最短边观感一致）。 */
-private const val RING_STROKE_FRACTION = 0.085f
 
 /** 首页进度环的初始观感（35%）：形序段涟漪外圈定格为该进度，与首页真实环观感衔接。 */
 private const val INITIAL_RING_PROGRESS = 0.35f
@@ -69,8 +67,8 @@ private const val RIPPLE_MAX_ALPHA = 0.9f
 /** 形序 Crossfade 时长（ms），与 SplashSequencer 的 MORPH 段一致。 */
 private const val MORPH_CROSSFADE_MS = 250
 
-/** 真首页环心上方固定布局段（HomeScreen 列）：顶距 44 + 问候行内距 6 + 问候与环间距 20 + 半环（HOME_RING_DIAMETER/2）。 */
-private val RING_CENTER_STACK_DP = 44.dp + 6.dp + 20.dp + HOME_RING_DIAMETER / 2
+/** 真首页环心上方固定布局段（HomeScreen 列）：顶距 24 + 问候行内距 6 + 装饰线区 32 + 半环（HOME_RING_DIAMETER/2）。 */
+private val RING_CENTER_STACK_DP = HOME_CONTENT_TOP_PADDING + 6.dp + 32.dp + HOME_RING_DIAMETER / 2
 
 /** 问候语行高（titleLarge 28sp）+ 日期副行行高（bodySmall 16sp），随系统字体缩放折算。 */
 private val GREETING_TEXT_HEIGHT_SP = 44.sp
@@ -150,8 +148,8 @@ fun SplashMorph(
 
 /**
  * 真首页（HomeScreen）进度环中心的纵向落点（像素，P2-1）：
- * 首页由 Scaffold 内容内边距折入状态栏 inset，列布局自上而下为 44dp 顶距 + 问候行
- * （titleLarge 28sp + 6dp + bodySmall 16sp）+ 20dp 间距 + 半环——据此推算环心，
+ * 首页由 Scaffold 内容内边距折入状态栏 inset，列布局自上而下为 24dp 顶距 + 问候行
+ * （titleLarge 28sp + 6dp + bodySmall 16sp）+ 32dp 装饰线区 + 半环——据此推算环心，
  * 开屏各段与 Seed 预览共用同一落点。文本行高按 M3 默认排版常量随字体缩放折算；
  * 问候语折到两行（maxLines=2）时会带来约一行行高（28sp）的残余偏差（见任务报告）。
  */
@@ -182,7 +180,12 @@ private fun HomeSeedPreview(
     val density = LocalDensity.current
     Box(modifier) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
-        FloatingParticles(colors = spec.particleColors, modifier = Modifier.matchParentSize())
+        FloatingParticles(
+            colors = spec.particleColors,
+            modifier = Modifier.matchParentSize(),
+            showFlowers = false,
+            density = ParticleDensity.QUIET,
+        )
         ProgressRing(
             progress = INITIAL_RING_PROGRESS,
             modifier =
@@ -192,14 +195,7 @@ private fun HomeSeedPreview(
                     .size(HOME_RING_DIAMETER),
             onRingTap = null,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "0ml", color = spec.ringValueText, style = MaterialTheme.typography.headlineLarge)
-                Text(
-                    text = "今日已喝",
-                    color = spec.ringValueText.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
+            RingCenterContent(totalMl = 0, reduceMotion = true)
         }
     }
 }

@@ -9,7 +9,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +17,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,22 +39,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
-import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.currentThemeSpec
-import com.awakedw.core.designsystem.lolita.GOLD_TRIM
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawBow
+import com.awakedw.core.designsystem.ornamentColor
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -68,6 +68,9 @@ import com.awakedw.feature.home.components.PraiseLine
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 196.dp
+
+/** Shared with the splash handover, so the final ring does not jump vertically. */
+val HOME_CONTENT_TOP_PADDING = 24.dp
 
 /** 环心数字滚动时长（规格 §4.2 第 3 步：~500ms）。 */
 private const val NUMBER_ROLL_MS = 500
@@ -82,15 +85,8 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
-/** 「记一杯」按钮光袋尺寸（96–160dp 区间取值）：呼吸光晕衬在按钮后方的浅浅一汪光。 */
-private val LOG_BUTTON_POCKET_WIDTH = 160.dp
-private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
-
 /** 胆大王光袋直径（96–160dp 区间取值）：给 108dp 立绘留一圈轻薄呼吸光晕。 */
 private val CAT_POCKET_DIAMETER = 100.dp
-
-/** Ring praise floats below the ring without adding permanent layout height. */
-private val PRAISE_LINE_DROP = 12.dp
 
 /** Mascot gets its own flow row after the factual summary, so it never covers statistics. */
 private val CAT_RAIL_HEIGHT = 92.dp
@@ -136,7 +132,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = CONTENT_TAIL_BREATHING),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(44.dp))
+            Spacer(Modifier.height(HOME_CONTENT_TOP_PADDING))
             // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
             // 装饰锚点不参与导航，也不挤占问候语的可视宽度；
             FadeUpOnce {
@@ -153,14 +149,13 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             RingBlock(
                 progress = state.progress,
                 totalMl = state.totalMl,
-                praiseLine = state.praiseLine,
                 onRingTap = viewModel::tapRing,
             )
             Spacer(Modifier.height(4.dp))
             FadeUpOnce(delayMillis = 40) {
                 CatRail(
                     mood = state.catMood,
-                    line = state.catLine,
+                    line = state.catLine ?: state.praiseLine,
                     onPet = viewModel::petCat,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -193,40 +188,38 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun CatRail(
+internal fun CatRail(
     mood: CatMood,
     line: String?,
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier.height(CAT_RAIL_HEIGHT),
+    Row(
+        modifier = modifier.heightIn(min = CAT_RAIL_HEIGHT),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PraiseLine(
             text = line,
             multiLine = true,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(end = 98.dp),
+            modifier = Modifier.weight(1f),
         )
         Box(
-            modifier = Modifier.align(Alignment.CenterEnd),
+            modifier = Modifier.size(CAT_POCKET_DIAMETER),
             contentAlignment = Alignment.Center,
         ) {
-            LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
+            LightPocket(modifier = Modifier.matchParentSize())
             CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
         }
     }
 }
 
-/** ??????????????? + ????? + ?????? + 12 ????????12?? */
+/** 今日饮水环：数值与环顶丝带；回应文案只在猫咪行展示。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun RingBlock(
     progress: Float,
     totalMl: Int,
-    praiseLine: String?,
     onRingTap: (Offset?) -> Unit,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
@@ -255,12 +248,6 @@ private fun RingBlock(
                 modifier = Modifier.align(Alignment.TopCenter).offset(y = -BOW_LIFT),
             )
         }
-        // 夸夸语改叠层挂载（布局审计 P1-2）：从环底缘垂下悬浮，不再占列内 26dp 常驻高度——
-        // 无文案时零占位，浮现时不挤压下方徽章行。
-        PraiseLine(
-            text = praiseLine,
-            modifier = Modifier.align(Alignment.BottomCenter).offset(y = PRAISE_LINE_DROP),
-        )
     }
 }
 
@@ -277,7 +264,7 @@ private fun RingBow(
 ) {
     val spec = currentThemeSpec()
     val sway =
-        if (reduceMotion) {
+        if (reduceMotion || !goalMet) {
             0f
         } else {
             val transition = rememberInfiniteTransition(label = "bowSway")
@@ -303,7 +290,7 @@ private fun RingBow(
             center = Offset(size.width / 2f, size.height / 2f),
             width = size.width * 0.72f,
             color = spec.primary,
-            knotColor = GOLD_TRIM,
+            knotColor = ornamentColor(spec),
             withTails = goalMet,
         )
     }
@@ -312,7 +299,7 @@ private fun RingBow(
 /** 环心：滚动到新值的总量 + 「今日已喝」小字（规格 §3.2 第 2 条）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun RingCenterContent(
+fun RingCenterContent(
     totalMl: Int,
     reduceMotion: Boolean,
 ) {
@@ -329,40 +316,22 @@ private fun RingCenterContent(
         }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "${rolledTotal}ml",
+            text =
+                buildAnnotatedString {
+                    append(rolledTotal.toString())
+                    withStyle(SpanStyle(fontSize = 13.sp, fontWeight = FontWeight.Normal)) { append("ml") }
+                },
             color = spec.ringValueText,
             // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
         )
         Spacer(Modifier.height(4.dp))
-        // 环心珍珠分隔点（§12）：三枚渐次大小的小珍珠，柔化数字与小字的过渡。
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            PearlDot(size = 3.dp, spec = spec)
-            PearlDot(size = 5.dp, spec = spec)
-            PearlDot(size = 3.dp, spec = spec)
-        }
-        Spacer(Modifier.height(4.dp))
         Text(
             text = "今日已喝",
-            color = spec.ringValueText.copy(alpha = 0.6f),
+            color = spec.greetingSubColor,
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
         )
     }
-}
-
-/** 小珍珠点（§12）：主题环值文字色的柔和圆点。 */
-@Suppress("ktlint:standard:function-naming")
-@Composable
-private fun PearlDot(
-    size: Dp,
-    spec: ThemeSpec,
-) {
-    Box(
-        modifier =
-            Modifier
-                .size(size)
-                .background(color = spec.ringValueText.copy(alpha = 0.45f), shape = CircleShape),
-    )
 }
 
 /** 满环微光呼吸（规格 §4.2 第 6 步「满环微光呼吸」）：柔光晕在环后缓缓起伏。 */

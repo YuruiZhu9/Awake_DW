@@ -12,4 +12,11 @@ class ParticleDensityTest {
         assertEquals(ParticleMath.DOT_COUNT, ParticleDensity.STANDARD.dotCount)
         assertTrue(ParticleDensity.QUIET.dotCount < ParticleDensity.STANDARD.dotCount)
     }
+
+    @Test
+    fun `安静粒子最大半径不超过六dp且亮度低于标准层`() {
+        val quiet = ParticleDensity.QUIET
+        assertTrue(40f * ParticleMath.BIG_RADIUS_FACTOR_RANGE.endInclusive * quiet.radiusScale <= 6f)
+        assertTrue(quiet.accentAlphaScale < ParticleDensity.STANDARD.accentAlphaScale)
+    }
 }

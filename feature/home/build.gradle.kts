@@ -28,6 +28,8 @@ android {
         jvmTarget = "17"
     }
 
+    sourceSets.getByName("test").assets.srcDir("../../app/src/main/assets")
+
     testOptions {
         unitTests {
             // compose-ui 测试走 Robolectric 路线：需要应用资源与真实组件生命周期。
@@ -37,6 +39,7 @@ android {
                 test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
                 // Compose+Robolectric 组合测试的 NATIVE 渲染内存峰值大（溢出断言类曾 OOM），给足堆。
                 test.maxHeapSize = "2g"
+                test.systemProperty("awake.visualVariant", test.name)
             }
         }
     }

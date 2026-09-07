@@ -58,8 +58,8 @@ internal fun PraiseLine(
                     modifier =
                         Modifier
                             .widthIn(max = CAT_LINE_BUBBLE_MAX_WIDTH)
-                            .background(color = spec.chipBg.copy(alpha = 0.92f), shape = RoundedCornerShape(percent = 50))
-                            .border(1.dp, spec.laceColor.copy(alpha = 0.48f), RoundedCornerShape(percent = 50))
+                            .background(color = spec.chipBg.copy(alpha = 0.92f), shape = RoundedCornerShape(16.dp))
+                            .border(1.dp, spec.laceColor.copy(alpha = 0.48f), RoundedCornerShape(16.dp))
                             .padding(CAT_LINE_BUBBLE_PADDING),
                 ) {
                     Text(

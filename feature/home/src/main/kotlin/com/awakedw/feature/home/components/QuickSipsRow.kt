@@ -25,7 +25,7 @@ import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 
 /** 快捷胶囊圆角：全圆，与徽章/按钮同一语言。 */
-private val QUICK_SIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
+private val QUICK_SIP_SHAPE: Shape = RoundedCornerShape(16.dp)
 
 /** 快捷量档位（§11.1）：小口约半杯、满杯约一杯半，毫升数取 10 的倍数。 */
 internal fun sipAmount(cupMl: Int): Int = roundTo10(cupMl / 2)
@@ -82,8 +82,8 @@ private fun QuickSipChip(
 ) {
     Surface(
         shape = QUICK_SIP_SHAPE,
-        color = spec.chipBg.copy(alpha = 0.32f),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.78f)),
+        color = spec.chipBg.copy(alpha = 0.72f),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),
     ) {
@@ -102,8 +102,8 @@ private fun QuickSipChip(
                 text = label,
                 color = spec.chipText,
                 style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                modifier = Modifier.padding(start = 6.dp),
+                maxLines = 2,
+                modifier = Modifier.weight(1f, fill = false).padding(start = 6.dp),
             )
         }
     }

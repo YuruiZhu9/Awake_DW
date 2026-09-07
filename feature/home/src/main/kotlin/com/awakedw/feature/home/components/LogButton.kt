@@ -12,8 +12,9 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,6 +61,7 @@ private const val PRESS_SCALE = 0.97f
 internal fun LogButton(
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
+    cupMl: Int? = null,
 ) {
     val spec = currentThemeSpec()
     val reduceMotion = rememberReduceMotion()
@@ -94,7 +96,7 @@ internal fun LogButton(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(18.dp))
                     .background(Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
                     .border(1.dp, Color.White.copy(alpha = if (spec.isDark) 0.24f else 0.34f), RoundedCornerShape(18.dp))
@@ -134,6 +136,15 @@ internal fun LogButton(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 9.dp),
                 )
+                if (cupMl != null) {
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "+${cupMl}ml",
+                        color = onPrimarySurface(spec),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                }
             }
         }
         BurstParticles(
