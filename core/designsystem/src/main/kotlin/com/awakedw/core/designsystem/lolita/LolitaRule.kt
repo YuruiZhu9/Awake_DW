@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.ornamentColor
 
 /**
  * A quiet lace-and-pearl rule used to give a page one structural Lolita detail.
@@ -39,7 +40,7 @@ fun LolitaRule(
             end = Offset(size.width - sideInset, centerY),
             strokeWidth = 1.dp.toPx(),
         )
-        drawCircle(color = GOLD_TRIM.copy(alpha = 0.82f), radius = 2.5.dp.toPx(), center = Offset(centerX, centerY))
+        drawCircle(color = ornamentColor(spec).copy(alpha = 0.82f), radius = 2.5.dp.toPx(), center = Offset(centerX, centerY))
         drawCircle(color = lace.copy(alpha = 0.74f), radius = 1.5.dp.toPx(), center = Offset(centerX - 7.dp.toPx(), centerY))
         drawCircle(color = lace.copy(alpha = 0.74f), radius = 1.5.dp.toPx(), center = Offset(centerX + 7.dp.toPx(), centerY))
     }

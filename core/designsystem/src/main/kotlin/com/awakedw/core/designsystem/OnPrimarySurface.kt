@@ -17,6 +17,7 @@ import com.awakedw.core.model.ThemeId
 fun onPrimarySurface(spec: ThemeSpec): Color =
     when {
         spec.id == ThemeId.GOTHIC -> Color(ThemePalette.GOTHIC_ON_PRIMARY)
+        spec.id == ThemeId.CLERIC || spec.id == ThemeId.THIN_MINT -> Color.White
         spec.isDark || spec.id == ThemeId.CARAMEL -> Color.White
         else -> Color(ThemePalette.ON_PRIMARY_SURFACE)
     }

@@ -9,4 +9,6 @@ enum class ThemeChoice {
     FIXED_NIGHT,
     FIXED_LAVENDER,
     FIXED_GOTHIC,
+    FIXED_CLERIC,
+    FIXED_THIN_MINT,
 }

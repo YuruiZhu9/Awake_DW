@@ -9,6 +9,8 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import com.awakedw.core.designsystem.ThemeSpec
@@ -23,7 +25,7 @@ private const val DARK_ART_ALPHA = 0.20f
 private const val LIGHT_CENTER_WASH_ALPHA = 0.14f
 private const val DARK_CENTER_WASH_ALPHA = 0.10f
 
-internal fun lolitaAssetFileOf(themeId: ThemeId): String =
+internal fun lolitaAssetFileOf(themeId: ThemeId): String? =
     when (themeId) {
         ThemeId.EMERALD -> "lolita/green.jpg"
         ThemeId.STRAWBERRY -> "lolita/rose.jpg"
@@ -31,6 +33,8 @@ internal fun lolitaAssetFileOf(themeId: ThemeId): String =
         ThemeId.NIGHT -> "lolita/gothic.jpg"
         ThemeId.LAVENDER -> "lolita/blue.jpg"
         ThemeId.GOTHIC -> "lolita/gothic.jpg"
+        ThemeId.CLERIC -> null
+        ThemeId.THIN_MINT -> "lolita/green.jpg"
     }
 
 /**
@@ -46,7 +50,7 @@ fun LolitaBackdrop(
     spec: ThemeSpec,
     modifier: Modifier = Modifier,
 ) {
-    val image = rememberAssetImageOrN(lolitaAssetFileOf(spec.id))
+    val image = rememberAssetImageOrN(lolitaAssetFileOf(spec.id), retainPreviousImage = false)
     val reduceMotion = rememberReduceMotion()
     val reveal =
         animateFloatAsState(
@@ -81,13 +85,30 @@ fun LolitaBackdrop(
                                 center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height * 0.48f),
                                 radius = max(size.width, size.height) * 0.66f,
                             )
+                        // Invert white-paper art into light ink before screening on a dark surface.
+                        val darkInk =
+                            if (spec.isDark) {
+                                ColorFilter.colorMatrix(
+                                    ColorMatrix(
+                                        floatArrayOf(
+                                            -1f, 0f, 0f, 0f, 255f,
+                                            0f, -1f, 0f, 0f, 255f,
+                                            0f, 0f, -1f, 0f, 255f,
+                                            0f, 0f, 0f, 1f, 0f,
+                                        ),
+                                    ),
+                                )
+                            } else {
+                                null
+                            }
                         onDrawBehind {
                             drawImage(
                                 image = source,
                                 dstOffset = androidx.compose.ui.unit.IntOffset(dstOffsetX, dstOffsetY),
                                 dstSize = androidx.compose.ui.unit.IntSize(dstWidth, dstHeight),
                                 alpha = reveal * if (spec.isDark) DARK_ART_ALPHA else LIGHT_ART_ALPHA,
-                                blendMode = BlendMode.Multiply,
+                                colorFilter = darkInk,
+                                blendMode = if (spec.isDark) BlendMode.Screen else BlendMode.Multiply,
                             )
                             drawRect(brush = centerWash)
                         }

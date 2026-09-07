@@ -122,4 +122,26 @@ class OnPrimarySurfaceTest {
         val ratio = contrast(ThemePalette.SHENYE_LACE, ThemePalette.SHENYE_CHIP_BG)
         assertTrue("lace #525C72 vs chipBg #182630 实际 $ratio", ratio >= 1.8f)
     }
+
+    @Test
+    fun `白色圣职按钮与正文对比度至少四点五`() {
+        listOf(ThemePalette.CLERIC_PRIMARY, ThemePalette.CLERIC_BUTTON_TOP, ThemePalette.CLERIC_BUTTON_BOTTOM).forEach { bg ->
+            assertTrue(contrast(0xFFFFFFFF, bg) >= 4.5f)
+        }
+        listOf(ThemePalette.CLERIC_BG_1, ThemePalette.CLERIC_BG_2, ThemePalette.CLERIC_BG_3).forEach { bg ->
+            assertTrue(contrast(ThemePalette.CLERIC_GREETING, bg) >= 4.5f)
+            assertTrue(contrast(ThemePalette.CLERIC_GREETING_SUB, bg) >= 4.5f)
+        }
+    }
+
+    @Test
+    fun `薄荷巧克力按钮与正文对比度至少四点五`() {
+        listOf(ThemePalette.THIN_MINT_PRIMARY, ThemePalette.THIN_MINT_BUTTON_TOP, ThemePalette.THIN_MINT_BUTTON_BOTTOM).forEach { bg ->
+            assertTrue(contrast(0xFFFFFFFF, bg) >= 4.5f)
+        }
+        listOf(ThemePalette.THIN_MINT_BG_1, ThemePalette.THIN_MINT_BG_2, ThemePalette.THIN_MINT_BG_3).forEach { bg ->
+            assertTrue(contrast(ThemePalette.THIN_MINT_GREETING, bg) >= 4.5f)
+            assertTrue(contrast(ThemePalette.THIN_MINT_GREETING_SUB, bg) >= 4.5f)
+        }
+    }
 }

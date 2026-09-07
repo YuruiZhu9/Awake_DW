@@ -255,4 +255,42 @@ object ThemePalette {
 
     /** 徽章底透明度：午后主题 rgba(254,223,225,.92) */
     const val CHIP_BG_ALPHA = 0.92f
+
+    // CLERIC · alpha9
+    const val CLERIC_BG_1 = 0xFFFAFAF7
+    const val CLERIC_BG_2 = 0xFFF0F1F4
+    const val CLERIC_BG_3 = 0xFFE2E5EB
+    const val CLERIC_PRIMARY = 0xFF505462
+    const val CLERIC_RING_TRACK = 0xFFCED2DC
+    const val CLERIC_RING_VALUE_TEXT = 0xFF393D49
+    const val CLERIC_GREETING = 0xFF393D49
+    const val CLERIC_GREETING_SUB = 0xFF5C616E
+    const val CLERIC_BUTTON_TOP = 0xFF505462
+    const val CLERIC_BUTTON_BOTTOM = 0xFF646978
+    const val CLERIC_CHIP_BG = 0xFFF5F5F4
+    const val CLERIC_CHIP_TEXT = 0xFF393D49
+    const val CLERIC_PARTICLE_1 = 0xFF9DA6B6
+    const val CLERIC_PARTICLE_2 = 0xFFC0C6D1
+    const val CLERIC_PARTICLE_3 = 0xFFD4D7DF
+    const val CLERIC_PARTICLE_4 = 0xFFB1B8C5
+    const val CLERIC_LACE = 0xFFB9C0CF
+
+    // THIN_MINT · alpha9
+    const val THIN_MINT_BG_1 = 0xFFF5FBF7
+    const val THIN_MINT_BG_2 = 0xFFE5F3EA
+    const val THIN_MINT_BG_3 = 0xFFC7E4D5
+    const val THIN_MINT_PRIMARY = 0xFF594039
+    const val THIN_MINT_RING_TRACK = 0xFFB9D9C8
+    const val THIN_MINT_RING_VALUE_TEXT = 0xFF49342F
+    const val THIN_MINT_GREETING = 0xFF49342F
+    const val THIN_MINT_GREETING_SUB = 0xFF5B6055
+    const val THIN_MINT_BUTTON_TOP = 0xFF594039
+    const val THIN_MINT_BUTTON_BOTTOM = 0xFF71534A
+    const val THIN_MINT_CHIP_BG = 0xFFEDF6EF
+    const val THIN_MINT_CHIP_TEXT = 0xFF49342F
+    const val THIN_MINT_PARTICLE_1 = 0xFF5B987C
+    const val THIN_MINT_PARTICLE_2 = 0xFF8BBDA1
+    const val THIN_MINT_PARTICLE_3 = 0xFFAFD4BD
+    const val THIN_MINT_PARTICLE_4 = 0xFF71534A
+    const val THIN_MINT_LACE = 0xFFA4C8B3
 }

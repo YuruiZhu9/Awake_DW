@@ -8,6 +8,19 @@ import org.junit.Test
 /** Material components must inherit the same palette as bespoke Awake surfaces. */
 class AwakeThemeTest {
     @Test
+    fun `all themes have material colors and new light branches remain distinct`() {
+        assertEquals(ThemeId.entries.toSet(), ThemeById.keys)
+        ThemeById.values.forEach { spec ->
+            assertEquals(spec.primary, materialColorSchemeOf(spec).primary)
+            assertEquals(onPrimarySurface(spec), materialColorSchemeOf(spec).onPrimary)
+        }
+        assertEquals(false, ClericThemeSpec.isDark)
+        assertEquals(false, ThinMintThemeSpec.isDark)
+        assertNotEquals(EmeraldThemeSpec.buttonTop, ThinMintThemeSpec.buttonTop)
+        assertNotEquals(GothicThemeSpec.backgroundGradient, ClericThemeSpec.backgroundGradient)
+    }
+
+    @Test
     fun `material scheme follows light theme anchors`() {
         val spec = ThemeById.getValue(ThemeId.EMERALD)
         val colors = materialColorSchemeOf(spec)

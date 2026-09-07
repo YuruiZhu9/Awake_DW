@@ -71,6 +71,8 @@ class ResolveThemeUseCase(
             ThemeChoice.FIXED_NIGHT -> flowOf(ThemeId.NIGHT)
             ThemeChoice.FIXED_LAVENDER -> flowOf(ThemeId.LAVENDER)
             ThemeChoice.FIXED_GOTHIC -> flowOf(ThemeId.GOTHIC)
+            ThemeChoice.FIXED_CLERIC -> flowOf(ThemeId.CLERIC)
+            ThemeChoice.FIXED_THIN_MINT -> flowOf(ThemeId.THIN_MINT)
         }
 
     /** 周期重读时钟的时段流：没有可订阅的外部时间事件源，轻量轮询是最简可靠的刷新方式。 */

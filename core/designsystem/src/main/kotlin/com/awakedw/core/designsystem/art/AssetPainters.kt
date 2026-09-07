@@ -102,18 +102,18 @@ fun nightVariantOf(
  * 组合期读取 assets 位图；缺失/解码失败组合值为 null（调用方回退，绝不抛异常）。
  * 内部 [Dispatchers.IO] 异步装载，[assetFile] 变化时自动重载。
  *
- * 实现注记：等价于 `produceState` 的展开写法（unkeyed `remember { mutableStateOf }` +
- * keyed [LaunchedEffect]）——语义逐点一致：state 实例跨键保留（换图期间旧图保持上屏，
- * 不闪空帧）、键变化取消旧装载并重启、IO 调度、缺失回退 null。弃用 `produceState`
- * 是因为当前工具链下 Compose runtime lint 对 lambda 接收者上的 `value =` 赋值会误报，
- * 展开写法无此问题。
+ * [assetFile] 为 null 表示没有配置图片。猫咪换表情时默认保留前帧，避免闪回矢量兜底。
+ * 背景可关闭 [retainPreviousImage] 防止新色板短暂显示旧服饰；过期加载自动取消。
  */
 @Composable
-fun rememberAssetImageOrN(assetFile: String): ImageBitmap? {
+fun rememberAssetImageOrN(
+    assetFile: String?,
+    retainPreviousImage: Boolean = true,
+): ImageBitmap? {
     val context = LocalContext.current
-    val state = remember { mutableStateOf<ImageBitmap?>(null) }
+    val state = remember(if (retainPreviousImage) null else assetFile) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(assetFile) {
-        state.value = withContext(Dispatchers.IO) { loadAssetBitmap(context, assetFile) }
+        state.value = assetFile?.let { withContext(Dispatchers.IO) { loadAssetBitmap(context, it) } }
     }
-    return state.value
+    return if (assetFile == null) null else state.value
 }

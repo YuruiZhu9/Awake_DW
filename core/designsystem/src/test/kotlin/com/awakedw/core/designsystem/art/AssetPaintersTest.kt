@@ -1,5 +1,6 @@
 package com.awakedw.core.designsystem.art
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.junit4.createComposeRule
 import kotlinx.coroutines.runBlocking
@@ -113,5 +114,18 @@ class AssetPaintersTest {
         // IO 装载不受帧钟调度，轮询等待 produceState 落值。
         composeRule.waitUntil(timeoutMillis = 5_000) { captured != null }
         assertNotNull(captured)
+    }
+
+    @Test
+    fun `switching to an unconfigured theme clears the previous bitmap`() {
+        val path = mutableStateOf<String?>("arttest/dot.png")
+        var captured: ImageBitmap? = null
+        composeRule.setContent {
+            captured = rememberAssetImageOrN(path.value, retainPreviousImage = false)
+        }
+        composeRule.waitUntil(timeoutMillis = 5_000) { captured != null }
+        composeRule.runOnIdle { path.value = null }
+        composeRule.waitForIdle()
+        assertNull(captured)
     }
 }

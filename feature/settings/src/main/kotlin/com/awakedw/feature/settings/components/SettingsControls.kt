@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeById
@@ -157,7 +159,7 @@ internal fun ToggleRow(
             onCheckedChange = onCheckedChange,
             colors =
                 SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
+                    checkedThumbColor = onPrimarySurface(spec),
                     checkedTrackColor = spec.primary,
                     uncheckedThumbColor = spec.chipText,
                     uncheckedTrackColor = spec.chipText.copy(alpha = 0.20f),
@@ -256,7 +258,6 @@ internal fun IntervalChipsRow(
 }
 
 /** Theme choices shown as compact color cards instead of a form-like list. */
-@OptIn(ExperimentalLayoutApi::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun ThemeChoiceChips(
@@ -264,19 +265,28 @@ internal fun ThemeChoiceChips(
     onSelect: (ThemeChoice) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        maxItemsInEachRow = 2,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Column(
+        modifier = modifier.fillMaxWidth().selectableGroup(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        ThemeChoice.entries.forEach { choice ->
-            ThemeChoiceCard(
-                choice = choice,
-                selected = choice == selected,
-                onClick = { onSelect(choice) },
-                modifier = Modifier.weight(1f),
-            )
+        ThemeChoiceCard(
+            choice = ThemeChoice.FOLLOW_TIME,
+            selected = selected == ThemeChoice.FOLLOW_TIME,
+            onClick = { onSelect(ThemeChoice.FOLLOW_TIME) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        ThemeChoice.entries.filter { it != ThemeChoice.FOLLOW_TIME }.chunked(2).forEach { choices ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                choices.forEach { choice ->
+                    ThemeChoiceCard(
+                        choice = choice,
+                        selected = choice == selected,
+                        onClick = { onSelect(choice) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (choices.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
     }
 }
@@ -290,15 +300,15 @@ private fun ThemeChoiceCard(
     modifier: Modifier = Modifier,
 ) {
     val current = currentThemeSpec()
-    val accent = themePrimary(choice)
-    val cardColor = if (selected) accent.copy(alpha = 0.18f) else current.chipBg.copy(alpha = 0.26f)
-    val borderColor = if (selected) accent.copy(alpha = 0.82f) else current.laceColor.copy(alpha = 0.42f)
+    val cardColor = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f)
+    val borderColor = if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = cardColor,
         border = BorderStroke(width = 1.dp, color = borderColor),
         onClick = onClick,
-        modifier = modifier.heightIn(min = 76.dp),
+        selected = selected,
+        modifier = modifier.heightIn(min = 86.dp).semantics { role = Role.RadioButton },
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
@@ -321,7 +331,7 @@ private fun ThemeChoiceCard(
                     Icon(
                         imageVector = Icons.Rounded.Check,
                         contentDescription = "已选择",
-                        tint = accent,
+                        tint = current.chipText,
                         modifier = Modifier.size(16.dp),
                     )
                 }
@@ -339,7 +349,9 @@ internal fun themeLabel(choice: ThemeChoice): String =
         ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
         ThemeChoice.FIXED_NIGHT -> "深夜青黛"
         ThemeChoice.FIXED_LAVENDER -> "雾紫玫瑰"
-        ThemeChoice.FIXED_GOTHIC -> "黑白哥特"
+        ThemeChoice.FIXED_GOTHIC -> "黑色哥特"
+        ThemeChoice.FIXED_CLERIC -> "白色圣职"
+        ThemeChoice.FIXED_THIN_MINT -> "薄荷巧克力"
     }
 
 @Suppress("ktlint:standard:function-naming")
@@ -352,9 +364,18 @@ private fun ThemeSwatch(
     Box(
         modifier =
             modifier
-                .heightIn(min = 22.dp)
+                .heightIn(min = 30.dp)
                 .background(brush, RoundedCornerShape(9.dp)),
     ) {
+        if (choice != ThemeChoice.FOLLOW_TIME) {
+            val theme = ThemeById.getValue(themeIdOf(choice))
+            Box(
+                modifier =
+                    Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)
+                        .size(width = 30.dp, height = 14.dp)
+                        .background(Brush.horizontalGradient(listOf(theme.buttonTop, theme.buttonBottom)), RoundedCornerShape(5.dp)),
+            )
+        }
         // A hairline highlight makes the swatch feel like a printed color card.
         Box(
             modifier =
@@ -375,16 +396,12 @@ private fun themeSwatchBrush(choice: ThemeChoice): Brush =
                     ThemeById.getValue(ThemeId.EMERALD).primary,
                     ThemeById.getValue(ThemeId.CARAMEL).primary,
                     ThemeById.getValue(ThemeId.NIGHT).primary,
-                    ThemeById.getValue(ThemeId.GOTHIC).primary,
                 ),
             )
         else -> {
             val theme = ThemeById.getValue(themeIdOf(choice))
             Brush.horizontalGradient(
-                listOf(
-                    theme.primary.copy(alpha = 0.72f),
-                    theme.buttonBottom,
-                ),
+                theme.backgroundGradient,
             )
         }
     }
@@ -397,18 +414,9 @@ private fun themeIdOf(choice: ThemeChoice): ThemeId =
         ThemeChoice.FIXED_NIGHT -> ThemeId.NIGHT
         ThemeChoice.FIXED_LAVENDER -> ThemeId.LAVENDER
         ThemeChoice.FIXED_GOTHIC -> ThemeId.GOTHIC
+        ThemeChoice.FIXED_CLERIC -> ThemeId.CLERIC
+        ThemeChoice.FIXED_THIN_MINT -> ThemeId.THIN_MINT
         ThemeChoice.FOLLOW_TIME -> ThemeId.EMERALD
-    }
-
-private fun themePrimary(choice: ThemeChoice): Color =
-    when (choice) {
-        ThemeChoice.FIXED_EMERALD -> ThemeById.getValue(ThemeId.EMERALD).primary
-        ThemeChoice.FIXED_STRAWBERRY -> ThemeById.getValue(ThemeId.STRAWBERRY).primary
-        ThemeChoice.FIXED_CARAMEL -> ThemeById.getValue(ThemeId.CARAMEL).primary
-        ThemeChoice.FIXED_NIGHT -> ThemeById.getValue(ThemeId.NIGHT).primary
-        ThemeChoice.FIXED_LAVENDER -> ThemeById.getValue(ThemeId.LAVENDER).primary
-        ThemeChoice.FIXED_GOTHIC -> ThemeById.getValue(ThemeId.GOTHIC).primary
-        ThemeChoice.FOLLOW_TIME -> ThemeById.getValue(ThemeId.EMERALD).primary
     }
 
 @Suppress("ktlint:standard:function-naming")

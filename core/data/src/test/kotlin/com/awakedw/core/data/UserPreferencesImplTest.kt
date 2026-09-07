@@ -33,6 +33,16 @@ class UserPreferencesImplTest {
     }
 
     @Test
+    fun `新增主题往返存储且旧哥特键保持兼容`() =
+        runTest {
+            listOf(ThemeChoice.FIXED_GOTHIC, ThemeChoice.FIXED_CLERIC, ThemeChoice.FIXED_THIN_MINT).forEach { choice ->
+                repo.setThemeChoice(choice)
+                assertEquals(choice, repo.settings.first().themeChoice)
+                assertEquals(choice.name, dataStore.data.first()[stringPreferencesKey("theme_mode")])
+            }
+        }
+
+    @Test
     fun `默认值_流首帧等于UserSettings默认_onboarding未完成_无celebrated`() =
         runTest {
             assertEquals(UserSettings(), repo.settings.first())

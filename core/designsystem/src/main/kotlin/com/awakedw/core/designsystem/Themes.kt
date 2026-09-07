@@ -157,7 +157,7 @@ val LavenderThemeSpec: ThemeSpec =
         laceColor = Color(ThemePalette.LAVENDER_LACE),
     )
 
-/** F ? ??????ThemeId.GOTHIC?????????????????? */
+/** 黑色哥特：炭黑底面与暗银强调。 */
 val GothicThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.GOTHIC,
@@ -188,6 +188,64 @@ val GothicThemeSpec: ThemeSpec =
         laceColor = Color(ThemePalette.GOTHIC_LACE),
     )
 
+val ClericThemeSpec: ThemeSpec =
+    ThemeSpec(
+        id = ThemeId.CLERIC,
+        backgroundGradient =
+            listOf(
+                Color(ThemePalette.CLERIC_BG_1),
+                Color(ThemePalette.CLERIC_BG_2),
+                Color(ThemePalette.CLERIC_BG_3),
+            ),
+        primary = Color(ThemePalette.CLERIC_PRIMARY),
+        ringTrack = Color(ThemePalette.CLERIC_RING_TRACK),
+        ringValueText = Color(ThemePalette.CLERIC_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.CLERIC_GREETING),
+        greetingSubColor = Color(ThemePalette.CLERIC_GREETING_SUB),
+        buttonTop = Color(ThemePalette.CLERIC_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.CLERIC_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.CLERIC_CHIP_BG),
+        chipText = Color(ThemePalette.CLERIC_CHIP_TEXT),
+        particleColors =
+            listOf(
+                Color(ThemePalette.CLERIC_PARTICLE_1),
+                Color(ThemePalette.CLERIC_PARTICLE_2),
+                Color(ThemePalette.CLERIC_PARTICLE_3),
+                Color(ThemePalette.CLERIC_PARTICLE_4),
+            ),
+        haloColor = Color(ThemePalette.CLERIC_PRIMARY),
+        laceColor = Color(ThemePalette.CLERIC_LACE),
+    )
+
+val ThinMintThemeSpec: ThemeSpec =
+    ThemeSpec(
+        id = ThemeId.THIN_MINT,
+        backgroundGradient =
+            listOf(
+                Color(ThemePalette.THIN_MINT_BG_1),
+                Color(ThemePalette.THIN_MINT_BG_2),
+                Color(ThemePalette.THIN_MINT_BG_3),
+            ),
+        primary = Color(ThemePalette.THIN_MINT_PRIMARY),
+        ringTrack = Color(ThemePalette.THIN_MINT_RING_TRACK),
+        ringValueText = Color(ThemePalette.THIN_MINT_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.THIN_MINT_GREETING),
+        greetingSubColor = Color(ThemePalette.THIN_MINT_GREETING_SUB),
+        buttonTop = Color(ThemePalette.THIN_MINT_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.THIN_MINT_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.THIN_MINT_CHIP_BG),
+        chipText = Color(ThemePalette.THIN_MINT_CHIP_TEXT),
+        particleColors =
+            listOf(
+                Color(ThemePalette.THIN_MINT_PARTICLE_1),
+                Color(ThemePalette.THIN_MINT_PARTICLE_2),
+                Color(ThemePalette.THIN_MINT_PARTICLE_3),
+                Color(ThemePalette.THIN_MINT_PARTICLE_4),
+            ),
+        haloColor = Color(ThemePalette.THIN_MINT_PRIMARY),
+        laceColor = Color(ThemePalette.THIN_MINT_LACE),
+    )
+
 /** ThemeId → 主题规格 的全覆盖查找表。 */
 val ThemeById: Map<ThemeId, ThemeSpec> =
     mapOf(
@@ -197,4 +255,6 @@ val ThemeById: Map<ThemeId, ThemeSpec> =
         NightThemeSpec.id to NightThemeSpec,
         LavenderThemeSpec.id to LavenderThemeSpec,
         GothicThemeSpec.id to GothicThemeSpec,
+        ClericThemeSpec.id to ClericThemeSpec,
+        ThinMintThemeSpec.id to ThinMintThemeSpec,
     )
