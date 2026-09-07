@@ -157,6 +157,37 @@ val LavenderThemeSpec: ThemeSpec =
         laceColor = Color(ThemePalette.LAVENDER_LACE),
     )
 
+/** F ? ??????ThemeId.GOTHIC?????????????????? */
+val GothicThemeSpec: ThemeSpec =
+    ThemeSpec(
+        id = ThemeId.GOTHIC,
+        backgroundGradient =
+            listOf(
+                Color(ThemePalette.GOTHIC_BG_1),
+                Color(ThemePalette.GOTHIC_BG_2),
+                Color(ThemePalette.GOTHIC_BG_3),
+            ),
+        primary = Color(ThemePalette.GOTHIC_PRIMARY),
+        ringTrack = Color(ThemePalette.GOTHIC_RING_TRACK),
+        ringValueText = Color(ThemePalette.GOTHIC_RING_VALUE_TEXT),
+        greetingColor = Color(ThemePalette.GOTHIC_GREETING),
+        greetingSubColor = Color(ThemePalette.GOTHIC_GREETING_SUB),
+        buttonTop = Color(ThemePalette.GOTHIC_BUTTON_TOP),
+        buttonBottom = Color(ThemePalette.GOTHIC_BUTTON_BOTTOM),
+        chipBg = Color(ThemePalette.GOTHIC_CHIP_BG),
+        chipText = Color(ThemePalette.GOTHIC_CHIP_TEXT),
+        particleColors =
+            listOf(
+                Color(ThemePalette.GOTHIC_PARTICLE_1),
+                Color(ThemePalette.GOTHIC_PARTICLE_2),
+                Color(ThemePalette.GOTHIC_PARTICLE_3),
+                Color(ThemePalette.GOTHIC_PARTICLE_4),
+            ),
+        haloColor = Color(ThemePalette.GOTHIC_PRIMARY),
+        isDark = true,
+        laceColor = Color(ThemePalette.GOTHIC_LACE),
+    )
+
 /** ThemeId → 主题规格 的全覆盖查找表。 */
 val ThemeById: Map<ThemeId, ThemeSpec> =
     mapOf(
@@ -165,4 +196,5 @@ val ThemeById: Map<ThemeId, ThemeSpec> =
         CaramelThemeSpec.id to CaramelThemeSpec,
         NightThemeSpec.id to NightThemeSpec,
         LavenderThemeSpec.id to LavenderThemeSpec,
+        GothicThemeSpec.id to GothicThemeSpec,
     )

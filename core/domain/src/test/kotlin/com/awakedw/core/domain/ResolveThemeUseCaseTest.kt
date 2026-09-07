@@ -56,6 +56,7 @@ class ResolveThemeUseCaseTest {
                 ThemeChoice.FIXED_CARAMEL to ThemeId.CARAMEL,
                 ThemeChoice.FIXED_NIGHT to ThemeId.NIGHT,
                 ThemeChoice.FIXED_LAVENDER to ThemeId.LAVENDER,
+                ThemeChoice.FIXED_GOTHIC to ThemeId.GOTHIC,
             ).forEach { (choice, expected) ->
                 prefs.setThemeChoice(choice)
                 assertEquals(expected, useCase().first())

@@ -67,7 +67,7 @@ import com.awakedw.feature.home.components.HomeActionDeck
 import com.awakedw.feature.home.components.PraiseLine
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
-val HOME_RING_DIAMETER = 220.dp
+val HOME_RING_DIAMETER = 196.dp
 
 /** 环心数字滚动时长（规格 §4.2 第 3 步：~500ms）。 */
 private const val NUMBER_ROLL_MS = 500
@@ -87,13 +87,13 @@ private val LOG_BUTTON_POCKET_WIDTH = 160.dp
 private val LOG_BUTTON_POCKET_HEIGHT = 96.dp
 
 /** 胆大王光袋直径（96–160dp 区间取值）：给 108dp 立绘留一圈轻薄呼吸光晕。 */
-private val CAT_POCKET_DIAMETER = 132.dp
+private val CAT_POCKET_DIAMETER = 100.dp
 
 /** Ring praise floats below the ring without adding permanent layout height. */
 private val PRAISE_LINE_DROP = 12.dp
 
 /** Mascot gets its own flow row after the factual summary, so it never covers statistics. */
-private val CAT_RAIL_HEIGHT = 148.dp
+private val CAT_RAIL_HEIGHT = 92.dp
 
 /** Small end spacing; the mascot row itself provides the required breathing room. */
 private val CONTENT_TAIL_BREATHING = 24.dp
@@ -156,7 +156,16 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 praiseLine = state.praiseLine,
                 onRingTap = viewModel::tapRing,
             )
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(4.dp))
+            FadeUpOnce(delayMillis = 40) {
+                CatRail(
+                    mood = state.catMood,
+                    line = state.catLine,
+                    onPet = viewModel::petCat,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
             // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
             FadeUpOnce(delayMillis = 80) {
                 HomeActionDeck(
@@ -174,23 +183,13 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(14.dp))
-            // The mascot occupies normal flow after the statistics row; it no longer covers factual text.
-            FadeUpOnce(delayMillis = 180) {
-                CatRail(
-                    mood = state.catMood,
-                    line = state.catLine,
-                    onPet = viewModel::petCat,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
         }
     }
 }
 
 /**
- * Flow-based mascot row. It follows the factual summary, keeping the cat and its bubble
- * visually separate from cup count, latest drink, and average interval text.
+ * Compact mascot rail: the cat stays in the first viewport near the ring while the
+ * factual summary remains untouched below the action deck.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -208,20 +207,20 @@ private fun CatRail(
             multiLine = true,
             modifier =
                 Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 4.dp, end = 116.dp),
+                    .align(Alignment.CenterStart)
+                    .padding(end = 98.dp),
         )
         Box(
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier.align(Alignment.CenterEnd),
             contentAlignment = Alignment.Center,
         ) {
             LightPocket(modifier = Modifier.size(CAT_POCKET_DIAMETER))
-            CatFigure(mood = mood, onPet = onPet)
+            CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
         }
     }
 }
 
-/** 进度环区块：达标后满环微光呼吸 + 可点按环体 + 环心数字滚动 + 12 点方向蝴蝶结（§12）。 */
+/** ??????????????? + ????? + ?????? + 12 ????????12?? */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun RingBlock(
@@ -333,7 +332,7 @@ private fun RingCenterContent(
             text = "${rolledTotal}ml",
             color = spec.ringValueText,
             // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
         )
         Spacer(Modifier.height(4.dp))
         // 环心珍珠分隔点（§12）：三枚渐次大小的小珍珠，柔化数字与小字的过渡。
@@ -346,7 +345,7 @@ private fun RingCenterContent(
         Text(
             text = "今日已喝",
             color = spec.ringValueText.copy(alpha = 0.6f),
-            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
         )
     }
 }

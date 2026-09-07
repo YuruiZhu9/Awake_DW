@@ -12,6 +12,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -91,9 +93,11 @@ internal fun LogButton(
         Box(
             modifier =
                 Modifier
-                    .clip(RoundedCornerShape(percent = 50))
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(18.dp))
                     .background(Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
-                    .border(1.dp, Color.White.copy(alpha = if (spec.isDark) 0.20f else 0.34f), RoundedCornerShape(percent = 50))
+                    .border(1.dp, Color.White.copy(alpha = if (spec.isDark) 0.24f else 0.34f), RoundedCornerShape(18.dp))
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -103,22 +107,32 @@ internal fun LogButton(
                         burstTrigger += 1
                         onTap()
                     }
-                    .padding(horizontal = 42.dp, vertical = 16.dp),
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.Center,
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.WaterDrop,
-                    contentDescription = null,
-                    tint = onPrimarySurface(spec),
-                    modifier = Modifier.size(18.dp),
-                )
+                Box(
+                    modifier =
+                        Modifier
+                            .size(34.dp)
+                            .background(onPrimarySurface(spec).copy(alpha = 0.14f), RoundedCornerShape(11.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.WaterDrop,
+                        contentDescription = null,
+                        tint = onPrimarySurface(spec),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Text(
                     text = LOG_BUTTON_LABEL,
                     color = onPrimarySurface(spec),
                     style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 9.dp),
                 )
             }
         }

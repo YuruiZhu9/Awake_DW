@@ -30,6 +30,7 @@ internal fun lolitaAssetFileOf(themeId: ThemeId): String =
         ThemeId.CARAMEL -> "lolita/warm.jpg"
         ThemeId.NIGHT -> "lolita/gothic.jpg"
         ThemeId.LAVENDER -> "lolita/blue.jpg"
+        ThemeId.GOTHIC -> "lolita/gothic.jpg"
     }
 
 /**

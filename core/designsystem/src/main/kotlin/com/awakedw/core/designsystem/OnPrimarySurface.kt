@@ -15,4 +15,8 @@ import com.awakedw.core.model.ThemeId
  * 纯函数（不依赖组合状态），组合内可直接调用，JVM 测试无需 Robolectric。
  */
 fun onPrimarySurface(spec: ThemeSpec): Color =
-    if (spec.isDark || spec.id == ThemeId.CARAMEL) Color.White else Color(ThemePalette.ON_PRIMARY_SURFACE)
+    when {
+        spec.id == ThemeId.GOTHIC -> Color(ThemePalette.GOTHIC_ON_PRIMARY)
+        spec.isDark || spec.id == ThemeId.CARAMEL -> Color.White
+        else -> Color(ThemePalette.ON_PRIMARY_SURFACE)
+    }

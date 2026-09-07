@@ -70,6 +70,7 @@ class ResolveThemeUseCase(
             ThemeChoice.FIXED_CARAMEL -> flowOf(ThemeId.CARAMEL)
             ThemeChoice.FIXED_NIGHT -> flowOf(ThemeId.NIGHT)
             ThemeChoice.FIXED_LAVENDER -> flowOf(ThemeId.LAVENDER)
+            ThemeChoice.FIXED_GOTHIC -> flowOf(ThemeId.GOTHIC)
         }
 
     /** 周期重读时钟的时段流：没有可订阅的外部时间事件源，轻量轮询是最简可靠的刷新方式。 */

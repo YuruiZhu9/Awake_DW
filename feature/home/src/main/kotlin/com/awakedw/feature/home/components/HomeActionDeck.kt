@@ -39,14 +39,14 @@ internal fun HomeActionDeck(
     val spec = currentThemeSpec()
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        color = spec.chipBg.copy(alpha = 0.30f),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.44f)),
-        shadowElevation = 1.dp,
+        shape = RoundedCornerShape(22.dp),
+        color = spec.chipBg.copy(alpha = 0.42f),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
+        shadowElevation = 2.dp,
         tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {

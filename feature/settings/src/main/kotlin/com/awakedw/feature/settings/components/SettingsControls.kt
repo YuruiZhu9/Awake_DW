@@ -339,6 +339,7 @@ internal fun themeLabel(choice: ThemeChoice): String =
         ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
         ThemeChoice.FIXED_NIGHT -> "深夜青黛"
         ThemeChoice.FIXED_LAVENDER -> "雾紫玫瑰"
+        ThemeChoice.FIXED_GOTHIC -> "黑白哥特"
     }
 
 @Suppress("ktlint:standard:function-naming")
@@ -374,6 +375,7 @@ private fun themeSwatchBrush(choice: ThemeChoice): Brush =
                     ThemeById.getValue(ThemeId.EMERALD).primary,
                     ThemeById.getValue(ThemeId.CARAMEL).primary,
                     ThemeById.getValue(ThemeId.NIGHT).primary,
+                    ThemeById.getValue(ThemeId.GOTHIC).primary,
                 ),
             )
         else -> {
@@ -394,6 +396,7 @@ private fun themeIdOf(choice: ThemeChoice): ThemeId =
         ThemeChoice.FIXED_CARAMEL -> ThemeId.CARAMEL
         ThemeChoice.FIXED_NIGHT -> ThemeId.NIGHT
         ThemeChoice.FIXED_LAVENDER -> ThemeId.LAVENDER
+        ThemeChoice.FIXED_GOTHIC -> ThemeId.GOTHIC
         ThemeChoice.FOLLOW_TIME -> ThemeId.EMERALD
     }
 
@@ -404,6 +407,7 @@ private fun themePrimary(choice: ThemeChoice): Color =
         ThemeChoice.FIXED_CARAMEL -> ThemeById.getValue(ThemeId.CARAMEL).primary
         ThemeChoice.FIXED_NIGHT -> ThemeById.getValue(ThemeId.NIGHT).primary
         ThemeChoice.FIXED_LAVENDER -> ThemeById.getValue(ThemeId.LAVENDER).primary
+        ThemeChoice.FIXED_GOTHIC -> ThemeById.getValue(ThemeId.GOTHIC).primary
         ThemeChoice.FOLLOW_TIME -> ThemeById.getValue(ThemeId.EMERALD).primary
     }
 

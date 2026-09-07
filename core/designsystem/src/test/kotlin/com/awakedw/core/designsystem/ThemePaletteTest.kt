@@ -157,4 +157,21 @@ class ThemePaletteTest {
         assertEquals(0xFF6F548E, ThemePalette.LAVENDER_CHIP_TEXT)
         assertEquals(0xFFE2D3EF, ThemePalette.LAVENDER_LACE)
     }
+
+    @Test
+    fun `black and white gothic palette anchors`() {
+        assertEquals(0xFF080809, ThemePalette.GOTHIC_BG_1)
+        assertEquals(0xFF121216, ThemePalette.GOTHIC_BG_2)
+        assertEquals(0xFF202024, ThemePalette.GOTHIC_BG_3)
+        assertEquals(0xFFE6E1E2, ThemePalette.GOTHIC_PRIMARY)
+        assertEquals(0xFF35343A, ThemePalette.GOTHIC_RING_TRACK)
+        assertEquals(0xFFF5F0EC, ThemePalette.GOTHIC_RING_VALUE_TEXT)
+        assertEquals(0xFFF2ECE8, ThemePalette.GOTHIC_GREETING)
+        assertEquals(0xFFA7A0A4, ThemePalette.GOTHIC_GREETING_SUB)
+        assertEquals(0xFFAAA4AA, ThemePalette.GOTHIC_BUTTON_TOP)
+        assertEquals(0xFFE0D9DB, ThemePalette.GOTHIC_BUTTON_BOTTOM)
+        assertEquals(0xFF1B1A1F, ThemePalette.GOTHIC_CHIP_BG)
+        assertEquals(0xFFE8E2E1, ThemePalette.GOTHIC_CHIP_TEXT)
+        assertEquals(0xFF7C757D, ThemePalette.GOTHIC_LACE)
+    }
 }

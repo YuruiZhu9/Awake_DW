@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -137,6 +138,7 @@ fun CatFigure(
     mood: CatMood,
     modifier: Modifier = Modifier,
     onPet: () -> Unit = {},
+    figureSize: Dp = CAT_FIGURE_SIZE_DP.dp,
 ) {
     val theme = currentThemeSpec()
     val bodyImage = rememberAssetImageOrN(catAssetFileOf(mood))
@@ -177,7 +179,7 @@ fun CatFigure(
     Box(
         modifier =
             modifier
-                .size(CAT_FIGURE_SIZE_DP.dp)
+                .size(figureSize)
                 .graphicsLayer {
                     scaleX = breathScale * bounce.value
                     scaleY = breathScale * bounce.value

@@ -57,6 +57,14 @@ class OnPrimarySurfaceTest {
         }
     }
 
+    @Test
+    fun `black and white gothic theme uses dark text on silver actions`() {
+        assertEquals(Color(ThemePalette.GOTHIC_ON_PRIMARY), onPrimarySurface(GothicThemeSpec))
+        assertTrue(contrast(ThemePalette.GOTHIC_ON_PRIMARY, ThemePalette.GOTHIC_PRIMARY) >= 3f)
+        assertTrue(contrast(ThemePalette.GOTHIC_ON_PRIMARY, ThemePalette.GOTHIC_BUTTON_TOP) >= 3f)
+        assertTrue(contrast(ThemePalette.GOTHIC_ON_PRIMARY, ThemePalette.GOTHIC_BUTTON_BOTTOM) >= 3f)
+    }
+
     // ---------- P2-4：按钮前景色对各主题主色与渐变两端保持清晰 ----------
 
     @Test

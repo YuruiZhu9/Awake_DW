@@ -195,6 +195,29 @@ object ThemePalette {
     const val LAVENDER_PARTICLE_2 = 0xFFA388C2
     const val LAVENDER_PARTICLE_3 = 0xFFC0ABD5
     const val LAVENDER_PARTICLE_4 = 0xFFD4C4E5
+
+    // ------------------------------------------------------------------
+    // F ? Gothic monochrome (ThemeId.GOTHIC)
+    // ------------------------------------------------------------------
+
+    const val GOTHIC_BG_1 = 0xFF080809
+    const val GOTHIC_BG_2 = 0xFF121216
+    const val GOTHIC_BG_3 = 0xFF202024
+    const val GOTHIC_PRIMARY = 0xFFE6E1E2
+    const val GOTHIC_RING_TRACK = 0xFF35343A
+    const val GOTHIC_RING_VALUE_TEXT = 0xFFF5F0EC
+    const val GOTHIC_GREETING = 0xFFF2ECE8
+    const val GOTHIC_GREETING_SUB = 0xFFA7A0A4
+    const val GOTHIC_BUTTON_TOP = 0xFFAAA4AA
+    const val GOTHIC_BUTTON_BOTTOM = 0xFFE0D9DB
+    const val GOTHIC_CHIP_BG = 0xFF1B1A1F
+    const val GOTHIC_CHIP_TEXT = 0xFFE8E2E1
+    const val GOTHIC_PARTICLE_1 = 0xFFE6E1E2
+    const val GOTHIC_PARTICLE_2 = 0xFFB9B2B7
+    const val GOTHIC_PARTICLE_3 = 0xFF756F76
+    const val GOTHIC_PARTICLE_4 = 0xFF3E3B42
+    const val GOTHIC_LACE = 0xFF7C757D
+    const val GOTHIC_ON_PRIMARY = 0xFF242126
     // ------------------------------------------------------------------
     // 洛丽塔配饰层（§12）：蕾丝线按主题派生，描金为共享软香槟金；
     // 深夜蕾丝改锚「暗银」，与描金成暗银描金（moodboard §4）

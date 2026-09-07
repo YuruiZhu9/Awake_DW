@@ -18,6 +18,16 @@ class AwakeThemeTest {
     }
 
     @Test
+    fun `gothic theme remains monochrome and dark`() {
+        val spec = ThemeById.getValue(ThemeId.GOTHIC)
+        val colors = materialColorSchemeOf(spec)
+
+        assertEquals(spec.primary, colors.primary)
+        assertEquals(spec.backgroundGradient.first(), colors.background)
+        assertEquals(true, spec.isDark)
+    }
+
+    @Test
     fun `dark theme remains distinct and uses dark background`() {
         val spec = ThemeById.getValue(ThemeId.NIGHT)
         val colors = materialColorSchemeOf(spec)

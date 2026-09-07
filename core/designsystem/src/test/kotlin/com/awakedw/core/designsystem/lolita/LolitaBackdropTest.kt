@@ -13,5 +13,6 @@ class LolitaBackdropTest {
         assertEquals("lolita/warm.jpg", lolitaAssetFileOf(ThemeId.CARAMEL))
         assertEquals("lolita/gothic.jpg", lolitaAssetFileOf(ThemeId.NIGHT))
         assertEquals("lolita/blue.jpg", lolitaAssetFileOf(ThemeId.LAVENDER))
+        assertEquals("lolita/gothic.jpg", lolitaAssetFileOf(ThemeId.GOTHIC))
     }
 }
