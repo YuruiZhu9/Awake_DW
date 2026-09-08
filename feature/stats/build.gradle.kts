@@ -24,6 +24,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    sourceSets.getByName("test").assets.srcDir("../../app/src/main/assets")
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { test ->
+                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                test.systemProperty("awake.visualVariant", test.name)
+            }
+        }
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -38,6 +49,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.tooling.preview)
 
     implementation(libs.lifecycle.viewmodel.compose)
@@ -50,5 +62,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     testImplementation(libs.junit)
+    testImplementation(libs.compose.ui.test)
+    testImplementation(libs.robolectric)
     testImplementation(libs.coroutines.test)
 }

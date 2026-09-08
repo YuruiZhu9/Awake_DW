@@ -75,4 +75,12 @@ class StatsMathTest {
     private companion object {
         const val EPSILON = 1e-3f
     }
+
+    @Test
+    fun `错峰生长的每列最终都到达真实高度`() {
+        for (index in 0..6) {
+            assertEquals(1f, StatsMath.columnGrowth(1f, index), 0.00001f)
+            assertEquals(0f, StatsMath.columnGrowth(0f, index), 0.00001f)
+        }
+    }
 }

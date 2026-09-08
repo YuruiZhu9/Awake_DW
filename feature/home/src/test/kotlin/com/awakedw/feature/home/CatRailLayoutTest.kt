@@ -4,16 +4,23 @@ import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.model.CatMood
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.home.components.LogButton
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -46,8 +53,32 @@ class CatRailLayoutTest {
         val text = composeRule.onNodeWithText(line).fetchSemanticsNode().boundsInRoot
         val cat = composeRule.onNodeWithContentDescription("胆大王").fetchSemanticsNode().boundsInRoot
         val button = composeRule.onNodeWithText("记一杯").fetchSemanticsNode().boundsInRoot
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeRule.onNodeWithText(line).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(TextAlign.Start, layouts.single().layoutInput.style.textAlign)
+        for (index in 0 until layouts.single().lineCount) assertEquals(0f, layouts.single().getLineLeft(index), 0.01f)
         assertTrue(text.right <= cat.left)
         assertTrue(text.bottom <= button.top)
         assertTrue(cat.bottom <= button.top)
+    }
+
+    @Test
+    fun `hint invokes pet once and does not return when response disappears`() {
+        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        val line = mutableStateOf<String?>(null)
+        var taps = 0
+        composeRule.setContent {
+            AwakeTheme(ThemeId.CLERIC) {
+                CatRail(CatMood.IDLE, line.value, {
+                    taps++
+                    line.value = "喝过水了。"
+                }, Modifier.fillMaxWidth())
+            }
+        }
+        composeRule.onNodeWithText("点击我试试~").performClick()
+        assertEquals(1, taps)
+        composeRule.onNodeWithText("点击我试试~").assertDoesNotExist()
+        composeRule.runOnIdle { line.value = null }
+        composeRule.onNodeWithText("点击我试试~").assertDoesNotExist()
     }
 }

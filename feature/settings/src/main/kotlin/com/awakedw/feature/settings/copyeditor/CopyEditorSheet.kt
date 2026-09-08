@@ -83,7 +83,7 @@ internal fun CopyLibrarySection(
                 Text(text = "心意文案库", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
                 // P3-6：删除/编辑说明一句放在分区头部，不再每条句子尾随常驻「长按删除」小字。
                 Text(
-                    text = "喝水提示和猫咪回应都从这里取用 · 点按编辑，长按删除",
+                    text = "用于喝水提示和猫咪回应",
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
                 )

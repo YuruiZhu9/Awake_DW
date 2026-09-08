@@ -7,9 +7,7 @@ import android.view.HapticFeedbackConstants
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,7 +33,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -43,31 +41,22 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
-import com.awakedw.core.designsystem.SurfaceContentPadding
 import com.awakedw.core.designsystem.SurfaceCornerRadius
-import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.components.EditorialHeader
+import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
-import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.feature.settings.components.IntervalChipsRow
 import com.awakedw.feature.settings.components.StepperRow
-import com.awakedw.feature.settings.components.ThemeChoiceChips
+import com.awakedw.feature.settings.components.ThemePickerEntry
 import com.awakedw.feature.settings.components.ToggleRow
 import com.awakedw.feature.settings.components.WindowRangeSlider
 import com.awakedw.feature.settings.copyeditor.CopyLibrarySection
-import kotlin.math.roundToInt
 
-// 卡形保持圆角矩形：自定义 Shape 的 outline 会干扰触摸注入的命中路径（Robolectric 实测，
-// 语义动作正常而位置点击失效）——蕾丝扇贝改为卡顶饰带绘制层实现（见 LaceTrim），观感等价且零交互风险。
-private val CARD_CORNER_RADIUS = SurfaceCornerRadius
-
-private val CARD_SHAPE: Shape = RoundedCornerShape(CARD_CORNER_RADIUS)
-
-/** 分区内元素的统一行间距。 */
-private val SECTION_SPACING = 14.dp
+private val CARD_SHAPE: Shape = RoundedCornerShape(SurfaceCornerRadius)
 
 /** 本页漂浮粒子的随机种子：与首页/统计页各不相同，保证各屏粒子排布有别。 */
 private const val SETTINGS_PARTICLE_SEED = 13L
@@ -130,22 +119,10 @@ fun SettingsScreen(
                     .padding(horizontal = PagePadding),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(Modifier.height(44.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    text = "我的",
-                    color = spec.greetingColor,
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-                Text(
-                    text = "喝水、提醒与外观设置",
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            LolitaRule(modifier = Modifier.padding(horizontal = 18.dp))
+            Spacer(Modifier.height(8.dp))
+            EditorialHeader("我的", "修改后自动保存", Icons.Rounded.Settings)
 
-            SettingsCard(title = "目标", subtitle = "设置每天的目标量和每杯容量") {
+            SettingsCard(title = "饮水目标", subtitle = null) {
                 // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
                 StepperRow(
                     label = "每日目标量",
@@ -167,7 +144,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsCard(title = "提醒", subtitle = "在清醒时段提醒我喝水") {
+            SettingsCard(title = "喝水提醒", subtitle = null) {
                 ReminderStatusRow(
                     statusLabel = state.reminderStatusLabel,
                     armed = state.reminderArmed,
@@ -184,20 +161,15 @@ fun SettingsScreen(
                     endMin = settings.windowEndMin,
                     onCommit = viewModel::setWindow,
                 )
+                Text("提醒间隔 · 分钟", color = spec.greetingSubColor, style = MaterialTheme.typography.labelMedium)
                 IntervalChipsRow(selectedMin = settings.intervalMin, onSelect = viewModel::setIntervalMin)
             }
 
-            SettingsCard(title = "外观", subtitle = "选择喜欢的颜色，或跟随时间变化") {
-                ThemeChoiceChips(
-                    selected = settings.themeChoice,
-                    onSelect = viewModel::setThemeChoice,
-                )
-            }
-
-            SettingsCard(title = "声音", subtitle = null) {
+            SettingsCard(title = "外观与声音", subtitle = null) {
+                ThemePickerEntry(selected = settings.themeChoice, onSelect = viewModel::setThemeChoice)
                 ToggleRow(
                     label = "音效",
-                    supporting = "播放轻柔提示音，系统静音时不播放",
+                    supporting = "系统静音时不播放",
                     checked = state.soundEnabled,
                     onCheckedChange = viewModel::setSoundEnabled,
                 )
@@ -231,63 +203,10 @@ private fun SettingsCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val spec = currentThemeSpec()
-    Surface(
-        shape = CARD_SHAPE,
-        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.64f)),
-        modifier = modifier.fillMaxWidth(),
-        shadowElevation = 1.dp,
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.42f)),
-    ) {
-        // P3-3：饰带层先于内边距列满幅绘制（直接触卡两缘），内容列再收 20dp 内边距——
-        // 饰带不再悬空于内边距里，首尾珠子按 24dp 圆角安全几何布点不被裁切。
-        Column {
-            LaceTrim(spec = spec)
-            Column(
-                modifier =
-                    Modifier
-                        .padding(start = SurfaceContentPadding, end = SurfaceContentPadding, bottom = 14.dp)
-                        .padding(top = SECTION_SPACING),
-                verticalArrangement = Arrangement.spacedBy(SECTION_SPACING),
-            ) {
-                if (title != null) {
-                    Column {
-                        Text(text = title, color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
-                        if (subtitle != null) {
-                            Text(text = subtitle, color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-                content()
-            }
-        }
-    }
-}
-
-/**
- * 蕾丝饰带（§12 L1）：卡顶一排相切的圆弧点带，主题蕾丝线着色。
- * 绘制层实现而非卡片 Shape——自定义 outline 会干扰触摸注入的命中路径（Robolectric 实测：
- * 语义动作正常而位置点击失效），饰带观感等价且零交互风险。
- *
- * P3-3：Canvas 满幅触卡两缘（先于 20dp 内边距列，见 SettingsCard）；珠串按圆角安全几何布点——
- * 珠心 y=珠半径处，圆角切点竖直列（x = 圆角半径）以内皆会被 24dp 圆角弧裁入，
- * 故珠串落在 [CARD_CORNER_RADIUS, 宽 − CARD_CORNER_RADIUS] 区间内均布，首尾珠子完整不裁。
- */
-@Suppress("ktlint:standard:function-naming")
-@Composable
-private fun LaceTrim(
-    spec: ThemeSpec,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier.fillMaxWidth().height(8.dp)) {
-        val radius = 4.dp.toPx()
-        val corner = CARD_CORNER_RADIUS.toPx()
-        val start = corner
-        val end = size.width - corner
-        val count = ((end - start) / (radius * 2f)).roundToInt().coerceAtLeast(2)
-        val step = (end - start) / count
-        repeat(count) { i ->
-            drawCircle(color = spec.laceColor.copy(alpha = 0.82f), radius = radius, center = Offset(start + step * (i + 0.5f), radius))
+    PaperPanel(modifier = modifier, title = title) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (subtitle != null) Text(subtitle, color = currentThemeSpec().greetingSubColor, style = MaterialTheme.typography.bodySmall)
+            content()
         }
     }
 }
@@ -304,48 +223,27 @@ private fun ReminderStatusRow(
 ) {
     val spec = currentThemeSpec()
     val view = LocalView.current
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(8.dp)
-                    .background(
-                        color = if (armed) spec.primary else spec.chipText.copy(alpha = 0.4f),
-                        shape = CircleShape,
-                    ),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = statusLabel,
-            color = if (armed) spec.greetingColor else spec.greetingSubColor,
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.weight(1f),
-        )
-        if (testSent) {
-            Text(
-                text = "提醒已发出 · 去通知栏看看",
-                color = spec.primary,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
-            )
-        } else {
-            Box(
-                modifier =
-                    Modifier
-                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-                        .clickable {
-                            view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                            onTest()
-                        },
-                contentAlignment = Alignment.Center,
-            ) {
+    Surface(shape = RoundedCornerShape(14.dp), color = spec.ringTrack.copy(alpha = 0.16f), modifier = modifier.fillMaxWidth()) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(6.dp).background(if (armed) spec.primary else spec.greetingSubColor, CircleShape))
                 Text(
-                    text = "测试提醒",
-                    color = spec.primary,
-                    style = MaterialTheme.typography.labelLarge,
+                    statusLabel,
+                    color = spec.greetingColor,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                )
+                androidx.compose.material3.TextButton(onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                    onTest()
+                }) { Text("测试提醒", color = spec.greetingColor, style = MaterialTheme.typography.labelMedium) }
+            }
+            if (testSent) {
+                Text(
+                    "提醒已发出，请查看通知栏",
+                    color = spec.greetingSubColor,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
         }
@@ -373,7 +271,7 @@ private fun GuideEntryRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(text = "让提醒更稳定", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
                 Text(
                     text = "打开系统设置，允许后台提醒",

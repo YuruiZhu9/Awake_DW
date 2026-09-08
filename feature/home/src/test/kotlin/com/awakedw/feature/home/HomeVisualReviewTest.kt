@@ -63,7 +63,7 @@ class HomeVisualReviewTest {
                 }
             }
         }
-        listOf(ThemeId.THIN_MINT, ThemeId.GOTHIC, ThemeId.CLERIC).forEach { id ->
+        listOf(ThemeId.EMERALD, ThemeId.THIN_MINT, ThemeId.GOTHIC, ThemeId.CLERIC).forEach { id ->
             composeRule.runOnIdle { theme.value = id }
             settle()
             composeRule.onNodeWithContentDescription("胆大王").assertIsDisplayed()
@@ -74,7 +74,7 @@ class HomeVisualReviewTest {
             val image = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
             composeRule.runOnIdle { rootView.draw(Canvas(image)) }
             val output =
-                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha10-${id.name.lowercase()}.png")
+                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha11-${id.name.lowercase()}.png")
             output.parentFile?.mkdirs()
             output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }

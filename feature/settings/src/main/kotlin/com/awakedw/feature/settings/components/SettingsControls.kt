@@ -1,14 +1,17 @@
 package com.awakedw.feature.settings.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
@@ -35,15 +39,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
@@ -57,13 +64,13 @@ import com.awakedw.feature.settings.SettingsValidation
 import java.util.Locale
 
 /** 步进器圆形小按钮直径。 */
-private val STEPPER_BUTTON_SIZE = 32.dp
+private val STEPPER_BUTTON_SIZE = 48.dp
 
 /** 间隔档位 chip 的最小宽度（P1-6）：不再 weight 均分，宽度自适应且不低于此值保住「120」等三位数。 */
 private val INTERVAL_CHIP_MIN_WIDTH = 56.dp
 
 /** 步进器小按钮形状：全圆。 */
-private val STEP_BUTTON_SHAPE: Shape = CircleShape
+private val STEP_BUTTON_SHAPE: Shape = RoundedCornerShape(14.dp)
 
 /** 选择 chips 的胶囊圆角：全圆。 */
 private val CHIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
@@ -86,25 +93,12 @@ internal fun StepperRow(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(text = label, color = spec.chipText, style = MaterialTheme.typography.bodyMedium)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            StepButton(text = "−", enabled = canDecrement, onClick = onDecrement, spec = spec)
-            Text(
-                text = valueText,
-                color = spec.greetingColor,
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 4.dp),
-            )
-            StepButton(text = "＋", enabled = canIncrement, onClick = onIncrement, spec = spec)
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, color = spec.greetingSubColor, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(valueText, color = spec.greetingColor, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            StepButton(text = "−", description = "减少$label", enabled = canDecrement, onClick = onDecrement, spec = spec)
+            StepButton(text = "＋", description = "增加$label", enabled = canIncrement, onClick = onIncrement, spec = spec)
         }
     }
 }
@@ -113,19 +107,21 @@ internal fun StepperRow(
 @Composable
 private fun StepButton(
     text: String,
+    description: String,
     enabled: Boolean,
     onClick: () -> Unit,
     spec: ThemeSpec,
 ) {
     Surface(
         shape = STEP_BUTTON_SHAPE,
-        color = if (enabled) spec.primary else spec.primary.copy(alpha = 0.30f),
+        color = spec.ringTrack.copy(alpha = if (enabled) 0.45f else 0.16f),
+        modifier = Modifier.semantics { contentDescription = description },
         onClick = onClick,
         enabled = enabled,
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(STEPPER_BUTTON_SIZE)) {
             // P2-4：浅色主题主色底上白字对比不足，字色走 onPrimarySurface（深夜维持白字）。
-            Text(text = text, color = onPrimarySurface(spec), style = MaterialTheme.typography.titleMedium)
+            Text(text = text, color = spec.chipText.copy(alpha = if (enabled) 1f else 0.35f), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -183,6 +179,7 @@ internal fun ToggleRow(
  */
 
 @Suppress("ktlint:standard:function-naming")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WindowRangeSlider(
     startMin: Int,
@@ -197,11 +194,16 @@ internal fun WindowRangeSlider(
     var range by remember(startMin, endMin) { mutableStateOf(startMin.toFloat()..endMin.toFloat()) }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = "开始 " + formatWindowTime(range.start.toInt()) + " — 结束 " + formatWindowTime(range.endInclusive.toInt()),
-            color = spec.greetingColor,
-            style = MaterialTheme.typography.titleSmall,
-        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(Modifier.weight(1f)) {
+                Text("开始提醒", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+                Text(formatWindowTime(range.start.toInt()), color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
+            }
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                Text("结束提醒", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+                Text(formatWindowTime(range.endInclusive.toInt()), color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
+            }
+        }
         RangeSlider(
             value = range,
             onValueChange = { next ->
@@ -221,6 +223,23 @@ internal fun WindowRangeSlider(
             onValueChangeFinished = { onCommit(range.start.toInt(), range.endInclusive.toInt()) },
             valueRange = SettingsValidation.WINDOW_MIN.toFloat()..SettingsValidation.WINDOW_MAX.toFloat(),
             steps = 0,
+            startThumb = { ReminderSliderThumb() },
+            endThumb = { ReminderSliderThumb() },
+            track = {
+                Canvas(Modifier.fillMaxWidth().height(4.dp)) {
+                    val min = SettingsValidation.WINDOW_MIN.toFloat()
+                    val span = (SettingsValidation.WINDOW_MAX - SettingsValidation.WINDOW_MIN).toFloat()
+                    val y = size.height / 2f
+                    drawLine(spec.ringTrack, Offset(0f, y), Offset(size.width, y), strokeWidth = size.height, cap = StrokeCap.Round)
+                    drawLine(
+                        spec.primary,
+                        Offset((range.start - min) / span * size.width, y),
+                        Offset((range.endInclusive - min) / span * size.width, y),
+                        strokeWidth = size.height,
+                        cap = StrokeCap.Round,
+                    )
+                }
+            },
             colors =
                 SliderDefaults.colors(
                     activeTrackColor = spec.primary,
@@ -229,6 +248,14 @@ internal fun WindowRangeSlider(
                 ),
         )
     }
+}
+
+/** Small pearl handle; RangeSlider retains native dragging, keyboard and accessibility behavior. */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun ReminderSliderThumb() {
+    val spec = currentThemeSpec()
+    Box(Modifier.size(22.dp).shadow(2.dp, CircleShape).background(spec.chipBg, CircleShape).border(2.dp, spec.primary, CircleShape))
 }
 
 /**
@@ -350,7 +377,7 @@ private fun ThemeChoiceCard(
 internal fun themeLabel(choice: ThemeChoice): String =
     when (choice) {
         ThemeChoice.FOLLOW_TIME -> "随时间"
-        ThemeChoice.FIXED_EMERALD -> "清晨薄荷"
+        ThemeChoice.FIXED_EMERALD -> "晨雾蓝瓷"
         ThemeChoice.FIXED_STRAWBERRY -> "午后藕荷"
         ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
         ThemeChoice.FIXED_NIGHT -> "深夜青黛"
@@ -451,7 +478,8 @@ private fun SelectableChip(
         shape = CHIP_SHAPE,
         color = if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f),
         onClick = onClick,
-        modifier = modifier,
+        selected = selected,
+        modifier = modifier.heightIn(min = 48.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

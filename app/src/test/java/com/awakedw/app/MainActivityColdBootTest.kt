@@ -79,7 +79,7 @@ class MainActivityColdBootTest {
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
         // 统计页真实挂载（hiltViewModel 注入 + 今日概览事实渲染）。
-        composeRule.onNodeWithContentDescription("今日记录 0 杯").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("记录次数 0 次").assertIsDisplayed()
         composeRule.onNodeWithText("首页").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))

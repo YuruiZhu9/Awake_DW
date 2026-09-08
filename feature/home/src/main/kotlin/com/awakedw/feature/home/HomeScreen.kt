@@ -9,6 +9,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +23,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +44,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -83,9 +89,6 @@ private const val GLOW_BREATH_MS = 1600
 private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
-
-/** 胆大王光袋直径（96–160dp 区间取值）：给 108dp 立绘留一圈轻薄呼吸光晕。 */
-private val CAT_POCKET_DIAMETER = 100.dp
 
 /** Mascot gets its own flow row after the factual summary, so it never covers statistics. */
 private val CAT_RAIL_HEIGHT = 92.dp
@@ -193,22 +196,38 @@ internal fun CatRail(
     onPet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spec = currentThemeSpec()
+    var hasInteracted by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(line) { if (line != null) hasInteracted = true }
+    val pet = {
+        hasInteracted = true
+        onPet()
+    }
     Row(
         modifier = modifier.heightIn(min = CAT_RAIL_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        PraiseLine(
-            text = line,
-            multiLine = true,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier.size(CAT_POCKET_DIAMETER),
-            contentAlignment = Alignment.Center,
-        ) {
-            LightPocket(modifier = Modifier.matchParentSize())
-            CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
+        PraiseLine(text = line, multiLine = true, modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
+            Box(modifier = Modifier.fillMaxWidth().heightIn(min = 34.dp), contentAlignment = Alignment.TopEnd) {
+                if (!hasInteracted && line == null) {
+                    Text(
+                        text = "点击我试试~",
+                        color = spec.chipText,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier =
+                            Modifier
+                                .background(spec.chipBg.copy(alpha = 0.96f), RoundedCornerShape(12.dp, 12.dp, 12.dp, 3.dp))
+                                .clickable(role = Role.Button, onClick = pet)
+                                .padding(horizontal = 9.dp, vertical = 6.dp),
+                    )
+                }
+            }
+            Box(modifier = Modifier.size(84.dp).align(Alignment.Start), contentAlignment = Alignment.Center) {
+                LightPocket(modifier = Modifier.matchParentSize())
+                CatFigure(mood = mood, onPet = pet, figureSize = 84.dp)
+            }
         }
     }
 }

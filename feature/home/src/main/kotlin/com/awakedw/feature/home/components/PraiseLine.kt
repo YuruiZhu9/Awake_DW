@@ -57,6 +57,7 @@ internal fun PraiseLine(
                 Box(
                     modifier =
                         Modifier
+                            .fillMaxWidth()
                             .widthIn(max = CAT_LINE_BUBBLE_MAX_WIDTH)
                             .background(color = spec.chipBg.copy(alpha = 0.92f), shape = RoundedCornerShape(16.dp))
                             .border(1.dp, spec.laceColor.copy(alpha = 0.48f), RoundedCornerShape(16.dp))
@@ -66,7 +67,7 @@ internal fun PraiseLine(
                         text = current,
                         color = spec.chipText,
                         style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Start,
                     )
                 }
             } else {
@@ -74,7 +75,7 @@ internal fun PraiseLine(
                     text = current,
                     color = spec.greetingColor,
                     style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth(),

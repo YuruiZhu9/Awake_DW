@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
@@ -28,13 +29,13 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** 时间线空态占位高度：让「还没出现」的文案有一块安静的居中空间。 */
-private val EMPTY_TIMELINE_HEIGHT = 120.dp
+private val EMPTY_TIMELINE_HEIGHT = 76.dp
 
 /** 小水滴圆点直径。 */
 private val DROP_DOT_SIZE = 8.dp
 
 /** 行与行之间的呼吸间距。 */
-private val ROW_SPACING = 12.dp
+private val ROW_SPACING = 8.dp
 
 /** 逐条入场的错峰步长（§10.3）：前若干行依次晚 40ms，长列表不再累积等待。 */
 private const val ROW_ENTRANCE_STAGGER_MS = 40
@@ -62,7 +63,7 @@ internal fun TodayTimeline(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "今天的第一杯还没出现哦 💧",
+                    text = "今天还没有饮水记录",
                     color = currentThemeSpec().greetingSubColor,
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -71,20 +72,7 @@ internal fun TodayTimeline(
     } else {
         val spec = currentThemeSpec()
         Column(
-            modifier =
-                modifier
-                    .fillMaxWidth()
-                    .drawBehind {
-                        if (records.size > 1) {
-                            val x = DROP_DOT_SIZE.toPx() / 2f
-                            drawLine(
-                                color = spec.laceColor.copy(alpha = 0.42f),
-                                start = Offset(x, DROP_DOT_SIZE.toPx() / 2f),
-                                end = Offset(x, size.height - DROP_DOT_SIZE.toPx() / 2f),
-                                strokeWidth = 1.dp.toPx(),
-                            )
-                        }
-                    },
+            modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         ) {
             records.forEachIndexed { index, record ->
@@ -102,7 +90,13 @@ private fun TimelineRow(
     record: WaterRecord,
     spec: ThemeSpec,
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth().heightIn(
+                min = 48.dp,
+            ).background(spec.ringTrack.copy(alpha = 0.20f), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
             modifier =
                 Modifier

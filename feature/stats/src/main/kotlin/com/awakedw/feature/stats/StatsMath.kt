@@ -11,6 +11,15 @@ import java.time.LocalDate
  * 量值为 0 的柱归一到 0f 高度，由绘制层画成基线圆点（「这天还没喝」的温柔占位）。
  */
 object StatsMath {
+    /** Normalize each delayed column so the last frame is the real value, not a shortened bar. */
+    fun columnGrowth(
+        progress: Float,
+        index: Int,
+    ): Float {
+        val delay = (index.coerceAtLeast(0) * 0.06f).coerceAtMost(0.80f)
+        return ((progress - delay) / (1f - delay)).coerceIn(0f, 1f)
+    }
+
     /** 柱与目标线共用的刻度带上限：占图表高的比例。 */
     const val SCALE_FRACTION = 0.86f
 

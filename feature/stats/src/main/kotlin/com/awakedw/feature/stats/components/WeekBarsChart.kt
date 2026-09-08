@@ -4,16 +4,27 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -24,6 +35,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -52,9 +66,6 @@ private const val GOAL_LINE_ALPHA = 0.6f
 /** 柱状图生长总时长（§10.3）：逐列错峰后单柱实际可见约 250ms。 */
 private const val GROW_TOTAL_MS = 400
 
-/** 逐列错峰步长（以生长总时长为 1 的比例）。 */
-private const val STAGGER_FRACTION = 0.06f
-
 /**
  * 本周柱状图（规格 §3.3 第 2 条）：近 7 天圆角顶柱 + 虚线目标线 + 末列「今」字标注。
  * 达标柱用主题 primary，其余柱与基线圆点用轨道色；柱高与目标线的几何换算见 [StatsMath]。
@@ -73,6 +84,9 @@ internal fun WeekBarsChart(
     val metGoals = StatsMath.metGoal(values, goalMl)
     val labels = StatsMath.columnLabels(bars.map { it.dayKey }, bars.lastOrNull()?.dayKey.orEmpty())
 
+    var selectedKey by remember(bars.map { it.dayKey }) { mutableStateOf(bars.lastOrNull()?.dayKey) }
+    val selectedBar = bars.firstOrNull { it.dayKey == selectedKey }
+
     val grow = remember { Animatable(if (reduceMotion) 1f else 0f) }
     LaunchedEffect(reduceMotion) {
         if (reduceMotion) {
@@ -83,23 +97,60 @@ internal fun WeekBarsChart(
     }
 
     Column(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT)) {
-            val heights = StatsMath.barHeights(values, goalMl, size.height)
-            val goalY = StatsMath.goalLineY(goalMl, values, size.height)
-            val progress = grow.value
-            drawGoalLine(goalY, spec.primary.copy(alpha = GOAL_LINE_ALPHA * progress))
-            bars.forEachIndexed { index, _ ->
-                val fraction = (progress - index * STAGGER_FRACTION).coerceIn(0f, 1f)
-                val centerX = slotCenter(index, bars.size, size.width)
-                when (val barHeight = heights[index] * fraction) {
-                    0f -> drawBaselineDot(centerX, size.height, spec.ringTrack.copy(alpha = fraction))
-                    else ->
-                        drawBar(
-                            centerX = centerX,
-                            barHeight = barHeight,
-                            slotWidth = size.width / bars.size,
-                            color = if (metGoals[index]) spec.primary else spec.ringTrack,
-                        )
+        if (bars.isEmpty()) {
+            Text(
+                "暂无饮水数据",
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 24.dp),
+            )
+            return@Column
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                "${selectedBar?.dayKey.orEmpty()} · ${selectedBar?.totalMl ?: 0}ml",
+                color = spec.greetingColor,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text("虚线为目标 ${goalMl}ml · 点柱查看", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(Modifier.height(12.dp))
+        Box(Modifier.fillMaxWidth().height(CHART_HEIGHT).selectableGroup()) {
+            Canvas(modifier = Modifier.matchParentSize()) {
+                val heights = StatsMath.barHeights(values, goalMl, size.height)
+                val goalY = StatsMath.goalLineY(goalMl, values, size.height)
+                val progress = grow.value
+                drawGoalLine(goalY, spec.primary.copy(alpha = GOAL_LINE_ALPHA * progress))
+                bars.forEachIndexed { index, _ ->
+                    val fraction = StatsMath.columnGrowth(progress, index)
+                    val centerX = slotCenter(index, bars.size, size.width)
+                    when (val barHeight = heights[index] * fraction) {
+                        0f -> drawBaselineDot(centerX, size.height, spec.ringTrack.copy(alpha = fraction))
+                        else ->
+                            drawBar(
+                                centerX = centerX,
+                                barHeight = barHeight,
+                                slotWidth = size.width / bars.size,
+                                color = if (metGoals[index]) spec.primary else spec.ringTrack,
+                            )
+                    }
+                }
+            }
+            Row(Modifier.fillMaxSize()) {
+                bars.forEach { bar ->
+                    Box(
+                        Modifier.weight(1f).fillMaxSize()
+                            .background(
+                                if (bar.dayKey == selectedKey) spec.primary.copy(alpha = 0.06f) else Color.Transparent,
+                                RoundedCornerShape(9.dp),
+                            )
+                            .selectable(
+                                selected = bar.dayKey == selectedKey,
+                                role = Role.RadioButton,
+                                onClick = { selectedKey = bar.dayKey },
+                            )
+                            .semantics { contentDescription = "${bar.dayKey}，${bar.totalMl}ml" },
+                    )
                 }
             }
         }
@@ -111,7 +162,7 @@ internal fun WeekBarsChart(
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     // 今天一列用主色点亮，与达标柱同色呼应。
-                    color = if (index == labels.lastIndex) spec.primary else spec.greetingSubColor.copy(alpha = 0.7f),
+                    color = if (index == labels.lastIndex) spec.primary else spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
