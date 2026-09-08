@@ -31,4 +31,9 @@
 3. 小步实现、补回归测试，确认所有主题和减少动态不回退。
 4. `gradlew.bat ktlintCheck build`，记录设备验收与未通过项；不把缓存命中当成新跑测次数。
 5. 提升版本号，生成 Debug／Release，检查包名／版本／签名并生成校验文件。
-6. 更新 CHANGELOG 和 QA，经用户要求提交推送；未经真机验收只发布 alpha，不宣称稳定。
+6. 更新 CHANGELOG 和 QA，经用户要求提交推送；未经真机验收默认发布 alpha；用户指定无后缀版本时，明确待验收范围，不宣称真机稳定性通过。
+
+## 0.4.0 阶段收口
+- 本轮按用户指定编号 0.4.0，继承 alpha12 视觉基线，修复首页事实摘要等宽居中排版。
+- 计划：`docs/superpowers/plans/2026-09-08-v040-home-summary-plan.md`。发布状态与证据：`docs/superpowers/checklists/v0.4.0-visual-qa.md`。
+- 后续 0.4.x 优先处理设备验收与局部修复；0.5.0 需新的范围确认，不默认重做现有美术。
