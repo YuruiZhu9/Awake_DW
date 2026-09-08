@@ -16,6 +16,15 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ThemeArtworkTest {
     @Test
+    fun `every theme has exactly one frame source without doubling existing artwork`() {
+        val pictureFrames = setOf(ThemeId.GOTHIC, ThemeId.CLERIC, ThemeId.THIN_MINT)
+        ThemeId.entries.forEach { id ->
+            assertEquals(id !in pictureFrames, usesDrawnLaceFrame(id))
+            assertTrue(usesDrawnLaceFrame(id) xor themeArtworkOf(id).framed)
+        }
+    }
+
+    @Test
     fun `detailed backgrounds use legible content surfaces without changing old themes`() {
         assertEquals(0.94f, artworkPanelOpacity(ThemeId.THIN_MINT, 0.26f))
         assertEquals(0.94f, artworkPanelOpacity(ThemeId.GOTHIC, 0.64f))

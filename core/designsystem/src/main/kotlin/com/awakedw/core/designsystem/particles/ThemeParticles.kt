@@ -13,10 +13,9 @@ enum class ParticleStyle { CLASSIC, PEARL, SILVER, PETAL }
 
 fun particleStyleOf(id: ThemeId): ParticleStyle =
     when (id) {
-        ThemeId.THIN_MINT -> ParticleStyle.PEARL
-        ThemeId.GOTHIC -> ParticleStyle.SILVER
-        ThemeId.CLERIC -> ParticleStyle.PETAL
-        else -> ParticleStyle.CLASSIC
+        ThemeId.EMERALD, ThemeId.CARAMEL, ThemeId.THIN_MINT -> ParticleStyle.PEARL
+        ThemeId.GOTHIC, ThemeId.NIGHT -> ParticleStyle.SILVER
+        ThemeId.CLERIC, ThemeId.STRAWBERRY, ThemeId.LAVENDER -> ParticleStyle.PETAL
     }
 
 /** Leave the central reading column quiet; preserve continuous motion without snapping to side rails. */

@@ -52,7 +52,7 @@ fun LolitaBackdrop(
                 .drawWithCache {
                     val source = image
                     if (source == null) {
-                        onDrawBehind { }
+                        onDrawBehind { if (usesDrawnLaceFrame(spec.id)) drawLaceFrame(spec) }
                     } else {
                         val scale =
                             if (art.framed && size.width > size.height) {
@@ -121,6 +121,7 @@ fun LolitaBackdrop(
                             if (art.framed) {
                                 drawRect(brush = readingVeil)
                             }
+                            if (usesDrawnLaceFrame(spec.id)) drawLaceFrame(spec)
                         }
                     }
                 },

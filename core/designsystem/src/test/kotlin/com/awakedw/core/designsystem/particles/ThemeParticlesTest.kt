@@ -7,11 +7,15 @@ import org.junit.Test
 
 class ThemeParticlesTest {
     @Test
-    fun `new art themes have distinct particle motifs and legacy themes stay classic`() {
+    fun `all themes have intentional quiet particle motifs`() {
         assertEquals(ParticleStyle.PEARL, particleStyleOf(ThemeId.THIN_MINT))
         assertEquals(ParticleStyle.SILVER, particleStyleOf(ThemeId.GOTHIC))
         assertEquals(ParticleStyle.PETAL, particleStyleOf(ThemeId.CLERIC))
-        assertEquals(ParticleStyle.CLASSIC, particleStyleOf(ThemeId.CARAMEL))
+        assertEquals(ParticleStyle.PEARL, particleStyleOf(ThemeId.CARAMEL))
+        assertEquals(ParticleStyle.PEARL, particleStyleOf(ThemeId.EMERALD))
+        assertEquals(ParticleStyle.SILVER, particleStyleOf(ThemeId.NIGHT))
+        assertEquals(ParticleStyle.PETAL, particleStyleOf(ThemeId.STRAWBERRY))
+        assertEquals(ParticleStyle.PETAL, particleStyleOf(ThemeId.LAVENDER))
     }
 
     @Test

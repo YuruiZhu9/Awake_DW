@@ -9,7 +9,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.currentThemeSpec
-import com.awakedw.core.designsystem.ornamentColor
 
 /**
  * A quiet lace-and-pearl rule used to give a page one structural Lolita detail.
@@ -40,21 +39,16 @@ fun LolitaRule(
             end = Offset(size.width - sideInset, centerY),
             strokeWidth = 1.dp.toPx(),
         )
-        if (themeArtworkOf(spec.id).framed) {
-            drawThemeOrnament(Offset(centerX, centerY), 20.dp.toPx(), spec)
-            // Paired hairlines suggest a stitched hem without a heavy lace border.
-            for (side in listOf(-1f, 1f)) {
-                drawLine(
-                    lace.copy(alpha = 0.22f),
-                    Offset(centerX + side * 24.dp.toPx(), centerY + 3.dp.toPx()),
-                    Offset(centerX + side * (centerX - sideInset), centerY + 3.dp.toPx()),
-                    strokeWidth = 0.5.dp.toPx(),
-                )
-            }
-        } else {
-            drawCircle(color = ornamentColor(spec).copy(alpha = 0.82f), radius = 2.5.dp.toPx(), center = Offset(centerX, centerY))
-            drawCircle(color = lace.copy(alpha = 0.74f), radius = 1.5.dp.toPx(), center = Offset(centerX - 7.dp.toPx(), centerY))
-            drawCircle(color = lace.copy(alpha = 0.74f), radius = 1.5.dp.toPx(), center = Offset(centerX + 7.dp.toPx(), centerY))
+        drawThemeOrnament(Offset(centerX, centerY), 20.dp.toPx(), spec)
+        // Fine paired seams repeat the frame's embroidery without adding another border.
+        for (side in listOf(-1f, 1f)) {
+            drawLine(
+                lace.copy(alpha = 0.22f),
+                Offset(centerX + side * 24.dp.toPx(), centerY + 3.dp.toPx()),
+                Offset(centerX + side * (centerX - sideInset), centerY + 3.dp.toPx()),
+                strokeWidth = 0.5.dp.toPx(),
+            )
+            drawCircle(lace.copy(alpha = 0.72f), 1.2.dp.toPx(), Offset(centerX + side * 17.dp.toPx(), centerY))
         }
     }
 }

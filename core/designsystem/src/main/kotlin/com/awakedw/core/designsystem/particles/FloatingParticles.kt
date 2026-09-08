@@ -122,14 +122,7 @@ fun FloatingParticles(
                         val frame = ParticleMath.floating(index, seed, anchorPx, p, area)
                         val radius = frame.radiusPx * density.radiusScale
                         val color = colorAt(colors, index)
-                        val focusAlpha =
-                            if (style == ParticleStyle.CLASSIC) {
-                                1f
-                            } else {
-                                readingColumnAlpha(
-                                    frame.center.x / area.width.coerceAtLeast(1f),
-                                )
-                            }
+                        val focusAlpha = readingColumnAlpha(frame.center.x / area.width.coerceAtLeast(1f))
                         if (frame.glow && style != ParticleStyle.SILVER) {
                             drawCircle(
                                 color = color.copy(alpha = frame.alpha * GLOW_RING_ALPHA * density.accentAlphaScale * focusAlpha),

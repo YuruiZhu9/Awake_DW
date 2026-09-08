@@ -39,3 +39,6 @@ fun artworkPanelOpacity(
     id: ThemeId,
     fallback: Float,
 ): Float = if (themeArtworkOf(id).framed) 0.94f else fallback
+
+/** Existing picture frames stay intact; all other themes receive a palette-colored lace hem. */
+internal fun usesDrawnLaceFrame(id: ThemeId): Boolean = !themeArtworkOf(id).framed

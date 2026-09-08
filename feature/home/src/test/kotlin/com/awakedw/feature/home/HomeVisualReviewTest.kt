@@ -39,7 +39,7 @@ class HomeVisualReviewTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun `new themes keep cat and recording actions in the first viewport`() {
+    fun `all themes keep persistent hint cat and recording actions in the first viewport`() {
         lateinit var rootView: View
         val theme = mutableStateOf(ThemeId.THIN_MINT)
         val clock = FakeClock(1_760_000_000_000L)
@@ -63,10 +63,11 @@ class HomeVisualReviewTest {
                 }
             }
         }
-        listOf(ThemeId.EMERALD, ThemeId.THIN_MINT, ThemeId.GOTHIC, ThemeId.CLERIC).forEach { id ->
+        ThemeId.entries.forEach { id ->
             composeRule.runOnIdle { theme.value = id }
             settle()
             composeRule.onNodeWithContentDescription("胆大王").assertIsDisplayed()
+            composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
             composeRule.onNodeWithText("记一杯").assertIsDisplayed()
             val root = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
             val button = composeRule.onNodeWithText("记一杯").fetchSemanticsNode().boundsInRoot
@@ -74,7 +75,7 @@ class HomeVisualReviewTest {
             val image = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
             composeRule.runOnIdle { rootView.draw(Canvas(image)) }
             val output =
-                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha11-${id.name.lowercase()}.png")
+                File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha12-${id.name.lowercase()}.png")
             output.parentFile?.mkdirs()
             output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }

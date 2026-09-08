@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -63,7 +64,7 @@ class CatRailLayoutTest {
     }
 
     @Test
-    fun `hint invokes pet once and does not return when response disappears`() {
+    fun `hint remains visible and clickable during and after cat responses`() {
         Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
         val line = mutableStateOf<String?>(null)
         var taps = 0
@@ -77,8 +78,12 @@ class CatRailLayoutTest {
         }
         composeRule.onNodeWithText("点击我试试~").performClick()
         assertEquals(1, taps)
-        composeRule.onNodeWithText("点击我试试~").assertDoesNotExist()
+        composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
+        composeRule.onNodeWithText("点击我试试~").performClick()
+        assertEquals(2, taps)
+        composeRule.onNodeWithContentDescription("胆大王").performClick()
+        assertEquals(3, taps)
         composeRule.runOnIdle { line.value = null }
-        composeRule.onNodeWithText("点击我试试~").assertDoesNotExist()
+        composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
     }
 }

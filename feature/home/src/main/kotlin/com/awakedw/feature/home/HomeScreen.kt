@@ -10,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +36,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -197,12 +198,7 @@ internal fun CatRail(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    var hasInteracted by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(line) { if (line != null) hasInteracted = true }
-    val pet = {
-        hasInteracted = true
-        onPet()
-    }
+    val bubbleShape = RoundedCornerShape(12.dp, 12.dp, 12.dp, 3.dp)
     Row(
         modifier = modifier.heightIn(min = CAT_RAIL_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
@@ -210,23 +206,24 @@ internal fun CatRail(
     ) {
         PraiseLine(text = line, multiLine = true, modifier = Modifier.weight(1f))
         Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
-            Box(modifier = Modifier.fillMaxWidth().heightIn(min = 34.dp), contentAlignment = Alignment.TopEnd) {
-                if (!hasInteracted && line == null) {
-                    Text(
-                        text = "点击我试试~",
-                        color = spec.chipText,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier =
-                            Modifier
-                                .background(spec.chipBg.copy(alpha = 0.96f), RoundedCornerShape(12.dp, 12.dp, 12.dp, 3.dp))
-                                .clickable(role = Role.Button, onClick = pet)
-                                .padding(horizontal = 9.dp, vertical = 6.dp),
-                    )
-                }
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                Text(
+                    text = "点击我试试~",
+                    color = spec.chipText,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier =
+                        Modifier
+                            .clip(bubbleShape)
+                            .background(spec.chipBg.copy(alpha = 0.96f))
+                            .border(0.5.dp, spec.laceColor.copy(alpha = 0.65f), bubbleShape)
+                            .clickable(role = Role.Button, onClickLabel = "摸摸猫咪", onClick = onPet)
+                            .heightIn(min = 48.dp)
+                            .padding(horizontal = 9.dp, vertical = 10.dp),
+                )
             }
             Box(modifier = Modifier.size(84.dp).align(Alignment.Start), contentAlignment = Alignment.Center) {
                 LightPocket(modifier = Modifier.matchParentSize())
-                CatFigure(mood = mood, onPet = pet, figureSize = 84.dp)
+                CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
             }
         }
     }
