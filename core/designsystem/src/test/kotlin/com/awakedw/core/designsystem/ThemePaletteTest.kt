@@ -13,31 +13,23 @@ import org.junit.Test
  */
 class ThemePaletteTest {
     @Test
-    fun `清晨天水碧系全部十六进制锚点`() {
-        // 背景渐变：#F1FBF7 → #E2F4EB → #D4F2E7（天水碧底锚）
-        assertEquals(0xFFF1FBF7, ThemePalette.QINGCHEN_BG_1)
-        assertEquals(0xFFE2F4EB, ThemePalette.QINGCHEN_BG_2)
-        assertEquals(0xFFD4F2E7, ThemePalette.QINGCHEN_BG_3)
-        // 主色（进度环/强调）：#2A9A6A 柏枝绿（指示值）
-        assertEquals(0xFF2A9A6A, ThemePalette.QINGCHEN_PRIMARY)
-        // 进度环轨道：#BFE7DC
-        assertEquals(0xFFBFE7DC, ThemePalette.QINGCHEN_RING_TRACK)
-        // 环心数值文字：#157A50
-        assertEquals(0xFF157A50, ThemePalette.QINGCHEN_RING_VALUE_TEXT)
-        // 问候语文字：#1A684D（副 #55907A）
-        assertEquals(0xFF1A684D, ThemePalette.QINGCHEN_GREETING)
-        assertEquals(0xFF55907A, ThemePalette.QINGCHEN_GREETING_SUB)
-        // 按钮（线性渐变）：#279061 → #43B988
-        assertEquals(0xFF279061, ThemePalette.QINGCHEN_BUTTON_TOP)
-        assertEquals(0xFF43B988, ThemePalette.QINGCHEN_BUTTON_BOTTOM)
-        // 徽章底/字：#D6ECF0（月白面锚）/ #16704A
-        assertEquals(0xFFD6ECF0, ThemePalette.QINGCHEN_CHIP_BG)
-        assertEquals(0xFF16704A, ThemePalette.QINGCHEN_CHIP_TEXT)
-        // 粒子色族：#2A9A6A #3FB389 #62C9A6 #79D4B5
-        assertEquals(0xFF2A9A6A, ThemePalette.QINGCHEN_PARTICLE_1)
-        assertEquals(0xFF3FB389, ThemePalette.QINGCHEN_PARTICLE_2)
-        assertEquals(0xFF62C9A6, ThemePalette.QINGCHEN_PARTICLE_3)
-        assertEquals(0xFF79D4B5, ThemePalette.QINGCHEN_PARTICLE_4)
+    fun `晨雾蓝瓷色板锚点`() {
+        assertEquals(0xFFF7FAFD, ThemePalette.QINGCHEN_BG_1)
+        assertEquals(0xFFE9F0F7, ThemePalette.QINGCHEN_BG_2)
+        assertEquals(0xFFD5E4F0, ThemePalette.QINGCHEN_BG_3)
+        assertEquals(0xFF486B86, ThemePalette.QINGCHEN_PRIMARY)
+        assertEquals(0xFFBDCFDF, ThemePalette.QINGCHEN_RING_TRACK)
+        assertEquals(0xFF304D65, ThemePalette.QINGCHEN_RING_VALUE_TEXT)
+        assertEquals(0xFF304D65, ThemePalette.QINGCHEN_GREETING)
+        assertEquals(0xFF4D6275, ThemePalette.QINGCHEN_GREETING_SUB)
+        assertEquals(0xFF3D5F79, ThemePalette.QINGCHEN_BUTTON_TOP)
+        assertEquals(0xFF526F88, ThemePalette.QINGCHEN_BUTTON_BOTTOM)
+        assertEquals(0xFFF0F5FA, ThemePalette.QINGCHEN_CHIP_BG)
+        assertEquals(0xFF304D65, ThemePalette.QINGCHEN_CHIP_TEXT)
+        assertEquals(0xFF759AB8, ThemePalette.QINGCHEN_PARTICLE_1)
+        assertEquals(0xFF9BB7CF, ThemePalette.QINGCHEN_PARTICLE_2)
+        assertEquals(0xFFBCCFDE, ThemePalette.QINGCHEN_PARTICLE_3)
+        assertEquals(0xFFD1E0EA, ThemePalette.QINGCHEN_PARTICLE_4)
     }
 
     @Test
@@ -134,7 +126,7 @@ class ThemePaletteTest {
         // 深夜蕾丝提亮锚（P2-5）：#525C72 = 月白·灰按 35% 预混鸦青暗底的等效暗银，
         // 旧锚 #343A4C 对徽章底仅 1.3:1 不可见，提亮后 ≥1.8（对比度断言见 OnPrimarySurfaceTest）。
         assertEquals(0xFFFADCE2, ThemePalette.WUHOU_LACE)
-        assertEquals(0xFFD2EDE7, ThemePalette.QINGCHEN_LACE)
+        assertEquals(0xFFABC3D7, ThemePalette.QINGCHEN_LACE)
         assertEquals(0xFFDECAC0, ThemePalette.HUANGHUN_LACE)
         assertEquals(0xFF525C72, ThemePalette.SHENYE_LACE)
         assertEquals(0xFFE2D3EF, ThemePalette.LAVENDER_LACE)

@@ -13,40 +13,24 @@ package com.awakedw.core.designsystem
  */
 object ThemePalette {
     // ------------------------------------------------------------------
-    // A · 清晨 · 天水碧系（ThemeId.EMERALD，默认/白天）
-    // ------------------------------------------------------------------
-
-    /** 背景渐变：#F1FBF7 → #E2F4EB → #D4F2E7（天水碧底锚） */
-    const val QINGCHEN_BG_1 = 0xFFF1FBF7 // 天水碧·纸白
-    const val QINGCHEN_BG_2 = 0xFFE2F4EB // 天水碧·浅
-    const val QINGCHEN_BG_3 = 0xFFD4F2E7 // 天水碧（底锚）
-
-    /** 主色（进度环/强调）：#2A9A6A 柏枝绿（指示值，未经站值校准） */
-    const val QINGCHEN_PRIMARY = 0xFF2A9A6A // 柏枝绿
-
-    /** 进度环轨道：#BFE7DC */
-    const val QINGCHEN_RING_TRACK = 0xFFBFE7DC // 天水碧·深
-
-    /** 环心数值文字：#157A50 */
-    const val QINGCHEN_RING_VALUE_TEXT = 0xFF157A50 // 柏枝绿·深
-
-    /** 问候语文字：#1A684D（副 #55907A） */
-    const val QINGCHEN_GREETING = 0xFF1A684D // 官绿·深
-    const val QINGCHEN_GREETING_SUB = 0xFF55907A // 铜绿·灰
-
-    /** 按钮（线性渐变）：#279061 → #43B988 */
-    const val QINGCHEN_BUTTON_TOP = 0xFF279061 // 柏枝绿·深
-    const val QINGCHEN_BUTTON_BOTTOM = 0xFF43B988 // 柏枝绿·亮
-
-    /** 徽章底/字：#D6ECF0（月白面锚）/ #16704A */
-    const val QINGCHEN_CHIP_BG = 0xFFD6ECF0 // 月白（面锚）
-    const val QINGCHEN_CHIP_TEXT = 0xFF16704A // 官绿
-
-    /** 粒子色族：#2A9A6A #3FB389 #62C9A6 #79D4B5 */
-    const val QINGCHEN_PARTICLE_1 = 0xFF2A9A6A // 柏枝绿
-    const val QINGCHEN_PARTICLE_2 = 0xFF3FB389 // 松花绿·亮
-    const val QINGCHEN_PARTICLE_3 = 0xFF62C9A6 // 天水碧·饱和
-    const val QINGCHEN_PARTICLE_4 = 0xFF79D4B5 // 天水碧·亮
+    // A · 晨雾蓝瓷（保留 ThemeId.EMERALD 键以兼容用户设置）
+    // 瓷白与雾蓝背景，深蓝灰强调；不再使用薄荷绿色。
+    const val QINGCHEN_BG_1 = 0xFFF7FAFD
+    const val QINGCHEN_BG_2 = 0xFFE9F0F7
+    const val QINGCHEN_BG_3 = 0xFFD5E4F0
+    const val QINGCHEN_PRIMARY = 0xFF486B86
+    const val QINGCHEN_RING_TRACK = 0xFFBDCFDF
+    const val QINGCHEN_RING_VALUE_TEXT = 0xFF304D65
+    const val QINGCHEN_GREETING = 0xFF304D65
+    const val QINGCHEN_GREETING_SUB = 0xFF4D6275
+    const val QINGCHEN_BUTTON_TOP = 0xFF3D5F79
+    const val QINGCHEN_BUTTON_BOTTOM = 0xFF526F88
+    const val QINGCHEN_CHIP_BG = 0xFFF0F5FA
+    const val QINGCHEN_CHIP_TEXT = 0xFF304D65
+    const val QINGCHEN_PARTICLE_1 = 0xFF759AB8
+    const val QINGCHEN_PARTICLE_2 = 0xFF9BB7CF
+    const val QINGCHEN_PARTICLE_3 = 0xFFBCCFDE
+    const val QINGCHEN_PARTICLE_4 = 0xFFD1E0EA
 
     // ------------------------------------------------------------------
     // B · 午后 · 藕荷系（ThemeId.STRAWBERRY，早晨）
@@ -227,7 +211,7 @@ object ThemePalette {
     const val WUHOU_LACE = 0xFFFADCE2 // 樱花·浅
 
     /** 蕾丝线：清晨（月白薄荷）#D2EDE7 */
-    const val QINGCHEN_LACE = 0xFFD2EDE7 // 月白·薄荷
+    const val QINGCHEN_LACE = 0xFFABC3D7 // 蓝瓷·细线
 
     /** 蕾丝线：黄昏（奶茶棕褐·米杏）#DECAC0 */
     const val HUANGHUN_LACE = 0xFFDECAC0 // 奶茶棕褐·米杏

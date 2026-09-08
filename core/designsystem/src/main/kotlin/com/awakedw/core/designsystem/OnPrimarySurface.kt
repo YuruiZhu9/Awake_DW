@@ -7,7 +7,7 @@ import com.awakedw.core.model.ThemeId
  * 主色底（按钮渐变 / 选中 chip / 步进钮）上的字色助手（P2-4 对比度修复）。
  *
  * - 深夜墨青（isDark）：按钮色板（#5C8FA0→#86B7C4）按白字校准，维持 [Color.White]；
- * - 焦糖奶茶改为棕褐色深按钮，使用白字保持清晰且避免黄色大色块；
+ * - 晨雾蓝瓷、焦糖奶茶、薄巧和圣职使用深按钮配白字；
  * - 其余浅色主题：原用白字压浅暖主色仅 1.8–2.5:1，统一改深暖褐
  *   [ThemePalette.ON_PRIMARY_SURFACE]（#3E322B），对各自主色渐变两端与 primary
  *   均 ≥3:1——逐项对比度计算由 OnPrimarySurfaceTest 用 WCAG 公式断言防漂移。
@@ -16,6 +16,7 @@ import com.awakedw.core.model.ThemeId
  */
 fun onPrimarySurface(spec: ThemeSpec): Color =
     when {
+        spec.id == ThemeId.EMERALD -> Color.White
         spec.id == ThemeId.GOTHIC -> Color(ThemePalette.GOTHIC_ON_PRIMARY)
         spec.id == ThemeId.CLERIC || spec.id == ThemeId.THIN_MINT -> Color.White
         spec.isDark || spec.id == ThemeId.CARAMEL -> Color.White

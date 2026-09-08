@@ -69,7 +69,7 @@ fun LolitaBackdrop(
                                 colors =
                                     listOf(
                                         spec.backgroundGradient.first().copy(
-                                            alpha = if (art.framed) 0.30f else 0.14f,
+                                            alpha = art.centerWash,
                                         ),
                                         Color.Transparent,
                                     ),
@@ -82,8 +82,8 @@ fun LolitaBackdrop(
                             Brush.horizontalGradient(
                                 0f to paper.copy(alpha = 0f),
                                 0.18f to paper.copy(alpha = 0.08f),
-                                0.34f to paper.copy(alpha = 0.70f),
-                                0.66f to paper.copy(alpha = 0.70f),
+                                0.34f to paper.copy(alpha = art.readingVeil),
+                                0.66f to paper.copy(alpha = art.readingVeil),
                                 0.82f to paper.copy(alpha = 0.08f),
                                 1f to paper.copy(alpha = 0f),
                             )

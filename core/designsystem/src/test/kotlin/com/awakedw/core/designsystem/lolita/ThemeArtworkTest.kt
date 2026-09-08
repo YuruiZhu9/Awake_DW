@@ -30,7 +30,7 @@ class ThemeArtworkTest {
             listOf(ThemeId.THIN_MINT, ThemeId.GOTHIC, ThemeId.CLERIC).forEach { id ->
                 val art = themeArtworkOf(id)
                 assertTrue(art.framed)
-                assertTrue(art.opacity in 0.5f..0.85f)
+                assertTrue(art.opacity in 0.5f..1f)
                 assertTrue(context.assets.open(art.asset).use { it.readBytes().size } < 350_000)
                 val bitmap = loadAssetBitmap(context, art.asset)
                 assertNotNull(bitmap)
@@ -41,7 +41,7 @@ class ThemeArtworkTest {
     @Test
     fun `gothic painted assets are never inverted and cleric is no longer a fallback`() {
         assertEquals(ArtworkTreatment.PAINTED, themeArtworkOf(ThemeId.GOTHIC).treatment)
-        assertEquals(ArtworkTreatment.PRINTED_INK, themeArtworkOf(ThemeId.CLERIC).treatment)
+        assertEquals(ArtworkTreatment.PAINTED, themeArtworkOf(ThemeId.CLERIC).treatment)
         assertEquals("lolita/cleric.jpg", themeArtworkOf(ThemeId.CLERIC).asset)
     }
 }

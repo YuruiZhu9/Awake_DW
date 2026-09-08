@@ -5,6 +5,16 @@ Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
 using System;
 using System.Drawing;
 public static class ThemeEdgeFeather {
+    private static int Tone(int v) { return Math.Max(0, Math.Min(255, (int)(255 - (255 - v) * 1.65 - 24))); }
+    public static void SilverRelief(Bitmap image) {
+        // Preserve the alpha silhouette; deepen only the existing pale ornament pigment.
+        for (int y = 0; y < image.Height; y++) {
+            for (int x = 0; x < image.Width; x++) {
+                Color c = image.GetPixel(x,y);
+                image.SetPixel(x,y,Color.FromArgb(c.A,Tone(c.R),Tone(c.G),Math.Min(255,Tone(c.B)+4)));
+            }
+        }
+    }
     public static void Apply(Bitmap image, bool left, bool top) {
         const float edge = 28f;
         for (int y = 0; y < image.Height; y++) {
@@ -58,6 +68,7 @@ function Draw-Crop($graphics, $image, [int[]]$src, [int[]]$dst, [single]$opacity
 }
 $mint = Open-Source '17_12_20'
 $cleric = Open-Source '17_12_08'
+[ThemeEdgeFeather]::SilverRelief($cleric)
 $gothic = Open-Source '17_12_02'
 try {
     $bitmap,$g = New-Art '#E5F3EA'

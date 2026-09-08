@@ -8,7 +8,7 @@ import org.junit.Test
 class LolitaBackdropTest {
     @Test
     fun `所有主题都有对应的氛围素材`() {
-        assertEquals("lolita/green.jpg", lolitaAssetFileOf(ThemeId.EMERALD))
+        assertEquals("lolita/blue.jpg", lolitaAssetFileOf(ThemeId.EMERALD))
         assertEquals("lolita/rose.jpg", lolitaAssetFileOf(ThemeId.STRAWBERRY))
         assertEquals("lolita/warm.jpg", lolitaAssetFileOf(ThemeId.CARAMEL))
         assertEquals("lolita/gothic.jpg", lolitaAssetFileOf(ThemeId.NIGHT))

@@ -3,7 +3,7 @@ package com.awakedw.core.designsystem
 import androidx.compose.ui.graphics.Color
 import com.awakedw.core.model.ThemeId
 
-/** A · 清晨天水碧系（ThemeId.EMERALD，默认/白天），色值对照 moodboard §4。 */
+/** A · 晨雾蓝瓷（保留 EMERALD 兼容键）：瓷白底与深蓝灰强调。 */
 val EmeraldThemeSpec: ThemeSpec =
     ThemeSpec(
         id = ThemeId.EMERALD,

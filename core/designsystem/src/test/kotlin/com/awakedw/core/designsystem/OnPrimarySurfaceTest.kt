@@ -52,7 +52,7 @@ class OnPrimarySurfaceTest {
     @Test
     fun `焦糖棕褐主题使用白字其余浅色主题使用深暖褐`() {
         assertEquals(Color.White, onPrimarySurface(CaramelThemeSpec))
-        listOf(EmeraldThemeSpec, StrawberryThemeSpec, LavenderThemeSpec).forEach { spec ->
+        listOf(StrawberryThemeSpec, LavenderThemeSpec).forEach { spec ->
             assertEquals(Color(ThemePalette.ON_PRIMARY_SURFACE), onPrimarySurface(spec))
         }
     }
@@ -68,20 +68,15 @@ class OnPrimarySurfaceTest {
     // ---------- P2-4：按钮前景色对各主题主色与渐变两端保持清晰 ----------
 
     @Test
-    fun `深暖褐对清晨主题按钮渐变两端与primary对比度均不低于3`() {
-        val text = ThemePalette.ON_PRIMARY_SURFACE
-        assertTrue(
-            "buttonTop #279061 实际 " + contrast(text, ThemePalette.QINGCHEN_BUTTON_TOP),
-            contrast(text, ThemePalette.QINGCHEN_BUTTON_TOP) >= 3f,
-        )
-        assertTrue(
-            "buttonBottom #43B988 实际 " + contrast(text, ThemePalette.QINGCHEN_BUTTON_BOTTOM),
-            contrast(text, ThemePalette.QINGCHEN_BUTTON_BOTTOM) >= 3f,
-        )
-        assertTrue(
-            "primary #2A9A6A 实际 " + contrast(text, ThemePalette.QINGCHEN_PRIMARY),
-            contrast(text, ThemePalette.QINGCHEN_PRIMARY) >= 3f,
-        )
+    fun `蓝瓷白字按钮和深蓝正文对比度至少四点五`() {
+        assertEquals(Color.White, onPrimarySurface(EmeraldThemeSpec))
+        listOf(ThemePalette.QINGCHEN_PRIMARY, ThemePalette.QINGCHEN_BUTTON_TOP, ThemePalette.QINGCHEN_BUTTON_BOTTOM).forEach {
+            assertTrue(contrast(0xFFFFFFFF, it) >= 4.5f)
+        }
+        listOf(ThemePalette.QINGCHEN_BG_1, ThemePalette.QINGCHEN_BG_2, ThemePalette.QINGCHEN_BG_3).forEach {
+            assertTrue(contrast(ThemePalette.QINGCHEN_GREETING, it) >= 4.5f)
+            assertTrue(contrast(ThemePalette.QINGCHEN_GREETING_SUB, it) >= 4.5f)
+        }
     }
 
     @Test
