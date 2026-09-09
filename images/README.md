@@ -31,6 +31,19 @@ APK 使用的文件位于 `app/src/main/assets/`：猫咪素材保留透明背�
 - 本轮新增三张背景共约 546KiB；原始大图不会进入 APK。
 - 图片来自用户；无需额外收集材料，没有在线下载或生成新图片。
 
+## 0.4.1 background candidates (2026-09-09)
+
+This iteration uses only existing user-provided originals. `tools/prepare-theme-candidates.ps1` derives same-theme frames from the existing blue, rose and warm paper artwork; no external download or network dependency is introduced. Generated JPEGs use a 1440px longest edge and stay below the 350KB per-image budget.
+
+| Runtime files | Theme use |
+| --- | --- |
+| `blue_alt.jpg`, `blue_soft.jpg` | Morning blue porcelain candidates |
+| `rose_alt.jpg`, `rose_soft.jpg` | Afternoon lotus candidates |
+| `warm_alt.jpg` | Evening milk-tea candidate |
+| `lavender.jpg` | Misty lavender candidate |
+
+`ThemeArtwork` keeps each primary frame first and rotates available same-theme candidates every 12 seconds in normal motion mode. Reduced motion keeps the primary frame still. Theme cards show the primary frame only; Gothic, Cleric and Thin Mint keep their dedicated frame without a second code-native border.
+
 ## alpha11 圣职可见度调整
 
 2026-09-08：处理脚本对原透明圣职图中的银饰/蕾丝色素作冷银灰增强，再按原 alpha 轮廓合成瓷白底。原 PNG 不覆盖；`cleric.jpg` 变为 246352 字节。运行时使用正常绘画叠加（96%）并降低中心洗染，使边框可见、中心仍可读。

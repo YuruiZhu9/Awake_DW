@@ -55,3 +55,9 @@
 - 不新增页面、导航入口、主题、记录字段、提醒策略、权限或网络能力。
 - 不隐藏常驻猫咪提示，不把文案库变成收藏/奖励，不移除已有专属画面图框。
 - 若真机观察轮换导致亮度跳变或性能回退，可将候选数量降为主图静态并保留蕾丝/统计改动；轮换无持久化，回退不影响用户记录。
+
+## Completion record (2026-09-09)
+
+- Implemented the five-item statistics fold, shared lace strategy for theme previews and full pages, local same-theme background candidates, the quiet home mascot empty-state ornament, and the refined default care-copy library.
+- Affected-module tests, full `ktlintCheck build`, 0.4.1 Debug/Release APK generation, signature verification, and SHA-256 recording are complete. Real-device visual, frame-rate, landscape, OLED, TalkBack, and upgrade-over-install checks remain manual acceptance items.
+- Version: 0.4.1 / versionCode 19. Water-record behavior, navigation, permissions, theme persistence keys, and copy-library JSON structure remain unchanged.
