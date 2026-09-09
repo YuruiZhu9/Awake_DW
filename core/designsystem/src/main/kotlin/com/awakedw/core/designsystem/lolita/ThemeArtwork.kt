@@ -1,8 +1,9 @@
 package com.awakedw.core.designsystem.lolita
 
 import com.awakedw.core.model.ThemeId
+import kotlin.random.Random
 
-/** Runtime art is local and stable: never randomly replaced during a gesture or a recomposition. */
+/** Local theme atmosphere art. The primary image is shown first; candidates rotate slowly. */
 data class ThemeArtwork(
     val asset: String,
     val opacity: Float,
@@ -10,17 +11,45 @@ data class ThemeArtwork(
     val framed: Boolean = false,
     val centerWash: Float = if (framed) 0.30f else 0.14f,
     val readingVeil: Float = 0.70f,
-)
+    val candidateAssets: List<String> = listOf(asset),
+) {
+    /** Keep the primary asset first and remove blank or duplicate candidates. */
+    fun usableAssets(): List<String> =
+        listOf(asset)
+            .plus(candidateAssets)
+            .filter(String::isNotBlank)
+            .distinct()
+}
 
 enum class ArtworkTreatment { PRINTED_INK, INVERTED_INK, PAINTED }
 
 fun themeArtworkOf(id: ThemeId): ThemeArtwork =
     when (id) {
-        ThemeId.EMERALD -> ThemeArtwork("lolita/blue.jpg", 0.24f)
-        ThemeId.STRAWBERRY -> ThemeArtwork("lolita/rose.jpg", 0.18f)
-        ThemeId.CARAMEL -> ThemeArtwork("lolita/warm.jpg", 0.18f)
+        ThemeId.EMERALD ->
+            ThemeArtwork(
+                "lolita/blue.jpg",
+                0.24f,
+                candidateAssets = listOf("lolita/blue_alt.jpg", "lolita/blue_soft.jpg"),
+            )
+        ThemeId.STRAWBERRY ->
+            ThemeArtwork(
+                "lolita/rose.jpg",
+                0.18f,
+                candidateAssets = listOf("lolita/rose_alt.jpg", "lolita/rose_soft.jpg"),
+            )
+        ThemeId.CARAMEL ->
+            ThemeArtwork(
+                "lolita/warm.jpg",
+                0.18f,
+                candidateAssets = listOf("lolita/warm_alt.jpg"),
+            )
         ThemeId.NIGHT -> ThemeArtwork("lolita/gothic.jpg", 0.20f, ArtworkTreatment.INVERTED_INK)
-        ThemeId.LAVENDER -> ThemeArtwork("lolita/blue.jpg", 0.18f)
+        ThemeId.LAVENDER ->
+            ThemeArtwork(
+                "lolita/blue.jpg",
+                0.18f,
+                candidateAssets = listOf("lolita/lavender.jpg"),
+            )
         ThemeId.GOTHIC -> ThemeArtwork("lolita/gothic_frame.jpg", 0.80f, ArtworkTreatment.PAINTED, framed = true)
         ThemeId.CLERIC ->
             ThemeArtwork(
@@ -34,7 +63,15 @@ fun themeArtworkOf(id: ThemeId): ThemeArtwork =
         ThemeId.THIN_MINT -> ThemeArtwork("lolita/thin_mint.jpg", 0.60f, framed = true)
     }
 
-/** Stronger text surfaces for detailed art; legacy themes retain their original translucency. */
+/** Stable pseudo-random order; recomposition cannot reshuffle the artwork. */
+internal fun artworkCycleOf(artwork: ThemeArtwork): List<String> {
+    val assets = artwork.usableAssets()
+    if (assets.size <= 1) return assets
+    val alternates = assets.drop(1).shuffled(Random(0x41 + artwork.asset.hashCode()))
+    return listOf(assets.first()) + alternates
+}
+
+/** Detailed art uses opaque content surfaces; legacy themes retain their original translucency. */
 fun artworkPanelOpacity(
     id: ThemeId,
     fallback: Float,

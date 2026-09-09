@@ -1,6 +1,7 @@
 package com.awakedw.feature.settings.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,9 +31,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.ThemeById
+import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
+import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.model.ThemeChoice
 
 /** Keep the main settings page short, while every theme remains one tap away. */
@@ -44,6 +51,9 @@ internal fun ThemePickerEntry(
     onSelect: (ThemeChoice) -> Unit,
 ) {
     val spec = currentThemeSpec()
+    val selectedSpec = if (selected == ThemeChoice.FOLLOW_TIME) spec else ThemeById.getValue(themeIdOf(selected))
+    val selectedArtwork = if (selected == ThemeChoice.FOLLOW_TIME) null else themeArtworkOf(selectedSpec.id)
+    val selectedImage = selectedArtwork?.let { rememberAssetImageOrN(it.asset, retainPreviousImage = false) }
     var open by rememberSaveable { mutableStateOf(false) }
     Surface(
         onClick = { open = true },
@@ -56,7 +66,27 @@ internal fun ThemePickerEntry(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(Modifier.size(42.dp).background(Brush.linearGradient(spec.backgroundGradient + spec.primary), RoundedCornerShape(12.dp)))
+            val swatchShape = RoundedCornerShape(12.dp)
+            Box(
+                Modifier
+                    .size(42.dp)
+                    .background(Brush.linearGradient(selectedSpec.backgroundGradient + selectedSpec.primary), swatchShape)
+                    .clip(swatchShape),
+            ) {
+                if (selectedImage != null) {
+                    Image(
+                        bitmap = selectedImage,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.TopCenter,
+                        alpha = selectedArtwork!!.opacity.coerceAtLeast(0.48f),
+                        modifier = Modifier.matchParentSize(),
+                    )
+                }
+                if (selectedArtwork != null) {
+                    ThemeLaceOverlay(spec = selectedSpec, modifier = Modifier.matchParentSize(), compact = true)
+                }
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text("主题", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
                 Text(themeLabel(selected), color = spec.greetingSubColor, style = MaterialTheme.typography.bodySmall)

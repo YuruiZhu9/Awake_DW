@@ -8,8 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -61,6 +63,21 @@ class CatRailLayoutTest {
         assertTrue(text.right <= cat.left)
         assertTrue(text.bottom <= button.top)
         assertTrue(cat.bottom <= button.top)
+    }
+
+    @Test
+    fun `idle mascot rail fills the response side without adding a fake message`() {
+        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        var taps = 0
+        composeRule.setContent {
+            AwakeTheme(ThemeId.EMERALD) {
+                CatRail(CatMood.IDLE, null, { taps++ }, Modifier.fillMaxWidth())
+            }
+        }
+        composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("胆大王").assertIsDisplayed()
+        composeRule.onAllNodesWithText("等待回应").assertCountEquals(0)
+        assertEquals(0, taps)
     }
 
     @Test

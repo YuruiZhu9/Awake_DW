@@ -56,6 +56,7 @@ import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
 import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.model.ThemeChoice
@@ -324,6 +325,20 @@ internal fun ThemeChoiceChips(
     }
 }
 
+/** Theme option label. */
+internal fun themeLabel(choice: ThemeChoice): String =
+    when (choice) {
+        ThemeChoice.FOLLOW_TIME -> "随时间"
+        ThemeChoice.FIXED_EMERALD -> "晨雾蓝瓷"
+        ThemeChoice.FIXED_STRAWBERRY -> "午后藕荷"
+        ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
+        ThemeChoice.FIXED_NIGHT -> "深夜青黛"
+        ThemeChoice.FIXED_LAVENDER -> "雾紫玫瑰"
+        ThemeChoice.FIXED_GOTHIC -> "黑色哥特"
+        ThemeChoice.FIXED_CLERIC -> "白色圣职"
+        ThemeChoice.FIXED_THIN_MINT -> "薄荷巧克力"
+    }
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun ThemeChoiceCard(
@@ -333,6 +348,7 @@ private fun ThemeChoiceCard(
     modifier: Modifier = Modifier,
 ) {
     val current = currentThemeSpec()
+    val theme = if (choice == ThemeChoice.FOLLOW_TIME) current else ThemeById.getValue(themeIdOf(choice))
     val cardColor = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f)
     val borderColor = if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)
     Surface(
@@ -347,7 +363,7 @@ private fun ThemeChoiceCard(
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ThemeSwatch(choice = choice, modifier = Modifier.fillMaxWidth())
+            ThemeSwatch(choice = choice, theme = theme, modifier = Modifier.fillMaxWidth())
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -373,50 +389,57 @@ private fun ThemeChoiceCard(
     }
 }
 
-/** Theme option label. */
-internal fun themeLabel(choice: ThemeChoice): String =
-    when (choice) {
-        ThemeChoice.FOLLOW_TIME -> "随时间"
-        ThemeChoice.FIXED_EMERALD -> "晨雾蓝瓷"
-        ThemeChoice.FIXED_STRAWBERRY -> "午后藕荷"
-        ThemeChoice.FIXED_CARAMEL -> "黄昏奶茶"
-        ThemeChoice.FIXED_NIGHT -> "深夜青黛"
-        ThemeChoice.FIXED_LAVENDER -> "雾紫玫瑰"
-        ThemeChoice.FIXED_GOTHIC -> "黑色哥特"
-        ThemeChoice.FIXED_CLERIC -> "白色圣职"
-        ThemeChoice.FIXED_THIN_MINT -> "薄荷巧克力"
+private fun themeSwatchBrush(
+    choice: ThemeChoice,
+    theme: ThemeSpec,
+): Brush =
+    if (choice == ThemeChoice.FOLLOW_TIME) {
+        Brush.horizontalGradient(
+            listOf(
+                ThemeById.getValue(ThemeId.STRAWBERRY).primary,
+                ThemeById.getValue(ThemeId.EMERALD).primary,
+                ThemeById.getValue(ThemeId.CARAMEL).primary,
+                ThemeById.getValue(ThemeId.NIGHT).primary,
+            ),
+        )
+    } else {
+        Brush.linearGradient(theme.backgroundGradient)
     }
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun ThemeSwatch(
     choice: ThemeChoice,
+    theme: ThemeSpec,
     modifier: Modifier = Modifier,
 ) {
-    val brush = themeSwatchBrush(choice)
+    val shape = RoundedCornerShape(9.dp)
     Box(
         modifier =
             modifier
-                .heightIn(min = 44.dp)
-                .background(brush, RoundedCornerShape(9.dp)),
+                .heightIn(min = 54.dp)
+                .background(themeSwatchBrush(choice, theme), shape)
+                .clip(shape),
     ) {
         if (choice != ThemeChoice.FOLLOW_TIME) {
-            val theme = ThemeById.getValue(themeIdOf(choice))
             val artwork = themeArtworkOf(theme.id)
-            val image = if (artwork.framed) rememberAssetImageOrN(artwork.asset, retainPreviousImage = false) else null
+            val image = rememberAssetImageOrN(artwork.asset, retainPreviousImage = false)
             if (image != null) {
                 Image(
                     bitmap = image,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.TopCenter,
-                    alpha = 0.82f,
-                    modifier = Modifier.matchParentSize().clip(RoundedCornerShape(9.dp)).testTag("theme-art-${theme.id.name}"),
+                    alpha = artwork.opacity.coerceAtLeast(0.48f),
+                    modifier = Modifier.matchParentSize().testTag("theme-art-${theme.id.name}"),
                 )
             }
+            ThemeLaceOverlay(spec = theme, modifier = Modifier.matchParentSize(), compact = true)
             Box(
                 modifier =
-                    Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 8.dp)
                         .size(width = 30.dp, height = 14.dp)
                         .background(Brush.horizontalGradient(listOf(theme.buttonTop, theme.buttonBottom)), RoundedCornerShape(5.dp)),
             )
@@ -427,31 +450,12 @@ private fun ThemeSwatch(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 1.dp)
-                    .background(Color.White.copy(alpha = 0.24f), RoundedCornerShape(9.dp)),
+                    .background(Color.White.copy(alpha = 0.24f), shape),
         )
     }
 }
 
-private fun themeSwatchBrush(choice: ThemeChoice): Brush =
-    when (choice) {
-        ThemeChoice.FOLLOW_TIME ->
-            Brush.horizontalGradient(
-                listOf(
-                    ThemeById.getValue(ThemeId.STRAWBERRY).primary,
-                    ThemeById.getValue(ThemeId.EMERALD).primary,
-                    ThemeById.getValue(ThemeId.CARAMEL).primary,
-                    ThemeById.getValue(ThemeId.NIGHT).primary,
-                ),
-            )
-        else -> {
-            val theme = ThemeById.getValue(themeIdOf(choice))
-            Brush.horizontalGradient(
-                theme.backgroundGradient,
-            )
-        }
-    }
-
-private fun themeIdOf(choice: ThemeChoice): ThemeId =
+internal fun themeIdOf(choice: ThemeChoice): ThemeId =
     when (choice) {
         ThemeChoice.FIXED_EMERALD -> ThemeId.EMERALD
         ThemeChoice.FIXED_STRAWBERRY -> ThemeId.STRAWBERRY

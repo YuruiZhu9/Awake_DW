@@ -97,4 +97,6 @@ try {
     $mint.Dispose(); $cleric.Dispose(); $gothic.Dispose(); $quality.Dispose()
 }
 Get-ChildItem -LiteralPath $output -File | Where-Object Name -in @('thin_mint.jpg','cleric.jpg','gothic_frame.jpg') | Select-Object Name,Length
+# The companion step derives additional same-theme candidates from existing user originals.
+& (Join-Path $PSScriptRoot 'prepare-theme-candidates.ps1')
 

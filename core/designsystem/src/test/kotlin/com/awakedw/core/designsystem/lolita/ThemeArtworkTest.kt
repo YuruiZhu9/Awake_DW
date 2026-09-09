@@ -53,4 +53,22 @@ class ThemeArtworkTest {
         assertEquals(ArtworkTreatment.PAINTED, themeArtworkOf(ThemeId.CLERIC).treatment)
         assertEquals("lolita/cleric.jpg", themeArtworkOf(ThemeId.CLERIC).asset)
     }
+
+    @Test
+    fun `all rotating candidates are packaged decoded and cycle order is stable`() =
+        runBlocking {
+            val context = RuntimeEnvironment.getApplication()
+            ThemeId.entries.forEach { id ->
+                val artwork = themeArtworkOf(id)
+                assertEquals(artwork.asset, artworkCycleOf(artwork).first())
+                assertEquals(artworkCycleOf(artwork), artworkCycleOf(artwork))
+                artwork.usableAssets().forEach { asset ->
+                    val folder = asset.substringBeforeLast('/')
+                    val name = asset.substringAfterLast('/')
+                    assertTrue(context.assets.list(folder)?.contains(name) == true)
+                    assertTrue(context.assets.open(asset).use { it.readBytes().size } < 350_000)
+                    assertNotNull(loadAssetBitmap(context, asset))
+                }
+            }
+        }
 }

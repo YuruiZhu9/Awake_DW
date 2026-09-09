@@ -43,6 +43,17 @@ class CopyLibraryRepositoryTest {
         }
 
     @Test
+    fun `default care copy keeps editor length and first person anchors`() =
+        runTest {
+            val lib = repo.library.first()
+            val groups = listOf(lib.morning, lib.day, lib.evening)
+            val all = groups.flatten()
+            assertTrue(groups.all { group -> group.any { it.contains("我") } })
+            assertTrue(all.all { it.length <= 40 })
+            assertEquals(all.size, all.toSet().size)
+        }
+
+    @Test
     fun `randomFor返回早组句子且20次连抽不与最近5条窗口内重复`() =
         runTest {
             val draws = mutableListOf<String>()

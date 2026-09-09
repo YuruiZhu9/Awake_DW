@@ -29,9 +29,11 @@ import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.settings.components.ThemeChoiceChips
+import com.awakedw.feature.settings.components.themeIdOf
 import com.awakedw.feature.settings.components.themeLabel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,9 +53,37 @@ class ThemePreviewVisualTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun `all fixed theme thumbnails expose their primary artwork`() {
+        disableMotion()
+        val fixedChoices = ThemeChoice.entries.filter { it != ThemeChoice.FOLLOW_TIME }
+        runBlocking {
+            fixedChoices.forEach { choice ->
+                assertNotNull(loadAssetBitmap(RuntimeEnvironment.getApplication(), themeArtworkOf(themeIdOf(choice)).asset))
+            }
+        }
+        composeRule.setContent {
+            AwakeTheme(ThemeId.EMERALD) {
+                ThemeChoiceChips(selected = ThemeChoice.FOLLOW_TIME, onSelect = {})
+            }
+        }
+        fixedChoices.forEach { choice ->
+            val id = themeIdOf(choice)
+            assertTrue(
+                "thumbnail should load ${id.name}",
+                composeRule.onAllNodesWithTag("theme-art-${id.name}", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
+            )
+        }
+    }
+
+    private fun disableMotion() {
+        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE, 0f)
+    }
+
+    @Test
     fun `artwork preview cards stay selectable in each dedicated theme`() {
         // Static preview also covers the reduced-motion path; the breathing backdrop never becomes idle otherwise.
-        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        disableMotion()
         // Use the production decode/cache path, but finish IO before native snapshot assertions.
         runBlocking {
             listOf(ThemeId.THIN_MINT, ThemeId.GOTHIC, ThemeId.CLERIC).forEach { id ->

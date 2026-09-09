@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,9 +15,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
@@ -30,6 +36,9 @@ import java.time.format.DateTimeFormatter
 
 /** 时间线空态占位高度：让「还没出现」的文案有一块安静的居中空间。 */
 private val EMPTY_TIMELINE_HEIGHT = 76.dp
+
+/** 折叠时间线保留的最近记录数，避免长列表把统计页拉得过长。 */
+private const val COLLAPSED_RECORD_LIMIT = 5
 
 /** 小水滴圆点直径。 */
 private val DROP_DOT_SIZE = 8.dp
@@ -48,7 +57,7 @@ private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm"
 
 /**
  * 今日时间线（规格 §3.3 第 3 条）：每杯一个小水滴圆点 + HH:mm，右侧「{ml}ml」，时间升序。
- * 今日一杯未喝时整块居中显示空态文案。
+ * 今日一杯未喝时整块居中显示空态文案；超过五条时默认只保留最近五条，点击后可展开。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -59,7 +68,7 @@ internal fun TodayTimeline(
     if (records.isEmpty()) {
         FadeUpOnce(delayMillis = 120, modifier = modifier.fillMaxWidth()) {
             Box(
-                modifier = Modifier.fillMaxWidth().height(EMPTY_TIMELINE_HEIGHT),
+                modifier = Modifier.fillMaxWidth().heightIn(min = EMPTY_TIMELINE_HEIGHT),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -71,13 +80,50 @@ internal fun TodayTimeline(
         }
     } else {
         val spec = currentThemeSpec()
+        var expanded by remember { mutableStateOf(false) }
+        val isCollapsible = records.size > COLLAPSED_RECORD_LIMIT
+        val visibleRecords =
+            if (isCollapsible && !expanded) {
+                records.takeLast(COLLAPSED_RECORD_LIMIT)
+            } else {
+                records
+            }
+
         Column(
             modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         ) {
-            records.forEachIndexed { index, record ->
+            visibleRecords.forEachIndexed { index, record ->
                 FadeUpOnce(delayMillis = minOf(index, ROW_ENTRANCE_MAX_STAGGERED) * ROW_ENTRANCE_STAGGER_MS) {
                     TimelineRow(record = record, spec = spec)
+                }
+            }
+            if (isCollapsible) {
+                TextButton(
+                    onClick = { expanded = !expanded },
+                    modifier =
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .heightIn(min = 48.dp)
+                            .semantics {
+                                contentDescription =
+                                    if (expanded) {
+                                        "收起今日记录"
+                                    } else {
+                                        "显示其余 ${records.size - COLLAPSED_RECORD_LIMIT} 次今日记录"
+                                    }
+                            },
+                ) {
+                    Text(
+                        text =
+                            if (expanded) {
+                                "收起"
+                            } else {
+                                "显示更多（还有 ${records.size - COLLAPSED_RECORD_LIMIT} 次）"
+                            },
+                        color = spec.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
             }
         }
@@ -92,9 +138,11 @@ private fun TimelineRow(
 ) {
     Row(
         modifier =
-            Modifier.fillMaxWidth().heightIn(
-                min = 48.dp,
-            ).background(spec.ringTrack.copy(alpha = 0.20f), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .background(spec.ringTrack.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

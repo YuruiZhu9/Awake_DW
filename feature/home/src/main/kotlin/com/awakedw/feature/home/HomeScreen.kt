@@ -204,7 +204,11 @@ internal fun CatRail(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        PraiseLine(text = line, multiLine = true, modifier = Modifier.weight(1f))
+        if (line == null) {
+            IdleCatAccent(modifier = Modifier.weight(1f))
+        } else {
+            PraiseLine(text = line, multiLine = true, modifier = Modifier.weight(1f))
+        }
         Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 Text(
@@ -226,6 +230,29 @@ internal fun CatRail(
                 CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
             }
         }
+    }
+}
+
+/** Quiet paper-seam ornament that fills the empty response side without adding a message or action. */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun IdleCatAccent(modifier: Modifier = Modifier) {
+    val spec = currentThemeSpec()
+    Canvas(modifier.heightIn(min = CAT_RAIL_HEIGHT)) {
+        val centerY = size.height / 2f
+        val left = 10.dp.toPx()
+        val right = (size.width - 10.dp.toPx()).coerceAtLeast(left)
+        val ink = spec.laceColor
+        drawLine(
+            color = ink.copy(alpha = 0.22f),
+            start = Offset(left, centerY),
+            end = Offset(right, centerY),
+            strokeWidth = 0.7.dp.toPx(),
+        )
+        drawCircle(ink.copy(alpha = 0.42f), 1.4.dp.toPx(), Offset(left + 8.dp.toPx(), centerY))
+        drawCircle(ink.copy(alpha = 0.34f), 1.dp.toPx(), Offset((left + right) / 2f, centerY))
+        drawCircle(ink.copy(alpha = 0.42f), 1.4.dp.toPx(), Offset(right - 8.dp.toPx(), centerY))
+        drawCircle(spec.primary.copy(alpha = 0.20f), 4.dp.toPx(), Offset((left + right) / 2f, centerY))
     }
 }
 
