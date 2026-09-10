@@ -1,4 +1,6 @@
 .superpowers/
+# 本地智能体工作状态（记忆/临时产物），与 .superpowers/ 同类，不入库
+.workbuddy/
 .env.txt
 build/
 local.properties
