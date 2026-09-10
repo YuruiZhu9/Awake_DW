@@ -48,3 +48,16 @@ This iteration uses only existing user-provided originals. `tools/prepare-theme-
 
 2026-09-08：处理脚本对原透明圣职图中的银饰/蕾丝色素作冷银灰增强，再按原 alpha 轮廓合成瓷白底。原 PNG 不覆盖；`cleric.jpg` 变为 246352 字节。运行时使用正常绘画叠加（96%）并降低中心洗染，使边框可见、中心仍可读。
 晨雾蓝瓷沿用已有 `blue.jpg`，替代旧清晨薄荷的绿色氛围图；无需用户额外收集素材。
+
+## 2026-09-10 new theme backgrounds
+
+The user-supplied source PNG files live in `Lolita/new/` and remain untouched. `tools/prepare-new-theme-art.ps1` creates the runtime JPEG derivatives below at 810×1440, JPEG quality 86, and below the 350KB per-file budget.
+
+| Source | Runtime asset | Theme |
+| --- | --- | --- |
+| `Lolita/new/晨雾蓝瓷.png` | `lolita/morning_blue_porcelain.jpg` | 晨雾蓝瓷 |
+| `Lolita/new/午后藕荷.png` | `lolita/afternoon_lotus.jpg` | 午后藕荷 |
+| `Lolita/new/黄昏奶茶.png` | `lolita/twilight_milk_tea.jpg` | 黄昏奶茶 |
+| `Lolita/new/雾紫玫瑰.png` | `lolita/mist_lavender_rose.jpg` | 雾紫玫瑰 |
+
+These four images use their own quiet central paper area and edge-weighted painted decoration, so runtime rendering uses normal painted compositing instead of the former low-opacity multiply treatment. Deep-night indigo continues to use the existing fallback until a dedicated source is confirmed.

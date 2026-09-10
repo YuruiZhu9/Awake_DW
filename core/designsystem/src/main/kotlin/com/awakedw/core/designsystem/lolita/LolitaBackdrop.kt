@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +73,7 @@ fun LolitaBackdrop(
 
     Crossfade(
         targetState = image,
+        modifier = modifier,
         animationSpec = tween(durationMillis = if (reduceMotion) 0 else ARTWORK_CROSSFADE_MS),
         label = "lolitaBackdropArtwork",
     ) { source ->
@@ -86,7 +88,7 @@ fun LolitaBackdrop(
             artwork = artwork,
             spec = spec,
             reveal = reveal,
-            modifier = modifier,
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

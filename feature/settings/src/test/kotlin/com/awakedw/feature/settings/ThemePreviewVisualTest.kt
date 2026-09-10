@@ -33,7 +33,6 @@ import com.awakedw.feature.settings.components.themeIdOf
 import com.awakedw.feature.settings.components.themeLabel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,10 +67,9 @@ class ThemePreviewVisualTest {
         }
         fixedChoices.forEach { choice ->
             val id = themeIdOf(choice)
-            assertTrue(
-                "thumbnail should load ${id.name}",
-                composeRule.onAllNodesWithTag("theme-art-${id.name}", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
-            )
+            composeRule.waitUntil(timeoutMillis = 5_000) {
+                composeRule.onAllNodesWithTag("theme-art-${id.name}", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+            }
         }
     }
 

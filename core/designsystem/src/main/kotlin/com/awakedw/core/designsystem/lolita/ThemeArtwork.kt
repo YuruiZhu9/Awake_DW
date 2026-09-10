@@ -27,28 +27,28 @@ fun themeArtworkOf(id: ThemeId): ThemeArtwork =
     when (id) {
         ThemeId.EMERALD ->
             ThemeArtwork(
-                "lolita/blue.jpg",
-                0.24f,
-                candidateAssets = listOf("lolita/blue_alt.jpg", "lolita/blue_soft.jpg"),
+                asset = "lolita/morning_blue_porcelain.jpg",
+                opacity = 0.74f,
+                treatment = ArtworkTreatment.PAINTED,
             )
         ThemeId.STRAWBERRY ->
             ThemeArtwork(
-                "lolita/rose.jpg",
-                0.18f,
-                candidateAssets = listOf("lolita/rose_alt.jpg", "lolita/rose_soft.jpg"),
+                asset = "lolita/afternoon_lotus.jpg",
+                opacity = 0.72f,
+                treatment = ArtworkTreatment.PAINTED,
             )
         ThemeId.CARAMEL ->
             ThemeArtwork(
-                "lolita/warm.jpg",
-                0.18f,
-                candidateAssets = listOf("lolita/warm_alt.jpg"),
+                asset = "lolita/twilight_milk_tea.jpg",
+                opacity = 0.70f,
+                treatment = ArtworkTreatment.PAINTED,
             )
         ThemeId.NIGHT -> ThemeArtwork("lolita/gothic.jpg", 0.20f, ArtworkTreatment.INVERTED_INK)
         ThemeId.LAVENDER ->
             ThemeArtwork(
-                "lolita/blue.jpg",
-                0.18f,
-                candidateAssets = listOf("lolita/lavender.jpg"),
+                asset = "lolita/mist_lavender_rose.jpg",
+                opacity = 0.72f,
+                treatment = ArtworkTreatment.PAINTED,
             )
         ThemeId.GOTHIC -> ThemeArtwork("lolita/gothic_frame.jpg", 0.80f, ArtworkTreatment.PAINTED, framed = true)
         ThemeId.CLERIC ->
@@ -60,7 +60,7 @@ fun themeArtworkOf(id: ThemeId): ThemeArtwork =
                 centerWash = 0.10f,
                 readingVeil = 0.48f,
             )
-        ThemeId.THIN_MINT -> ThemeArtwork("lolita/thin_mint.jpg", 0.60f, framed = true)
+        ThemeId.THIN_MINT -> ThemeArtwork("lolita/thin_mint.jpg", 0.60f, ArtworkTreatment.PAINTED, framed = true)
     }
 
 /** Stable pseudo-random order; recomposition cannot reshuffle the artwork. */
