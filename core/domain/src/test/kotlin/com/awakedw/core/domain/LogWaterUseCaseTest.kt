@@ -81,6 +81,26 @@ class LogWaterUseCaseTest {
             assertEquals(true, second.celebrated)
         }
 
+    /**
+     * 记完之后的当日总量要随结果一起交出去（判达标时本就算过，此前算完即弃）：
+     * 通知动作「记一杯」的调用方不在应用内、看不到进度环，回执只能靠这个值交代进度。
+     */
+    @Test
+    fun `结果携带记完之后的当日总量`() =
+        runBlocking {
+            prefs.setGoalMl(1000)
+            prefs.setCupMl(250)
+
+            val first = useCase() as LogResult.Logged
+            assertEquals(250, first.totalAfterLog)
+
+            val sip = useCase(amountMl = 125) as LogResult.Logged
+            assertEquals(375, sip.totalAfterLog)
+
+            // 与仓储的实际统计一致，不是另一条平行推算。
+            assertEquals(water.todayStats().totalMl, sip.totalAfterLog)
+        }
+
     @Test
     fun `次日重新达标可再次庆祝`() =
         runBlocking {

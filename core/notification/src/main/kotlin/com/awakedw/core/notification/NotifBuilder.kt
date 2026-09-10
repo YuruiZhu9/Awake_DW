@@ -63,11 +63,23 @@ class NotifBuilder
                 .build()
         }
 
-        /** 打卡回执通知：同 id 更新为「已记一杯」，2 秒后自动撤销。 */
-        fun loggedAck(): Notification =
+        /**
+         * 打卡回执：同一通知原位换成一份**收据**——已记一杯，并交代当日进度。
+         *
+         * 回执**不得**复用 [titleOf]：那是时段问候，属于提醒通道的话。此前它被拿来当回执标题，
+         * 于是使用者点完「记一杯」，通知变成「午安 ☀ / 已记一杯」——看上去像又来了一条提醒，
+         * 把「这一下按对了」的确认冲掉。通知里同样要把两个通道分开（与首页环心确认同一原则）。
+         *
+         * 达标那次改说「今日份水灵达成 ✨」：使用者此刻盯着通知栏，看不到应用内的达标缎带，
+         * 这里是唯一能告诉他的地方。文案与 `HomeScreen.CELEBRATION_TEXT` 刻意保持一致。
+         */
+        fun loggedAck(
+            totalMl: Int,
+            celebrated: Boolean,
+        ): Notification =
             baseBuilder()
-                .setContentTitle(titleOf(currentSlot()))
-                .setContentText(LOGGED_TEXT)
+                .setContentTitle(LOGGED_TEXT)
+                .setContentText(if (celebrated) LOGGED_GOAL_TEXT else loggedProgressText(totalMl))
                 .setTimeoutAfter(ACK_TIMEOUT_MS)
                 .build()
 
@@ -94,10 +106,18 @@ class NotifBuilder
             /** 全链路固定通知 id：提醒与打卡回执共用，实现「更新」而非叠加。 */
             const val NOTIFICATION_ID = 2001
             const val ACTION_LOG_WATER = "记一杯"
+
+            /** 回执标题：陈述这一下已经生效，不带任何问候语。 */
             const val LOGGED_TEXT = "已记一杯"
+
+            /** 本次打卡达成当日目标时的回执正文（与首页达标缎带同文案）。 */
+            const val LOGGED_GOAL_TEXT = "今日份水灵达成 ✨"
             const val ACK_TIMEOUT_MS = 2_000L
             private const val ACTION_REQUEST_CODE = 2002
             private const val OPEN_APP_REQUEST_CODE = 2003
+
+            /** 回执正文：交代记完之后的当日进度，单位写法与应用内一致（「250ml」无空格）。 */
+            fun loggedProgressText(totalMl: Int): String = "今天共 ${totalMl}ml"
 
             /**
              * 时段 → 标题（§4.3）。DAY 覆盖 11:00–17:59，横跨中午与下午，
