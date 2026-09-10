@@ -31,6 +31,11 @@ class RoomWaterRepository
             return entity.copy(id = dao.insert(entity)).toDomain()
         }
 
+        /** 撤回误记的一杯：删除后由 [changes] 行数流驱动各页重算，无需额外刷新。 */
+        override suspend fun delete(recordId: Long) {
+            dao.deleteById(recordId)
+        }
+
         override suspend fun todayStats(): DailyStats {
             // 单查询 + 内存推导：total/cupCount 同源，消除双查询间的写入竞态（终审 T4a）。
             val records = dao.recordsFor(currentDayKey())

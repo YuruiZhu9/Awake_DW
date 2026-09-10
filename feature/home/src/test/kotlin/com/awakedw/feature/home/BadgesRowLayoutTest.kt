@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.home.components.BadgesRow
@@ -45,6 +46,23 @@ class BadgesRowLayoutTest {
     fun `three facts share the entire available width equally`() {
         showSummary(lastDrink = "10:30", interval = "45 分钟")
         assertEvenColumns(listOf("今日 8 杯", "最近一杯 10:30", "平均间隔 45 分钟"))
+    }
+
+    /**
+     * 触控下限：两行文字的天然高度只有约 40dp，而「最近一杯」承担长按撤回——
+     * 高度不够就会长按按空。列宽由上面的用例守着，这里只量高度。
+     */
+    @Test
+    fun `fact columns keep the minimum touch height`() {
+        showSummary(lastDrink = "10:30", interval = "45 分钟")
+        val minPx = with(rule.density) { ControlMinHeight.toPx() }
+        listOf("今日 8 杯", "最近一杯 10:30", "平均间隔 45 分钟").forEach { description ->
+            val height = rule.onNodeWithContentDescription(description).fetchSemanticsNode().boundsInRoot.height
+            assertTrue(
+                "「$description」的可点高度 ${height}px 低于下限 ${minPx}px（$ControlMinHeight）",
+                height >= minPx,
+            )
+        }
     }
 
     @Test

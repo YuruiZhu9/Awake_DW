@@ -1,5 +1,6 @@
 package com.awakedw.feature.stats
 
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.model.WaterRecord
@@ -38,7 +39,13 @@ class StatsViewModelTest {
         val water = FakeWaterRepository(clock)
         val prefs = FakePrefsRepository(settings)
         Dispatchers.setMain(UnconfinedTestDispatcher(scheduler))
-        val viewModel = StatsViewModel(clock = clock, water = water, prefs = prefs)
+        val viewModel =
+            StatsViewModel(
+                clock = clock,
+                water = water,
+                deleteWater = DeleteWaterRecordUseCase(water),
+                prefs = prefs,
+            )
         return Harness(clock, water, prefs, viewModel)
     }
 
@@ -113,5 +120,43 @@ class StatsViewModelTest {
             single.water.seedToday()
             runCurrent()
             assertEquals("—", single.viewModel.uiState.value.badges.avgIntervalLabel)
+        }
+
+    @Test
+    fun `deleting one record refreshes badges chart and timeline together`() =
+        runTest {
+            val h = harness(testScheduler)
+            h.water.seedToday(60, 30)
+            runCurrent()
+            val target = h.viewModel.uiState.value.timeline.first()
+
+            h.viewModel.deleteRecord(target.id)
+            runCurrent()
+
+            // 一处删除，三块数字（徽章 / 周柱 / 时间线）都按剩余记录重算。
+            val state = h.viewModel.uiState.value
+            assertEquals(500, state.badges.totalMl)
+            assertEquals(2, state.badges.cupCount)
+            assertEquals(2, state.timeline.size)
+            assertTrue(state.timeline.none { it.id == target.id })
+            assertEquals(500, state.bars.last().totalMl)
+        }
+
+    @Test
+    fun `deleting every record returns statistics to the empty state`() =
+        runTest {
+            val h = harness(testScheduler)
+            h.water.seedToday(30)
+            runCurrent()
+
+            h.viewModel.uiState.value.timeline.forEach { h.viewModel.deleteRecord(it.id) }
+            runCurrent()
+
+            val state = h.viewModel.uiState.value
+            assertTrue(state.timeline.isEmpty())
+            assertEquals(0, state.badges.totalMl)
+            assertEquals(0, state.badges.cupCount)
+            assertEquals("—", state.badges.avgIntervalLabel)
+            assertEquals(0, state.bars.last().totalMl)
         }
 }

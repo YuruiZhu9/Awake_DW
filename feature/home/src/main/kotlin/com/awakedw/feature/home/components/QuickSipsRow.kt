@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
@@ -28,16 +29,24 @@ import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 /** 快捷胶囊圆角：全圆，与徽章/按钮同一语言。 */
 private val QUICK_SIP_SHAPE: Shape = RoundedCornerShape(16.dp)
 
-/** 快捷量档位（§11.1）：小口约半杯、满杯约一杯半，毫升数取 10 的倍数。 */
+/** 快捷量档位（§11.1）：小口约半杯、一杯半约 1.5 杯，毫升数取 10 的倍数。 */
 internal fun sipAmount(cupMl: Int): Int = roundTo10(cupMl / 2)
 
-internal fun fullAmount(cupMl: Int): Int = roundTo10(cupMl * 3 / 2)
+internal fun cupAndHalfAmount(cupMl: Int): Int = roundTo10(cupMl * 3 / 2)
 
 private fun roundTo10(v: Int): Int = (v + 5) / 10 * 10
 
+/** 快捷胶囊文案（与「一杯容量」对齐）：讲清各自相当于几杯，不让毫升数孤零零地悬着。 */
+internal fun sipLabel(cupMl: Int): String = "小口 ${sipAmount(cupMl)}ml"
+
+internal fun cupAndHalfLabel(cupMl: Int): String = "一杯半 ${cupAndHalfAmount(cupMl)}ml"
+
 /**
- * 快捷饮量行（§11.1）：「小口 {n}ml / 满杯 {n}ml」两枚次级胶囊，
- * 点按即以该量记一笔（与主按钮共用防抖闸门与夸夸语反馈），轻触感同主按钮。
+ * 快捷饮量行（§11.1）：「小口 {n}ml / 一杯半 {n}ml」两枚次级胶囊，
+ * 点按即以该量记一笔（与主按钮共用防抖闸门与环心确认），轻触感同主按钮。
+ *
+ * 第二档叫「一杯半」而不是「满杯」：设置里的「一杯容量」已经定义了杯子的大小，
+ * 主按钮写的是 +{一杯容量}ml，再叫「满杯」会让同一个杯子出现两种容量。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -53,7 +62,7 @@ internal fun QuickSipsRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         QuickSipChip(
-            label = "小口 ${sipAmount(cupMl)}ml",
+            label = sipLabel(cupMl),
             spec = spec,
             modifier = Modifier.weight(1f),
             onClick = {
@@ -62,12 +71,12 @@ internal fun QuickSipsRow(
             },
         )
         QuickSipChip(
-            label = "满杯 ${fullAmount(cupMl)}ml",
+            label = cupAndHalfLabel(cupMl),
             spec = spec,
             modifier = Modifier.weight(1f),
             onClick = {
                 view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                onQuickLog(fullAmount(cupMl))
+                onQuickLog(cupAndHalfAmount(cupMl))
             },
         )
     }
@@ -86,7 +95,7 @@ private fun QuickSipChip(
         color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.72f)),
         border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
         onClick = onClick,
-        modifier = modifier.heightIn(min = 48.dp),
+        modifier = modifier.heightIn(min = ControlMinHeight),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),

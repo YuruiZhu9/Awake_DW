@@ -75,6 +75,14 @@ class FakeWaterRepository(
         return DailyStats(totalMl = totalsByDay[currentDayKey()] ?: 0, cupCount = today.size, avgIntervalMin = avgIntervalOf(today))
     }
 
+    /** 删除一笔并同步回落当日总量：与 Room 实现「删完由变更流重算」的语义一致。 */
+    override suspend fun delete(recordId: Long) {
+        val removed = recorded.firstOrNull { it.id == recordId } ?: return
+        recorded -= removed
+        totalsByDay[removed.dayKeyLocal] = ((totalsByDay[removed.dayKeyLocal] ?: 0) - removed.amountMl).coerceAtLeast(0)
+        emitChange()
+    }
+
     override suspend fun weekBars(daysBack: Int): List<WeekBar> {
         require(daysBack > 0)
         val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()

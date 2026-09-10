@@ -19,6 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -27,12 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
+import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.components.EditorialHeader
 import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
+import com.awakedw.core.model.WaterRecord
 import com.awakedw.feature.stats.components.TodayTimeline
 import com.awakedw.feature.stats.components.WeekBarsChart
 
@@ -40,14 +45,18 @@ import com.awakedw.feature.stats.components.WeekBarsChart
 @Composable
 fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
-    StatsContent(state)
+    StatsContent(state, onDeleteRecord = viewModel::deleteRecord)
 }
 
 /** Pure display entry point for populated, empty and large-font visual regression. */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-internal fun StatsContent(state: StatsUiState) {
+internal fun StatsContent(
+    state: StatsUiState,
+    onDeleteRecord: (Long) -> Unit = {},
+) {
     val spec = currentThemeSpec()
+    var pendingDelete by remember { mutableStateOf<WaterRecord?>(null) }
     Box(Modifier.fillMaxSize()) {
         GradientBackdrop(spec, Modifier.matchParentSize())
         LolitaBackdrop(spec, Modifier.matchParentSize())
@@ -87,12 +96,21 @@ internal fun StatsContent(state: StatsUiState) {
                     color = spec.primary,
                     trackColor = spec.ringTrack,
                 )
-                Text(
-                    "每日目标 ${state.goalMl}ml",
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        "每日目标 ${state.goalMl}ml",
+                        color = spec.greetingSubColor,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    // 达标是一个事实，不是奖励：只把「已达成」写清楚，不引入徽章或连续语义。
+                    if (state.badges.totalMl >= state.goalMl) {
+                        Text("· 已达成", color = spec.primary, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     StatsFact("记录次数", "${state.badges.cupCount} 次", Modifier.weight(1f))
                     StatsFact("平均间隔", state.badges.avgIntervalLabel, Modifier.weight(1f))
@@ -102,10 +120,28 @@ internal fun StatsContent(state: StatsUiState) {
                 WeekBarsChart(state.bars, state.goalMl, Modifier.fillMaxWidth())
             }
             PaperPanel(title = "今日记录 · ${state.timeline.size} 次") {
-                TodayTimeline(state.timeline, Modifier.fillMaxWidth())
+                TodayTimeline(
+                    records = state.timeline,
+                    onRequestDelete = { record -> pendingDelete = record },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
             Spacer(Modifier.height(12.dp))
         }
+    }
+
+    pendingDelete?.let { record ->
+        AwakeConfirmDialog(
+            title = "删除这条记录",
+            body = "${record.amountMl}ml 的这条记录会被删掉，今日总数与近七日同步减少。",
+            confirmLabel = "删除",
+            destructive = true,
+            onConfirm = {
+                onDeleteRecord(record.id)
+                pendingDelete = null
+            },
+            onDismiss = { pendingDelete = null },
+        )
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.TimeSlots
 import com.awakedw.core.designsystem.components.IntervalLabel
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogResult
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
@@ -30,14 +31,23 @@ import javax.inject.Inject
 /** 打卡防抖窗口（规格 §4.1）：窗口内经任一入口的连续触发只记一杯。 */
 const val LOG_DEBOUNCE_MS = 800L
 
-/** 夸夸语浮现停留时长（规格 §4.2 第 5 步：约 1.4s 后淡出）。 */
+/** 环心打卡确认停留时长（规格 §4.2 第 5 步：约 1.4s 后淡出）。 */
 const val PRAISE_HOLD_MS = 1_400L
+
+/** 防抖窗口内重复触发时的微提示停留时长：短于夸夸语，只为说明「刚才那下已记过」。 */
+const val REPEAT_HINT_HOLD_MS = 900L
 
 /** 达标反馈状态停留时长（2500ms 自动收敛，不产生奖励或内容解锁）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
-/** 猫气泡停留时长（2.0s 收场，独立于夸夸语的 1.4s）。 */
+/** 猫气泡停留时长（2.0s 收场，独立于环心确认的 1.4s）。 */
 const val CAT_LINE_HOLD_MS = 2_000L
+
+/** 防抖窗口内重复触发时的提示语：不是报错，只是把「已经记过」说清楚。 */
+const val REPEAT_HINT_TEXT = "刚刚记过了"
+
+/** 撤回成功后的确认语前缀：删掉的是哪一杯，要说清楚，不能默默把数字改小。 */
+const val REVERT_ACK_PREFIX = "已撤回 · "
 
 /** Immutable state for the water logging home screen. */
 data class HomeUiState(
@@ -49,7 +59,11 @@ data class HomeUiState(
     val avgIntervalLabel: String = "—",
     val lastDrinkLabel: String? = null,
     val greeting: String? = null,
-    val praiseLine: String? = null,
+    /**
+     * 环心确认行文案（打卡确认短句或重复提示）；null 时环心显示默认的「今日已喝」。
+     * 与猫咪气泡物理分离：确认发生在刚被看着的位置，猫语留在猫那一行，两者不再抢同一格。
+     */
+    val centerNote: String? = null,
     val celebrating: Boolean = false,
     val catMood: CatMood = CatMood.IDLE,
     val catLine: String? = null,
@@ -65,10 +79,13 @@ class HomeViewModel(
     private val clock: AppClock,
     observeHome: ObserveHomeUseCase,
     private val logWater: LogWaterUseCase,
+    private val deleteWater: DeleteWaterRecordUseCase,
     private val copies: CopyLibraryRepository,
     private val sound: AwakeSoundPlayer,
     private val logDebounceMs: Long = LOG_DEBOUNCE_MS,
     private val catLineHoldMs: Long = CAT_LINE_HOLD_MS,
+    private val praiseHoldMs: Long = PRAISE_HOLD_MS,
+    private val repeatHintHoldMs: Long = REPEAT_HINT_HOLD_MS,
 ) : ViewModel() {
     /** Dagger 注入入口：生产以缺省时长委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
     @Inject
@@ -76,16 +93,20 @@ class HomeViewModel(
         clock: AppClock,
         observeHome: ObserveHomeUseCase,
         logWater: LogWaterUseCase,
+        deleteWater: DeleteWaterRecordUseCase,
         copies: CopyLibraryRepository,
         sound: AwakeSoundPlayer,
     ) : this(
         clock,
         observeHome,
         logWater,
+        deleteWater,
         copies,
         sound,
         LOG_DEBOUNCE_MS,
         CAT_LINE_HOLD_MS,
+        PRAISE_HOLD_MS,
+        REPEAT_HINT_HOLD_MS,
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -95,8 +116,11 @@ class HomeViewModel(
     /** 最近一次成笔时刻（epoch ms）：初值取负窗，保证第一次点击立即成笔且不溢出。 */
     private var lastAcceptedAt: Long = -logDebounceMs
 
-    /** 反馈序列代次：新一轮打卡使旧序列的收场动作失效，避免新旧夸夸语互踩。 */
+    /** 反馈序列代次：新一轮打卡使旧序列的收场动作失效，避免新旧反馈互踩。 */
     private var feedbackEpoch = 0
+
+    /** 环心确认行代次：与 [feedbackEpoch] 分开——重复提示不应当取消达标横幅的收场。 */
+    private var centerEpoch = 0
 
     /** 猫序列代次（气泡 + 心情）：摸猫/新打卡换代使旧猫序列的收场失效；独立于 [feedbackEpoch]。 */
     private var catEpoch = 0
@@ -130,7 +154,7 @@ class HomeViewModel(
         scheduleLog()
     }
 
-    /** 快捷量入口（§11.1：小口/满杯）：与主按钮共用同一防抖闸门与反馈编排。 */
+    /** 快捷量入口（§11.1：小口/一杯半）：与主按钮共用同一防抖闸门与反馈编排。 */
     fun quickLog(amountMl: Int) {
         scheduleLog(amountMl)
     }
@@ -140,16 +164,34 @@ class HomeViewModel(
         scheduleLog()
     }
 
-    /** 摸猫：戳一下胆大王，抽一句当前时段心意文案回应（同 [CAT_LINE_HOLD_MS] 收场，心情不动）+ 一声呼噜。 */
+    /** 摸猫：戳一下胆大王，抽一句短句回应（同 [catLineHoldMs] 收场，心情不动）+ 一声呼噜。 */
     fun petCat() {
         sound.play(SoundEvent.PURR)
         playCatResponse(happy = false, slot = TimeSlots.slotOfHour(currentHour()))
     }
 
-    /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；距上次成笔不足 [logDebounceMs] 的触发合并忽略。 */
+    /**
+     * 撤回今日最后一杯（首页「最近一杯」长按）：
+     * 删除后由仓储变更流驱动进度、事实条与统计页同步重算，本层不做本地推算。
+     * 成功后走环心确认通道回一句「已撤回 · {n}ml」——删除是破坏性动作，
+     * 不能让数字默默变小而没有任何交代。
+     */
+    fun revertLatestCup() {
+        viewModelScope.launch {
+            val removed = deleteWater.revertLatestToday()
+            if (removed != null) {
+                showCenterNote("$REVERT_ACK_PREFIX${removed.amountMl}ml", praiseHoldMs)
+            }
+        }
+    }
+
+    /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；窗口内的后续触发合并忽略，但给一句明确回显。 */
     private fun scheduleLog(amountMl: Int? = null) {
         val now = clock.nowEpochMs()
-        if (now - lastAcceptedAt < logDebounceMs) return
+        if (now - lastAcceptedAt < logDebounceMs) {
+            showCenterNote(REPEAT_HINT_TEXT, repeatHintHoldMs)
+            return
+        }
         lastAcceptedAt = now
         viewModelScope.launch { logAndPraise(amountMl) }
     }
@@ -160,40 +202,52 @@ class HomeViewModel(
         val epoch = feedbackEpoch
 
         val slot = TimeSlots.slotOfHour(currentHour())
-        val praise = copies.randomFor(slot)
+        // 环心确认：短句池，与猫语各自独立去重，打卡瞬间读到的是一句回应而不是一句格言。
+        showCenterNote(copies.randomPraise(slot), praiseHoldMs)
         _uiState.update {
             it.copy(
-                praiseLine = praise,
                 // 当日首次达标为 true；其余打卡（含达标后再打）一律回到普通反馈。
                 celebrating = result?.celebrated == true,
             )
         }
 
-        // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句心意文案，回应每次成笔。
+        // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句猫语，回应每次成笔。
         if (result != null) {
             // 声音三触发点之一（任务 12）：成笔确认即随机一声掉落音；当日首次达标再追一段旋律。
-            // fire-and-forget，与动画解耦——不等夸夸语/庆祝的任何一拍。
+            // fire-and-forget，与动画解耦——不等环心确认/庆祝的任何一拍。
             sound.play(DROP_EVENTS.random())
             if (result.celebrated) sound.play(SoundEvent.GOAL_MELODY)
             playCatResponse(happy = true, slot = slot)
         }
 
-        delay(PRAISE_HOLD_MS)
-        if (feedbackEpoch == epoch) {
-            _uiState.update { it.copy(praiseLine = null) }
-        }
         if (result?.celebrated == true) {
-            delay(CELEBRATION_HOLD_MS - PRAISE_HOLD_MS)
+            delay(CELEBRATION_HOLD_MS)
             if (feedbackEpoch == epoch) {
                 _uiState.update { it.copy(celebrating = false) }
             }
         }
     }
 
+    /** 环心确认行：写入文案并按时收场；后一次调用换代，旧收场自动失效。 */
+    private fun showCenterNote(
+        text: String,
+        holdMs: Long,
+    ) {
+        centerEpoch += 1
+        val epoch = centerEpoch
+        _uiState.update { it.copy(centerNote = text) }
+        viewModelScope.launch {
+            delay(holdMs)
+            if (centerEpoch == epoch) {
+                _uiState.update { it.copy(centerNote = null) }
+            }
+        }
+    }
+
     /**
-     * 猫回应序列：抽一句心意文案点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
+     * 猫回应序列：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
      * [catLineHoldMs] 后收场——气泡清空、心情按当前小时落回（白天 IDLE / 深夜安睡，零惩罚）。
-     * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及夸夸语/庆祝的收场。
+     * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及环心确认与达标横幅的收场。
      */
     private fun playCatResponse(
         happy: Boolean,

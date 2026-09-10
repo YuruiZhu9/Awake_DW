@@ -23,8 +23,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -286,7 +289,12 @@ private fun PrimaryButton(
     }
 }
 
-/** 次按钮：低扰动的文字按钮——「以后再说」同样置位完成，不阻拦任何人。 */
+/**
+ * 次按钮：低扰动的文字按钮——「以后再说」同样置位完成，不阻拦任何人。
+ *
+ * 触控高度补齐到 [ControlMinHeight]：裸 clickable 不受 M3 最小交互尺寸保护，
+ * 此前只有上下各 10dp 内边距（约 40dp），偏偏它是「不想被引导」时唯一的出口，更不该难点中。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun SkipButton(
@@ -302,6 +310,8 @@ private fun SkipButton(
             modifier
                 .clip(RoundedCornerShape(percent = 50))
                 .clickable(onClick = onTap)
+                .heightIn(min = ControlMinHeight)
+                .wrapContentHeight(Alignment.CenterVertically)
                 .padding(horizontal = 24.dp, vertical = 10.dp),
     )
 }

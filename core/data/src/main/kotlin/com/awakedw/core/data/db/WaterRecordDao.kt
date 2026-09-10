@@ -18,6 +18,10 @@ interface WaterRecordDao {
     @Insert
     suspend fun insert(entity: WaterRecordEntity): Long
 
+    /** 按主键删除一笔记录：撤回误记用；id 不存在时不报错。 */
+    @Query("DELETE FROM water_record WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
     @Query("SELECT * FROM water_record WHERE day_key_local = :day ORDER BY drank_at_epoch_ms ASC")
     suspend fun recordsFor(day: String): List<WaterRecordEntity>
 

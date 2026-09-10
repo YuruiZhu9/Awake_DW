@@ -22,6 +22,8 @@ import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
+import com.awakedw.feature.stats.components.DELETE_HINT_TEXT
+import com.awakedw.feature.stats.components.EMPTY_TIMELINE_TEXT
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -63,21 +65,54 @@ class StatsVisualReviewTest {
         for (id in listOf(ThemeId.EMERALD, ThemeId.CLERIC)) {
             rule.runOnIdle { theme.value = id }
             rule.onNodeWithText("统计").performScrollTo().assertIsDisplayed()
-            capture(view, "stats-${id.name.lowercase()}")
+            capture(view, id.name.lowercase())
         }
         rule.runOnIdle { font.value = 1.5f }
         rule.onNodeWithContentDescription("2026-09-04，1000ml").performScrollTo().performClick().assertIsSelected()
         rule.onNodeWithText("2026-09-04 · 1000ml").assertIsDisplayed()
-        capture(view, "stats-large-chart")
+        capture(view, "large-chart")
         rule.onNodeWithText("今日记录 · 5 次").performScrollTo().assertIsDisplayed()
-        capture(view, "stats-large-records")
+        capture(view, "large-records")
+    }
+
+    /**
+     * 达标标记与时间线删除说明行：两者都只在实际有数据/达标时出现，
+     * 上面的填充态（1250 / 1600）既不达标、时间线又落在折叠线以下，一张图都拍不到。
+     * 这里把目标设为已达成，并把时间线滚进视口，留下证据。
+     */
+    @Test
+    fun `reached target is marked and the timeline discloses its delete gesture`() {
+        Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        lateinit var view: View
+        val state =
+            StatsUiState(
+                StatsBadges(1800, 6, "约 56 分钟"),
+                (2..8).map { WeekBar("2026-09-0$it", if (it == 8) 1800 else 0) },
+                1600,
+                (1..3).map { WaterRecord(it.toLong(), 600, 1_788_854_400_000L + it * 3_600_000L, "2026-09-08") },
+            )
+        rule.setContent {
+            view = LocalView.current
+            AwakeTheme(ThemeId.EMERALD) { StatsContent(state) }
+        }
+
+        rule.onNodeWithText("· 已达成").assertExists()
+        capture(view, "target-met")
+
+        rule.onNodeWithText(DELETE_HINT_TEXT).performScrollTo().assertIsDisplayed()
+        capture(view, "timeline-delete")
     }
 
     @Test
     fun `empty stats show a plain empty state without an imaginary record`() {
         Settings.Global.putFloat(RuntimeEnvironment.getApplication().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
-        rule.setContent { AwakeTheme(ThemeId.CLERIC) { StatsContent(StatsUiState()) } }
-        rule.onNodeWithText("今天还没有饮水记录").performScrollTo().assertIsDisplayed()
+        lateinit var view: View
+        rule.setContent {
+            view = LocalView.current
+            AwakeTheme(ThemeId.CLERIC) { StatsContent(StatsUiState()) }
+        }
+        rule.onNodeWithText(EMPTY_TIMELINE_TEXT).performScrollTo().assertIsDisplayed()
+        capture(view, "empty")
     }
 
     private fun capture(
@@ -87,7 +122,8 @@ class StatsVisualReviewTest {
         rule.waitForIdle()
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         rule.runOnIdle { view.draw(Canvas(bitmap)) }
-        val file = File("build/reports/visual-review/${System.getProperty("awake.visualVariant", "local")}/alpha11-$label.png")
+        val variant = System.getProperty("awake.visualVariant", "local")
+        val file = File("build/reports/visual-review/$variant/stats-$label.png")
         file.parentFile?.mkdirs()
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()

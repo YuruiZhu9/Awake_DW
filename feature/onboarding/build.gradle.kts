@@ -62,4 +62,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.robolectric)
+    // 引导页的触控下限与出口走 Robolectric compose 测量（此前本模块没有 compose 测试依赖，
+    // 所以这一屏长期没有 UI 覆盖）。
+    testImplementation(libs.compose.ui.test)
 }

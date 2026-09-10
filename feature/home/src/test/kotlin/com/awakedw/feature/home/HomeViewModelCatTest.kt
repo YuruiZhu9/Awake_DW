@@ -1,5 +1,6 @@
 package com.awakedw.feature.home
 
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.model.CatMood
@@ -27,11 +28,11 @@ internal val NIGHT_BASE_TIME: Long =
 
 /**
  * 记一杯回应编排——胆大王的反馈（moodboard §6.2 首页接线）：
- * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中当前时段心意文案；气泡按 [CAT_LINE_HOLD_MS]（2.0s）
- *   收场（独立于夸夸语 1.4s），心情按当前小时落回（白天 IDLE）；
+ * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中**内置猫语池**；气泡按 [CAT_LINE_HOLD_MS]（2.0s）
+ *   收场（独立于环心确认的 1.4s），心情按当前小时落回（白天 IDLE）；
  * - 同日已达标后再打卡（celebrated=false）猫仍 HAPPY 一次——回应每次成笔；
  * - init 按当前小时定初态：22 点后安睡（SLEEPY）；
- * - `petCat()`：摸猫即抽一句当前时段心意文案，同 2.0s 收场；猫序列换代不殃及夸夸语/达标反馈的收场；
+ * - `petCat()`：摸猫即抽一句猫语，同 2.0s 收场；猫序列换代不殃及环心确认与达标横幅的收场；
  *
  * 猫气泡停留时长经构造器缺省参注入（生产 [CAT_LINE_HOLD_MS]，测试缩窗）——与 logDebounceMs 同款。
  */
@@ -60,6 +61,7 @@ class HomeViewModelCatTest {
                 clock = clock,
                 observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
+                deleteWater = DeleteWaterRecordUseCase(water),
                 copies = copies,
                 sound = FakeSoundPlayer(),
                 catLineHoldMs = catLineHoldMs,
@@ -82,10 +84,10 @@ class HomeViewModelCatTest {
             assertEquals(CatMood.HAPPY, h.viewModel.uiState.value.catMood)
             assertEquals("喵，喝水啦", h.viewModel.uiState.value.catLine)
 
-            // 夸夸语 1.4s 先收场，猫气泡不受牵连（独立时长）。
+            // 环心确认 1.4s 先收场，猫气泡不受牵连（独立时长）。
             advanceTimeBy(PRAISE_HOLD_MS)
             runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.praiseLine)
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
             assertEquals("喵，喝水啦", h.viewModel.uiState.value.catLine)
             assertEquals(CatMood.HAPPY, h.viewModel.uiState.value.catMood)
 
@@ -165,7 +167,7 @@ class HomeViewModelCatTest {
         }
 
     @Test
-    fun `摸猫不殃及夸夸语与庆祝的定时收场`() =
+    fun `摸猫不殃及环心确认与达标横幅的定时收场`() =
         runTest {
             val h =
                 harness(
@@ -177,13 +179,13 @@ class HomeViewModelCatTest {
             runCurrent()
             assertEquals(true, h.viewModel.uiState.value.celebrating)
 
-            // 打卡后立刻摸猫：猫序列换代，但夸夸/庆祝归 feedbackEpoch 管，照常收场。
+            // 打卡后立刻摸猫：猫序列换代，但环心确认/庆祝归各自的代次管，照常收场。
             h.viewModel.petCat()
             runCurrent()
 
             advanceTimeBy(PRAISE_HOLD_MS)
             runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.praiseLine)
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
 
             advanceTimeBy(CELEBRATION_HOLD_MS - PRAISE_HOLD_MS)
             runCurrent()
@@ -194,14 +196,14 @@ class HomeViewModelCatTest {
         }
 
     private companion object {
-        /** 夸夸语 1.4s、庆祝横幅 2.5s：与生产常量同值，用于跨序列收场节奏断言。 */
+        /** 环心确认 1.4s、庆祝横幅 2.5s：与生产常量同值，用于跨序列收场节奏断言。 */
         const val PRAISE_HOLD_MS = 1_400L
         const val CELEBRATION_HOLD_MS = 2_500L
 
         /** 相邻两次成笔的假钟间隔：跨出 800ms 防抖窗。 */
         const val WINDOW_GAP_MS = 1_300L
 
-        /** 缩窗后的猫语停留时长：只验证「注入时长被遵守」，不与夸夸语节奏耦合。 */
+        /** 缩窗后的猫语停留时长：只验证「注入时长被遵守」，不与环心确认节奏耦合。 */
         const val SHRUNK_CAT_HOLD_MS = 300L
     }
 }

@@ -15,7 +15,7 @@ sealed interface LogResult {
     ) : LogResult
 }
 
-/** 记一笔喝水：[amountMl] 缺省按设置写一杯，传快捷量（小口/满杯）则写该量；
+/** 记一笔喝水：[amountMl] 缺省按设置写一杯，传快捷量（小口 / 一杯半）则写该量；
  * 若本次使当日总量首次达到/超过目标，持久化 celebrated_day_key 并返回 celebrated=true。 */
 class LogWaterUseCase
     @Inject

@@ -99,11 +99,14 @@ class NotifBuilder
             private const val ACTION_REQUEST_CODE = 2002
             private const val OPEN_APP_REQUEST_CODE = 2003
 
-            /** 时段 → 标题（§4.3）。 */
+            /**
+             * 时段 → 标题（§4.3）。DAY 覆盖 11:00–17:59，横跨中午与下午，
+             * 取「午安」这类不指认具体时辰的说法，避免上午 11 点收到「下午好」。
+             */
             fun titleOf(slot: TimeSlot): String =
                 when (slot) {
                     TimeSlot.MORNING -> "早安 ☀"
-                    TimeSlot.DAY -> "下午好 ☀"
+                    TimeSlot.DAY -> "午安 ☀"
                     TimeSlot.EVENING -> "晚上好 🌙"
                 }
         }

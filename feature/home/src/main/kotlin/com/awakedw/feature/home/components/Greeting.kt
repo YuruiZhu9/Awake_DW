@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.awakedw.core.common.TimeSlots
@@ -46,6 +45,9 @@ internal fun dateSubline(
  * 时段问候 + 日期副行（规格 §3.2 自上而下第 1 条）。
  * [customGreeting] 非空时优先展示（文案库抽取，每次进首页都换一句），
  * null 时回落时段默认句；日期读系统本地时间，随一天自然流转。
+ *
+ * 问候语不设 maxLines/省略号（视觉基线 §3「长文本自然换行、不截断」）：
+ * 大字体或使用者自写的长句允许自然增高并带动页面滚动，不做裁切。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -65,8 +67,6 @@ internal fun Greeting(
             // 环顶已有单个结饰，问候语不再保留旧版右侧装饰的空位，保持真正居中。
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(6.dp))

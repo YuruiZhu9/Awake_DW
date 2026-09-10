@@ -99,10 +99,16 @@ class FakeCopyLibraryRepository(
         avoidRecent: Int,
     ): String = _library.value.groupOf(slot).first()
 
+    /** 打卡确认与猫语来自内置短句池，与可编辑的文案库无关——固定返回即可。 */
+    override suspend fun randomPraise(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String = "记好了"
+
     override suspend fun randomCatLine(
         slot: TimeSlot,
         avoidRecent: Int,
-    ): String = _library.value.groupOf(slot).firstOrNull() ?: "喝口水吧"
+    ): String = "喵一句"
 
     override suspend fun upsert(
         slot: TimeSlot,
@@ -166,6 +172,8 @@ class FakeWaterRepository(
     override val changes = MutableStateFlow(Unit)
 
     override suspend fun addCup(amountMl: Int) = WaterRecord(id = 1, amountMl = amountMl, drankAtEpochMs = 0, dayKeyLocal = "")
+
+    override suspend fun delete(recordId: Long) = Unit
 
     override suspend fun todayStats(): DailyStats = stats
 

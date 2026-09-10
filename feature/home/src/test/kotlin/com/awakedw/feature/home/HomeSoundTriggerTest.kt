@@ -1,5 +1,6 @@
 package com.awakedw.feature.home
 
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.model.ThemeChoice
@@ -51,6 +52,7 @@ class HomeSoundTriggerTest {
                 clock = clock,
                 observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
+                deleteWater = DeleteWaterRecordUseCase(water),
                 copies = copies,
                 sound = sound,
             )

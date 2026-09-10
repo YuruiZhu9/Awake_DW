@@ -1,5 +1,6 @@
 package com.awakedw.feature.home
 
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.model.ThemeChoice
@@ -46,6 +47,7 @@ class HomeViewModelTest {
                 clock = clock,
                 observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
+                deleteWater = DeleteWaterRecordUseCase(water),
                 copies = copies,
                 sound = FakeSoundPlayer(),
             )
@@ -157,10 +159,10 @@ class HomeViewModelTest {
             assertEquals(true, h.viewModel.uiState.value.celebrating)
             assertEquals(BASE_DAY_KEY, h.prefs.celebratedKeyValue)
 
-            // 夸夸语 1.4s 收场；庆祝横幅撑满 2.5s 后自动收敛。
+            // 环心确认 1.4s 收场；庆祝横幅撑满 2.5s 后自动收敛。
             advanceTimeBy(PRAISE_HOLD_MS)
             runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.praiseLine)
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
             assertEquals(true, h.viewModel.uiState.value.celebrating)
 
             advanceTimeBy(CELEBRATION_HOLD_MS - PRAISE_HOLD_MS)
@@ -176,16 +178,84 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `打卡瞬间从当前时段文案组抽取夸夸语`() =
+    fun `打卡瞬间从内置短句池抽取环心确认语而不动用可编辑长句`() =
         runTest {
             val h = harness(testScheduler)
 
             h.viewModel.tapLogButton()
             runCurrent()
 
-            // 第 1 抽是 init 的顶部问候语，第 2 抽才是本次打卡的夸夸语。
-            assertEquals(listOf(TimeSlot.MORNING, TimeSlot.MORNING), h.copies.requestedSlots)
-            assertEquals("早安短句", h.viewModel.uiState.value.praiseLine)
+            // 长句池只被 init 的问候语用过一次；打卡确认走的是独立的短句池。
+            assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedSlots)
+            assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedPraiseSlots)
+            assertEquals("记好了", h.viewModel.uiState.value.centerNote)
+        }
+
+    @Test
+    fun `防抖窗口内的重复触发在环心给出明确回显`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals("记好了", h.viewModel.uiState.value.centerNote)
+
+            // 同刻再点：不成笔，但把「刚刚记过了」说清楚，而不是静默吞掉。
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(1, h.water.addCount)
+            assertEquals(REPEAT_HINT_TEXT, h.viewModel.uiState.value.centerNote)
+
+            advanceTimeBy(REPEAT_HINT_HOLD_MS)
+            runCurrent()
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
+        }
+
+    @Test
+    fun `撤回今日最后一杯后总量与杯数同步回落`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.water.seedToday(60, 30) // 10:00 / 10:30 / 11:00 三杯
+            runCurrent()
+            assertEquals(750, h.viewModel.uiState.value.totalMl)
+
+            h.viewModel.revertLatestCup()
+            runCurrent()
+            assertEquals(500, h.viewModel.uiState.value.totalMl)
+            assertEquals(2, h.viewModel.uiState.value.cupCount)
+        }
+
+    @Test
+    fun `撤回成功在环心交代删掉了哪一杯`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.water.seedToday(60, amountMl = 380)
+            runCurrent()
+
+            h.viewModel.revertLatestCup()
+            runCurrent()
+
+            // 破坏性动作不能默默把数字改小：确认语要说清删掉的那一杯的量。
+            assertEquals("${REVERT_ACK_PREFIX}380ml", h.viewModel.uiState.value.centerNote)
+
+            advanceTimeBy(PRAISE_HOLD_MS)
+            runCurrent()
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
+        }
+
+    @Test
+    fun `今日无记录时撤回不产生任何确认语`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+
+            h.viewModel.revertLatestCup()
+            runCurrent()
+
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
+            assertEquals(0, h.viewModel.uiState.value.totalMl)
         }
 
     @Test
@@ -229,6 +299,7 @@ class HomeViewModelTest {
                     clock = h.clock,
                     observeHome = ObserveHomeUseCase(h.water, h.prefs),
                     logWater = LogWaterUseCase(h.water, h.prefs, h.clock),
+                    deleteWater = DeleteWaterRecordUseCase(h.water),
                     copies = h.copies,
                     sound = FakeSoundPlayer(),
                 )
@@ -272,7 +343,7 @@ class HomeViewModelTest {
         }
 
     private companion object {
-        /** 夸夸语停留 1.4s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
+        /** 环心确认 1.4s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
         const val PRAISE_HOLD_MS = 1_400L
         const val CELEBRATION_HOLD_MS = 2_500L
 

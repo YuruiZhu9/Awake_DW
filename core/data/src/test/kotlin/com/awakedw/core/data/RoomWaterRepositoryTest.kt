@@ -113,4 +113,57 @@ class RoomWaterRepositoryTest {
             }
         }
     }
+
+    @Test
+    fun `删除一笔后当日统计与周柱同步回落`() {
+        runBlocking {
+            repo.addCup(250)
+            clock.ms = tenOclock(60L)
+            val middle = repo.addCup(100)
+            clock.ms = tenOclock(90L)
+            repo.addCup(380)
+
+            repo.delete(middle.id)
+
+            // 行数与总量都按删后剩余两笔重算；平均间隔按 90min/1≈90 重算。
+            assertEquals(
+                DailyStats(totalMl = 630, cupCount = 2, avgIntervalMin = 90, lastDrankAtEpochMs = tenOclock(90L)),
+                repo.todayStats(),
+            )
+            assertEquals(listOf(250, 380), repo.todayRecords().map { it.amountMl })
+            assertEquals(WeekBar(tenOclock().toDayKey(zone), 630), repo.weekBars().last())
+        }
+    }
+
+    @Test
+    fun `删除会令变更流再发射一次`() {
+        runBlocking {
+            val record = repo.addCup(250)
+            repo.changes.test {
+                assertEquals(Unit, awaitItem()) // 订阅首值：当前态
+
+                repo.delete(record.id)
+                assertEquals(Unit, awaitItem())
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun `删除不存在的id静默忽略且不影响其余记录`() {
+        runBlocking {
+            repo.addCup(250)
+            clock.ms = tenOclock(90L)
+            repo.addCup(250)
+
+            repo.delete(recordId = 9_999L)
+
+            assertEquals(
+                DailyStats(totalMl = 500, cupCount = 2, avgIntervalMin = 90, lastDrankAtEpochMs = tenOclock(90L)),
+                repo.todayStats(),
+            )
+            assertEquals(listOf(250, 250), repo.todayRecords().map { it.amountMl })
+        }
+    }
 }

@@ -12,6 +12,9 @@ interface WaterRepository {
 
     suspend fun addCup(amountMl: Int): WaterRecord
 
+    /** 删除一笔记录（撤回误记）；[recordId] 不存在时静默忽略。 */
+    suspend fun delete(recordId: Long)
+
     suspend fun todayStats(): DailyStats
 
     /** 含今天，共 [daysBack] 天，缺数天补 0。 */

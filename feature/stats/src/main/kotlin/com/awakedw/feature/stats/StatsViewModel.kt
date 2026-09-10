@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.common.toDayKey
 import com.awakedw.core.designsystem.components.IntervalLabel
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.WaterRecord
@@ -55,6 +56,7 @@ class StatsViewModel
     constructor(
         private val clock: AppClock,
         private val water: WaterRepository,
+        private val deleteWater: DeleteWaterRecordUseCase,
         prefs: UserPreferencesRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(StatsUiState())
@@ -66,6 +68,11 @@ class StatsViewModel
                 combine(water.changes, prefs.settings) { _, settings -> settings }
                     .collect { settings -> refresh(settings.goalMl) }
             }
+        }
+
+        /** 删除某一笔记录（时间线长按纠错）：删除后由变更流自动重算本页全部数字。 */
+        fun deleteRecord(recordId: Long) {
+            viewModelScope.launch { deleteWater(recordId) }
         }
 
         private suspend fun refresh(goalMl: Int) {

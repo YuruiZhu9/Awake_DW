@@ -70,7 +70,16 @@ private const val MORPH_CROSSFADE_MS = 250
 /** 真首页环心上方固定布局段（HomeScreen 列）：顶距 24 + 问候行内距 6 + 装饰线区 32 + 半环（HOME_RING_DIAMETER/2）。 */
 private val RING_CENTER_STACK_DP = HOME_CONTENT_TOP_PADDING + 6.dp + 32.dp + HOME_RING_DIAMETER / 2
 
-/** 问候语行高（titleLarge 28sp）+ 日期副行行高（bodySmall 16sp），随系统字体缩放折算。 */
+/**
+ * 问候语所占高度（titleLarge 一行 + 日期副行一行），随系统字体缩放折算。
+ *
+ * 这是**估算而非测量**：真首页的问候语来自文案库，长度由使用者决定，开屏时还不知道会抽到哪一句。
+ * 内置 108 句是 11–18 字，多数落在一行、少数折到两行，折行时本估算偏小约一个行高（28sp），
+ * 交棒瞬间环心会有可见位移；使用者自写的超长问候（编辑器上限 40 字）可折到三行以上，偏差随之增大。
+ *
+ * 这是「问候语不截断」（视觉基线 §3）换来的代价——两者不可兼得，此处选择不截断。
+ * 若哪天要收紧交棒精度，先想清楚是恢复截断还是把行数纳入估算，别只改这个常量。
+ */
 private val GREETING_TEXT_HEIGHT_SP = 44.sp
 
 /** 自然放行后的交棒等待：Crossfade 已走完，只留半拍防尾帧截断。 */
@@ -151,7 +160,7 @@ fun SplashMorph(
  * 首页由 Scaffold 内容内边距折入状态栏 inset，列布局自上而下为 24dp 顶距 + 问候行
  * （titleLarge 28sp + 6dp + bodySmall 16sp）+ 32dp 装饰线区 + 半环——据此推算环心，
  * 开屏各段与 Seed 预览共用同一落点。文本行高按 M3 默认排版常量随字体缩放折算；
- * 问候语折到两行（maxLines=2）时会带来约一行行高（28sp）的残余偏差（见任务报告）。
+ * 问候语折行数超过一行时的残余偏差见 [GREETING_TEXT_HEIGHT_SP]。
  */
 @Composable
 private fun rememberHomeRingCenterYpx(): Float {

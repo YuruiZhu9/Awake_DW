@@ -91,6 +91,13 @@ class FakeWaterRepository(
         )
     }
 
+    /** 删除一笔并广播变更：首页与统计页据此重算，无需本地推算。 */
+    override suspend fun delete(recordId: Long) {
+        val removed = records.firstOrNull { it.id == recordId } ?: return
+        records -= removed
+        _changes.tryEmit(Unit)
+    }
+
     override suspend fun weekBars(daysBack: Int): List<WeekBar> {
         require(daysBack > 0)
         val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
@@ -195,14 +202,19 @@ class FakeSoundPlayer : AwakeSoundPlayer {
 }
 
 /**
- * 固定文案库：按时段返回固定短句，并记录被询问过的时段供断言。
- * 猫交互句为构造入参 [catLines]，会写入当前时段的活动文案桶，按游标循环抽取。
- * 缺省仓库仍使用独立的早/午/晚测试短句，避免影响其他首页测试。
+ * 固定文案库：长句按时段返回固定短句并记录被询问过的时段供断言；
+ * [catLines] 铺猫语池、[praiseLines] 铺打卡确认池，两者与可编辑文案库解耦——
+ * 与生产的「长句可编辑 / 短句内置」分层保持一致。
  */
 class FakeCopyLibraryRepository(
     catLines: List<String>? = null,
+    private val praiseLines: List<String> = listOf("记好了"),
 ) : CopyLibraryRepository {
+    /** randomFor（长句：问候 / 通知正文）被调用的时段序列。 */
     val requestedSlots = mutableListOf<TimeSlot>()
+
+    /** randomPraise（打卡确认短句）被调用的时段序列。 */
+    val requestedPraiseSlots = mutableListOf<TimeSlot>()
 
     private val _library =
         MutableStateFlow(
@@ -216,6 +228,9 @@ class FakeCopyLibraryRepository(
     /** 猫语抽取游标：循环推进，模拟「连抽不重样」的最小语义。 */
     private var catCursor = 0
 
+    /** 打卡确认抽取游标。 */
+    private var praiseCursor = 0
+
     override val library = _library
 
     override suspend fun randomFor(
@@ -224,6 +239,14 @@ class FakeCopyLibraryRepository(
     ): String {
         requestedSlots += slot
         return _library.value.groupOf(slot).first()
+    }
+
+    override suspend fun randomPraise(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String {
+        requestedPraiseSlots += slot
+        return praiseLines[praiseCursor++ % praiseLines.size]
     }
 
     override suspend fun randomCatLine(

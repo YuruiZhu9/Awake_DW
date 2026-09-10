@@ -3,8 +3,10 @@ package com.awakedw.core.data
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.awakedw.core.data.copy.DefaultCopies
 import com.awakedw.core.data.copy.DefaultCopyLibraryRepository
+import com.awakedw.core.data.copy.ShortCopies
 import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.model.TimeSlot
 import kotlinx.coroutines.flow.first
@@ -43,14 +45,31 @@ class CopyLibraryRepositoryTest {
         }
 
     @Test
-    fun `default care copy keeps editor length and first person anchors`() =
+    fun `默认文案守则_长度_唯一_无分隔符_无第二三人称_无近似重复`() =
         runTest {
             val lib = repo.library.first()
             val groups = listOf(lib.morning, lib.day, lib.evening)
             val all = groups.flatten()
-            assertTrue(groups.all { group -> group.any { it.contains("我") } })
-            assertTrue(all.all { it.length <= 40 })
-            assertEquals(all.size, all.toSet().size)
+
+            assertEquals(108, all.size)
+            assertTrue(all.all { it.isNotBlank() })
+            assertEquals("全表不得出现重复句", all.size, all.toSet().size)
+            assertTrue("长度应落在 10–24 字（含标点），便于问候与通知一行读完", all.all { it.length in 10..24 })
+            assertTrue("不得含去重池分隔符 |", all.none { it.contains('|') })
+
+            val forbidden = listOf('你', '您', '她', '他')
+            all.forEach { line ->
+                forbidden.forEach { ch ->
+                    assertFalse("「$line」出现「$ch」，破坏第一人称自述口吻", line.contains(ch))
+                }
+            }
+            assertTrue("每组都要有第一人称锚点", groups.all { group -> group.any { it.contains("我") } })
+
+            // 近似重复是「尴尬」的主要来源：同组内不得有两句共享前六个字。
+            groups.forEach { group ->
+                val heads = group.map { it.take(6) }
+                assertEquals("同组内存在近似重复的起手：$heads", heads.size, heads.toSet().size)
+            }
         }
 
     @Test
@@ -64,6 +83,40 @@ class CopyLibraryRepositoryTest {
                 val recentWindow = draws.subList(maxOf(0, i - 5), i)
                 assertFalse("第${i}抽与最近5条窗口重复", text in recentWindow)
             }
+        }
+
+    @Test
+    fun `打卡确认与猫语取自内置短句池且与长句去重池各记各的`() =
+        runTest {
+            val praise = repo.randomPraise(TimeSlot.MORNING)
+            val cat = repo.randomCatLine(TimeSlot.MORNING)
+            val long = repo.randomFor(TimeSlot.MORNING)
+
+            assertTrue("打卡确认应来自短句池：$praise", praise in ShortCopies.praiseMorning)
+            assertTrue("猫语应来自短句池：$cat", cat in ShortCopies.catMorning)
+            assertTrue("长句仍来自可编辑文案库：$long", long in DefaultCopies.morning)
+
+            // 三类语料各自持有去重键，互不挤占窗口。
+            val raw = dataStore.data.first()[stringPreferencesKey("recent_copy_ids")].orEmpty()
+            assertTrue("长句池键应存在", raw.contains("\"MORNING|"))
+            assertTrue("打卡确认池键应存在", raw.contains("PRAISE_MORNING|"))
+            assertTrue("猫语池键应存在", raw.contains("CAT_MORNING|"))
+        }
+
+    @Test
+    fun `语义感知：短句池连抽不重复且不受长句池内容影响`() =
+        runTest {
+            // 把长句全部删空——短句池与应用内的编辑互不影响，仍应正常抽出。
+            repeat(36) { repo.delete(TimeSlot.DAY, 0) }
+            repeat(6) {
+                val praise = repo.randomPraise(TimeSlot.DAY, avoidRecent = 4)
+                assertTrue(praise in ShortCopies.praiseDay)
+            }
+            repeat(6) {
+                val cat = repo.randomCatLine(TimeSlot.DAY, avoidRecent = 4)
+                assertTrue(cat in ShortCopies.catDay)
+            }
+            assertTrue("长句组被删空后仍回退默认组", repo.randomFor(TimeSlot.DAY) in DefaultCopies.day)
         }
 
     @Test

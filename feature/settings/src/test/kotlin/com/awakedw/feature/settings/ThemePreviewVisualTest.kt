@@ -120,13 +120,8 @@ class ThemePreviewVisualTest {
             }
             val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
             composeRule.runOnIdle { view.draw(Canvas(bitmap)) }
-            val file =
-                File(
-                    "build/reports/visual-review/${System.getProperty(
-                        "awake.visualVariant",
-                        "local",
-                    )}/alpha10-choices-${id.name.lowercase()}.png",
-                )
+            val variant = System.getProperty("awake.visualVariant", "local")
+            val file = File("build/reports/visual-review/$variant/theme-choice-${id.name.lowercase()}.png")
             file.parentFile?.mkdirs()
             file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             bitmap.recycle()

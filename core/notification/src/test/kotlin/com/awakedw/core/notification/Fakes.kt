@@ -63,6 +63,10 @@ class FakeWaterRepository(
     override suspend fun weekBars(daysBack: Int): List<WeekBar> = emptyList()
 
     override suspend fun todayRecords(): List<WaterRecord> = records.toList()
+
+    override suspend fun delete(recordId: Long) {
+        records.removeAll { it.id == recordId }
+    }
 }
 
 /** 内存版用户设置仓储：settings 为 StateFlow 快照流，经接口方法改写即触发下游。 */
@@ -132,6 +136,11 @@ class FakeCopyLibraryRepository : CopyLibraryRepository {
             TimeSlot.EVENING -> "晚一句"
         }
     }
+
+    override suspend fun randomPraise(
+        slot: TimeSlot,
+        avoidRecent: Int,
+    ): String = "记好了"
 
     override suspend fun randomCatLine(
         slot: TimeSlot,

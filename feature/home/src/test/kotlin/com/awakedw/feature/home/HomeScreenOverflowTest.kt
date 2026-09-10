@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.model.ThemeChoice
@@ -101,6 +102,7 @@ class HomeScreenOverflowTest {
                 clock = clock,
                 observeHome = ObserveHomeUseCase(water, prefs),
                 logWater = LogWaterUseCase(water, prefs, clock),
+                deleteWater = DeleteWaterRecordUseCase(water),
                 copies = copies,
                 sound = FakeSoundPlayer(),
             )
@@ -176,7 +178,7 @@ class HomeScreenOverflowTest {
 
         /** 快捷胶囊文案前缀（毫升数随杯容计算，断言走前缀匹配）。 */
         const val SMALL_SIP_PREFIX = "小口"
-        const val FULL_SIP_PREFIX = "满杯"
+        const val FULL_SIP_PREFIX = "一杯半"
 
         /** 猫立绘的无障碍描述（CatFigure 语义锚点）。 */
         const val CAT_DESCRIPTION = "胆大王"

@@ -82,6 +82,16 @@ class FakeWaterRepository(
         )
     }
 
+    override suspend fun todayRecords(): List<WaterRecord> = recordsOf(currentDayKey()).sortedBy { it.drankAtEpochMs }
+
+    /** 删除一笔并回落当日总量，模拟 Room 行数流触发的重算。 */
+    override suspend fun delete(recordId: Long) {
+        val removed = records.firstOrNull { it.id == recordId } ?: return
+        records -= removed
+        totalsByDay[removed.dayKeyLocal] = ((totalsByDay[removed.dayKeyLocal] ?: 0) - removed.amountMl).coerceAtLeast(0)
+        _changes.tryEmit(Unit)
+    }
+
     override suspend fun weekBars(daysBack: Int): List<WeekBar> {
         require(daysBack > 0)
         val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
@@ -90,8 +100,6 @@ class FakeWaterRepository(
             WeekBar(dayKey = key, totalMl = totalsByDay[key] ?: 0)
         }
     }
-
-    override suspend fun todayRecords(): List<WaterRecord> = recordsOf(currentDayKey()).sortedBy { it.drankAtEpochMs }
 
     private fun appendRecord(
         atEpochMs: Long,

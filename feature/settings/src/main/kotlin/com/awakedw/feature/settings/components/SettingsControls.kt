@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
@@ -483,7 +484,7 @@ private fun SelectableChip(
         color = if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f),
         onClick = onClick,
         selected = selected,
-        modifier = modifier.heightIn(min = 48.dp),
+        modifier = modifier.heightIn(min = ControlMinHeight),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
