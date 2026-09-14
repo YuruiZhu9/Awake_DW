@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import java.time.LocalDateTime
@@ -28,11 +29,11 @@ internal val NIGHT_BASE_TIME: Long =
 
 /**
  * 记一杯回应编排——胆大王的反馈（moodboard §6.2 首页接线）：
- * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中**内置猫语池**；气泡按 [CAT_LINE_HOLD_MS]（2.0s）
- *   收场（独立于环心确认的 1.4s），心情按当前小时落回（白天 IDLE）；
+ * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中**内置猫语池**；气泡按 [CAT_LINE_HOLD_MS]（3.0s）
+ *   收场——与环心打卡引文同拍（视觉基线 §12.2），心情按当前小时落回（白天 IDLE）；
  * - 同日已达标后再打卡（celebrated=false）猫仍 HAPPY 一次——回应每次成笔；
  * - init 按当前小时定初态：22 点后安睡（SLEEPY）；
- * - `petCat()`：摸猫即抽一句猫语，同 2.0s 收场；猫序列换代不殃及环心确认与达标横幅的收场；
+ * - `petCat()`：摸猫即抽一句猫语，同 3.0s 收场；猫序列换代不殃及环心确认与达标横幅的收场；
  *
  * 猫气泡停留时长经构造器缺省参注入（生产 [CAT_LINE_HOLD_MS]，测试缩窗）——与 logDebounceMs 同款。
  */
@@ -75,7 +76,7 @@ class HomeViewModelCatTest {
     )
 
     @Test
-    fun `打卡成功猫升HAPPY抽猫语且气泡按2秒独立收场`() =
+    fun `打卡成功猫升HAPPY抽猫语且与环心引文同拍收场`() =
         runTest {
             val h = harness(testScheduler)
 
@@ -83,17 +84,13 @@ class HomeViewModelCatTest {
             runCurrent()
             assertEquals(CatMood.HAPPY, h.viewModel.uiState.value.catMood)
             assertEquals("喵，喝水啦", h.viewModel.uiState.value.catLine)
+            assertNotNull(h.viewModel.uiState.value.centerNote)
 
-            // 环心确认 1.4s 先收场，猫气泡不受牵连（独立时长）。
-            advanceTimeBy(PRAISE_HOLD_MS)
+            // 同屏同拍：打卡引文与猫语在同一刻一起收场（视觉基线 §12.2），
+            // 心情按当前小时（10 点）回落 IDLE。
+            advanceTimeBy(CAT_LINE_HOLD_MS)
             runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.centerNote)
-            assertEquals("喵，喝水啦", h.viewModel.uiState.value.catLine)
-            assertEquals(CatMood.HAPPY, h.viewModel.uiState.value.catMood)
-
-            // 撑满 2.0s：气泡清空，心情按当前小时（10 点）回落 IDLE。
-            advanceTimeBy(CAT_LINE_HOLD_MS - PRAISE_HOLD_MS)
-            runCurrent()
+            assertNull(h.viewModel.uiState.value.centerNote)
             assertNull(h.viewModel.uiState.value.catLine)
             assertEquals(CatMood.IDLE, h.viewModel.uiState.value.catMood)
         }
@@ -113,11 +110,15 @@ class HomeViewModelCatTest {
             assertEquals(true, h.viewModel.uiState.value.celebrating)
             assertEquals(CatMood.HAPPY, h.viewModel.uiState.value.catMood)
 
-            // 第一轮全部收场（庆祝 2.5s 为最后一拍）。
+            // 第一轮全部收场：庆祝横幅 2.5s 先收，打卡引文与猫语 3.0s 同拍后收。
             advanceTimeBy(CELEBRATION_HOLD_MS)
             runCurrent()
             assertEquals(false, h.viewModel.uiState.value.celebrating)
+
+            advanceTimeBy(CAT_LINE_HOLD_MS - CELEBRATION_HOLD_MS)
+            runCurrent()
             assertEquals(CatMood.IDLE, h.viewModel.uiState.value.catMood)
+            assertNull(h.viewModel.uiState.value.catLine)
 
             h.clock.ms += WINDOW_GAP_MS
             h.viewModel.tapLogButton()
@@ -183,21 +184,24 @@ class HomeViewModelCatTest {
             h.viewModel.petCat()
             runCurrent()
 
-            advanceTimeBy(PRAISE_HOLD_MS)
-            runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.centerNote)
-
-            advanceTimeBy(CELEBRATION_HOLD_MS - PRAISE_HOLD_MS)
+            // 庆祝横幅 2.5s 先收；环心引文 3.0s 仍留在环心。
+            advanceTimeBy(CELEBRATION_HOLD_MS)
             runCurrent()
             assertEquals(false, h.viewModel.uiState.value.celebrating)
+            assertNotNull(h.viewModel.uiState.value.centerNote)
 
-            // 猫气泡按摸猫时刻起的 2.0s 收场（此刻已被覆盖经过）。
+            advanceTimeBy(PRAISE_HOLD_MS - CELEBRATION_HOLD_MS)
+            runCurrent()
+            assertNull(h.viewModel.uiState.value.centerNote)
+
+            // 猫气泡按摸猫时刻起的 3.0s 收场（此刻已被覆盖经过）。
             assertNull(h.viewModel.uiState.value.catLine)
         }
 
     private companion object {
-        /** 环心确认 1.4s、庆祝横幅 2.5s：与生产常量同值，用于跨序列收场节奏断言。 */
-        const val PRAISE_HOLD_MS = 1_400L
+        /** 环心引文 3.0s、猫语 3.0s（两者同拍）、庆祝横幅 2.5s：与生产常量同值。 */
+        const val PRAISE_HOLD_MS = 3_000L
+        const val CAT_LINE_HOLD_MS = 3_000L
         const val CELEBRATION_HOLD_MS = 2_500L
 
         /** 相邻两次成笔的假钟间隔：跨出 800ms 防抖窗。 */

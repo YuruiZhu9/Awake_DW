@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -159,15 +160,15 @@ class HomeViewModelTest {
             assertEquals(true, h.viewModel.uiState.value.celebrating)
             assertEquals(BASE_DAY_KEY, h.prefs.celebratedKeyValue)
 
-            // 环心确认 1.4s 收场；庆祝横幅撑满 2.5s 后自动收敛。
-            advanceTimeBy(PRAISE_HOLD_MS)
-            runCurrent()
-            assertEquals(null, h.viewModel.uiState.value.centerNote)
-            assertEquals(true, h.viewModel.uiState.value.celebrating)
-
-            advanceTimeBy(CELEBRATION_HOLD_MS - PRAISE_HOLD_MS)
+            // 环心引文 3.0s 收场，比庆祝横幅的 2.5s 晚半拍——横幅先收，引文还留在环心。
+            advanceTimeBy(CELEBRATION_HOLD_MS)
             runCurrent()
             assertEquals(false, h.viewModel.uiState.value.celebrating)
+            assertNotEquals(null, h.viewModel.uiState.value.centerNote)
+
+            advanceTimeBy(PRAISE_HOLD_MS - CELEBRATION_HOLD_MS)
+            runCurrent()
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
 
             // 同日再打卡：celebrated_day_key 已记录，不再触发庆祝。
             h.clock.ms += CUP_SPACING_MS
@@ -185,10 +186,10 @@ class HomeViewModelTest {
             h.viewModel.tapLogButton()
             runCurrent()
 
-            // 长句池只被 init 的问候语用过一次；打卡确认走的是独立的短句池。
+            // 长句池只被 init 的问候语用过一次；打卡确认走的是独立的引文池。
             assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedSlots)
             assertEquals(listOf(TimeSlot.MORNING), h.copies.requestedPraiseSlots)
-            assertEquals("记好了", h.viewModel.uiState.value.centerNote)
+            assertEquals(RingNote("记好了"), h.viewModel.uiState.value.centerNote)
         }
 
     @Test
@@ -198,13 +199,13 @@ class HomeViewModelTest {
 
             h.viewModel.tapLogButton()
             runCurrent()
-            assertEquals("记好了", h.viewModel.uiState.value.centerNote)
+            assertEquals(RingNote("记好了"), h.viewModel.uiState.value.centerNote)
 
             // 同刻再点：不成笔，但把「刚刚记过了」说清楚，而不是静默吞掉。
             h.viewModel.tapLogButton()
             runCurrent()
             assertEquals(1, h.water.addCount)
-            assertEquals(REPEAT_HINT_TEXT, h.viewModel.uiState.value.centerNote)
+            assertEquals(RingNote(REPEAT_HINT_TEXT), h.viewModel.uiState.value.centerNote)
 
             advanceTimeBy(REPEAT_HINT_HOLD_MS)
             runCurrent()
@@ -238,7 +239,7 @@ class HomeViewModelTest {
             runCurrent()
 
             // 破坏性动作不能默默把数字改小：确认语要说清删掉的那一杯的量。
-            assertEquals("${REVERT_ACK_PREFIX}380ml", h.viewModel.uiState.value.centerNote)
+            assertEquals(RingNote("${REVERT_ACK_PREFIX}380ml"), h.viewModel.uiState.value.centerNote)
 
             advanceTimeBy(PRAISE_HOLD_MS)
             runCurrent()
@@ -343,8 +344,8 @@ class HomeViewModelTest {
         }
 
     private companion object {
-        /** 环心确认 1.4s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
-        const val PRAISE_HOLD_MS = 1_400L
+        /** 环心引文 3.0s、庆祝横幅 2.5s：反馈时序断言用（与生产常量同值）。 */
+        const val PRAISE_HOLD_MS = 3_000L
         const val CELEBRATION_HOLD_MS = 2_500L
 
         /** 相邻两杯的假钟间隔：跨出 800ms 防抖窗。 */

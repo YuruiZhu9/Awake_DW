@@ -8,6 +8,7 @@ import com.awakedw.core.data.copy.DefaultCopies
 import com.awakedw.core.data.copy.DefaultCopyLibraryRepository
 import com.awakedw.core.data.copy.ShortCopies
 import com.awakedw.core.domain.contracts.CopyLibrary
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.TimeSlot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -101,6 +102,21 @@ class CopyLibraryRepositoryTest {
             assertTrue("长句池键应存在", raw.contains("\"MORNING|"))
             assertTrue("打卡确认池键应存在", raw.contains("PRAISE_MORNING|"))
             assertTrue("猫语池键应存在", raw.contains("CAT_MORNING|"))
+        }
+
+    @Test
+    fun `打卡引文连同落款一起返回且去重只按正文`() =
+        runTest {
+            val draws = mutableListOf<PraiseQuote>()
+            repeat(10) { draws += repo.randomPraise(TimeSlot.MORNING, avoidRecent = 4) }
+
+            assertTrue("抽到的引文必须来自早组池", draws.all { it in ShortCopies.praiseMorning })
+            draws.forEach { quote ->
+                assertTrue("引文正文不得为空", quote.text.isNotBlank())
+                // 没有落款是合法的（原创句），但「空串落款」不是——那是占位符，不是出处。
+                assertTrue("落款只能是作者名或 null", quote.attribution?.isNotBlank() != false)
+            }
+            assertTrue("早组应至少抽到一条带落款的引文", draws.any { it.attribution != null })
         }
 
     @Test

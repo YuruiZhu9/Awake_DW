@@ -1,5 +1,6 @@
 package com.awakedw.core.domain.contracts
 
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.TimeSlot
 import kotlinx.coroutines.flow.Flow
 
@@ -24,13 +25,14 @@ interface CopyLibraryRepository {
     ): String
 
     /**
-     * 抽取**打卡确认短句**：来自内置短句池，与心意文案库的长句互不干扰。
-     * 打卡瞬间出现在环心，需要一句 3–14 字的即时回应，而不是完整的心声。
+     * 抽取**打卡确认语**：来自内置引文池，与心意文案库的长句互不干扰。
+     * 打卡瞬间出现在环心，读到的是一句引文或一句闲话加它的落款，
+     * 而不是一句自我评价；去重只按正文，落款不参与（视觉基线 §12）。
      */
     suspend fun randomPraise(
         slot: TimeSlot,
         avoidRecent: Int = SHORT_POOL_AVOID_RECENT,
-    ): String
+    ): PraiseQuote
 
     /**
      * 抽取**猫咪回应短句**：同样来自内置短句池，与 [randomPraise] 使用两个独立的去重窗口。

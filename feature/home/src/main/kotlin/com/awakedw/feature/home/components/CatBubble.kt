@@ -39,6 +39,10 @@ private val CAT_LINE_BUBBLE_SHAPE = RoundedCornerShape(16.dp, 16.dp, 16.dp, 5.dp
  * 与打卡确认分开是有意的：打卡确认走环心（[com.awakedw.feature.home.HomeScreen] 的 centerNote），
  * 两者同屏时一上一下、各说各的事，不再抢同一格而互相覆盖。
  *
+ * 打卡引文与猫语同时出现、同时收场（视觉基线 §12.2），焦点靠层级而不是错峰来定：
+ * 引文在环心做主（衬线正文 + 落款），气泡在这里作陪，字号收在 `bodySmall`。
+ * 摸猫时环心没有引文，这里就是唯一的一段话，读起来依然清楚。
+ *
  * 宽度随内容（上限 [CAT_LINE_BUBBLE_MAX_WIDTH]），短句内缩成小胶囊、长句自然换行，
  * 文字始终左对齐（视觉基线：猫咪长回应保持左对齐）；[text] 为 null 时零占位。
  */
@@ -69,7 +73,7 @@ internal fun CatBubble(
                 Text(
                     text = current,
                     color = spec.chipText,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Start,
                 )
             }

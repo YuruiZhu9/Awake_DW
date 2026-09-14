@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.domain.contracts.CopyLibraryRepository
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.TimeSlot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -59,13 +60,14 @@ class DefaultCopyLibraryRepository
                     recentsByKey = decodeRecents(prefs[recentCopyIdsKey]),
                     key = slot.name,
                     avoidRecent = avoidRecent,
+                    idOf = { it },
                 )
             }
 
         override suspend fun randomPraise(
             slot: TimeSlot,
             avoidRecent: Int,
-        ): String =
+        ): PraiseQuote =
             selectionMutex.withLock {
                 val prefs = dataStore.data.first()
                 drawAndPersist(
@@ -73,6 +75,8 @@ class DefaultCopyLibraryRepository
                     recentsByKey = decodeRecents(prefs[recentCopyIdsKey]),
                     key = PRAISE_KEY_PREFIX + slot.name,
                     avoidRecent = avoidRecent,
+                    // 去重只看正文：落款不参与，否则同一位作者的两句会被当成同一句。
+                    idOf = PraiseQuote::text,
                 )
             }
 
@@ -87,6 +91,7 @@ class DefaultCopyLibraryRepository
                     recentsByKey = decodeRecents(prefs[recentCopyIdsKey]),
                     key = CAT_KEY_PREFIX + slot.name,
                     avoidRecent = avoidRecent,
+                    idOf = { it },
                 )
             }
 
@@ -119,27 +124,31 @@ class DefaultCopyLibraryRepository
         }
 
         /**
-         * 从 [pool] 抽一句并写回 [key] 的去重池：跳过最近 [avoidRecent] 条，
+         * 从 [pool] 抽一条并写回 [key] 的去重池：跳过最近 [avoidRecent] 条，
          * 候选耗尽即清空该池重来（保证永远抽得出）。
+         *
+         * 池的元素与去重用的标识分离（[idOf]）：长句与猫语是字符串本身，
+         * 打卡引文是 [PraiseQuote] 但只按正文去重——落款不参与。
          */
-        private suspend fun drawAndPersist(
-            pool: List<String>,
+        private suspend fun <T> drawAndPersist(
+            pool: List<T>,
             recentsByKey: Map<String, List<String>>,
             key: String,
             avoidRecent: Int,
-        ): String {
+            idOf: (T) -> String,
+        ): T {
             if (pool.isEmpty()) error("文案池为空：$key")
             val recents = recentsByKey[key].orEmpty()
             val blocked = recents.takeLast(avoidRecent.coerceAtLeast(0)).toSet()
-            val candidates = pool.filterNot { it in blocked }
-            val chosen: String
+            val candidates = pool.filterNot { idOf(it) in blocked }
+            val chosen: T
             val nextRecents: List<String>
             if (candidates.isEmpty()) {
                 chosen = pool.random()
-                nextRecents = listOf(chosen)
+                nextRecents = listOf(idOf(chosen))
             } else {
                 chosen = candidates.random()
-                nextRecents = (recents + chosen).takeLast(RECENT_KEEP_PER_KEY)
+                nextRecents = (recents + idOf(chosen)).takeLast(RECENT_KEEP_PER_KEY)
             }
             persistRecents(recentsByKey, key, nextRecents)
             return chosen

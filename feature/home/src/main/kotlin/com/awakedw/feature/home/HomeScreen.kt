@@ -62,6 +62,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -71,6 +72,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
+import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
@@ -100,6 +102,18 @@ private const val NUMBER_ROLL_MS = 500
 
 /** 环心确认行与默认小字之间的横切时长。 */
 private const val RING_NOTE_FADE_MS = 240
+
+/**
+ * 环心文案区的最小高度：容下「两行正文 + 一行落款」。
+ * 引文进出的只是这一区域里的内容，占位不变——数值与进度环因此纹丝不动（视觉基线 §12.3）。
+ */
+private val RING_NOTE_MIN_HEIGHT = 60.dp
+
+/** 环心文案区的左右呼吸边：不让引文贴到环弧上。 */
+private val RING_NOTE_HORIZONTAL_PADDING = 22.dp
+
+/** 落款前缀。没有出处的原创句不写这一行，而不是补一个「佚名」。 */
+private const val ATTRIBUTION_PREFIX = "—— "
 
 /** 达标微光呼吸的 alpha 区间与单程时长。 */
 private const val GLOW_ALPHA_MIN = 0.10f
@@ -138,9 +152,12 @@ internal const val REVERT_HINT_TEXT = "长按「最近一杯」可以撤回刚�
  * the primary log action, and an optional mascot response.
  *
  * 三条文字反馈通道物理分离，互不挤占同一格：
- * 1. 打卡确认 → 环心（[RingCenterContent] 的 `centerNote`），1.4s 后复位；
+ * 1. 打卡确认 → 环心（[RingCenterContent] 的 `centerNote`），3.0s 后复位；
  * 2. 达标横幅 → 环下缎带（[CelebrationBanner]），2.5s 后收回；
- * 3. 猫咪回应 → 猫那一行的气泡（[CatRail]），2.0s 后收场。
+ * 3. 猫咪回应 → 猫那一行的气泡（[CatRail]），3.0s 后收场。
+ *
+ * 打卡确认与猫语**同屏同拍**（视觉基线 §12.2）：同时出现、同时收场，焦点由层级决定——
+ * 环心的引文做主（衬线正文 + 落款），猫语气泡收小作陪。
  *
  * Visual decoration stays subordinate to the water task. The bow on the ring is a
  * Lolita-inspired accent, not a navigation affordance or reward signal.
@@ -407,13 +424,13 @@ private fun IdleCatAccent(modifier: Modifier = Modifier) {
     }
 }
 
-/** 今日饮水环：数值与环顶丝带；回应文案只在猫咪行展示。 */
+/** 今日饮水环：数值与环顶丝带；打卡确认在环心，猫语在猫那一行，各归其位。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun RingBlock(
     progress: Float,
     totalMl: Int,
-    centerNote: String?,
+    centerNote: RingNote?,
     onRingTap: (Offset?) -> Unit,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
@@ -490,16 +507,18 @@ private fun RingBow(
 }
 
 /**
- * 环心：滚动到新值的总量 + 一行小字。
- * 小字在默认的「今日已喝」与 [centerNote]（打卡确认／重复提示）之间横切——
- * 确认就出现在使用者刚刚看着的位置，不产生任何布局位移。
+ * 环心：滚动到新值的总量 + 一块临时文案区。
+ *
+ * 文案区在默认的「今日已喝」与 [centerNote]（打卡引文／重复提示／撤回回执）之间横切——
+ * 引文出现在使用者刚刚看着的位置。文案区预留「两行正文 + 一行落款」的最小高度且顶部对齐，
+ * 引文进出不会推动数值与进度环（视觉基线 §12.3）；内容更高时自然撑开，不截断。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun RingCenterContent(
     totalMl: Int,
     reduceMotion: Boolean,
-    centerNote: String? = null,
+    centerNote: RingNote? = null,
 ) {
     val spec = currentThemeSpec()
     val rolledTotal =
@@ -512,7 +531,10 @@ fun RingCenterContent(
                 label = "ringTotalMl",
             ).value
         }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(horizontal = RING_NOTE_HORIZONTAL_PADDING),
+    ) {
         Text(
             text =
                 buildAnnotatedString {
@@ -524,16 +546,58 @@ fun RingCenterContent(
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
         )
         Spacer(Modifier.height(4.dp))
-        Crossfade(
-            targetState = centerNote,
-            animationSpec = tween(durationMillis = if (reduceMotion) 0 else RING_NOTE_FADE_MS),
-            label = "ringCenterNote",
-        ) { note ->
+        Box(
+            modifier = Modifier.heightIn(min = RING_NOTE_MIN_HEIGHT),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Crossfade(
+                targetState = centerNote,
+                animationSpec = tween(durationMillis = if (reduceMotion) 0 else RING_NOTE_FADE_MS),
+                label = "ringCenterNote",
+            ) { note ->
+                if (note == null) {
+                    Text(
+                        text = "今日已喝",
+                        color = spec.greetingSubColor,
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                } else {
+                    RingNoteText(note = note, spec = spec)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 环心的引文块（视觉基线 §12.1）：正文一行或两行，落款另起一行小字。
+ * 没有落款的原创句就只显示正文——**不伪造出处**，这一行不会为了对齐而补上「佚名」。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun RingNoteText(
+    note: RingNote,
+    spec: ThemeSpec,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
+        Text(
+            text = note.text,
+            color = spec.chipText,
+            // 引文用系统衬线（与问候语同一套书卷气），让「小票引文」这一形态在环心里也读得出来。
+            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Serif),
+            textAlign = TextAlign.Center,
+        )
+        if (note.attribution != null) {
+            Spacer(Modifier.height(3.dp))
             Text(
-                text = note ?: "今日已喝",
-                color = if (note != null) spec.chipText else spec.greetingSubColor,
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = if (note != null) 0.2.sp else 1.5.sp),
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                text = "$ATTRIBUTION_PREFIX${note.attribution}",
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
+                textAlign = TextAlign.Center,
             )
         }
     }

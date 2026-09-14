@@ -7,6 +7,7 @@ import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.DailyStats
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
@@ -203,12 +204,12 @@ class FakeSoundPlayer : AwakeSoundPlayer {
 
 /**
  * 固定文案库：长句按时段返回固定短句并记录被询问过的时段供断言；
- * [catLines] 铺猫语池、[praiseLines] 铺打卡确认池，两者与可编辑文案库解耦——
- * 与生产的「长句可编辑 / 短句内置」分层保持一致。
+ * [catLines] 铺猫语池、[praiseQuotes] 铺打卡引文池，两者与可编辑文案库解耦——
+ * 与生产的「长句可编辑 / 打卡引文与猫语内置」分层保持一致。
  */
 class FakeCopyLibraryRepository(
     catLines: List<String>? = null,
-    private val praiseLines: List<String> = listOf("记好了"),
+    private val praiseQuotes: List<PraiseQuote> = listOf(PraiseQuote("记好了")),
 ) : CopyLibraryRepository {
     /** randomFor（长句：问候 / 通知正文）被调用的时段序列。 */
     val requestedSlots = mutableListOf<TimeSlot>()
@@ -244,9 +245,9 @@ class FakeCopyLibraryRepository(
     override suspend fun randomPraise(
         slot: TimeSlot,
         avoidRecent: Int,
-    ): String {
+    ): PraiseQuote {
         requestedPraiseSlots += slot
-        return praiseLines[praiseCursor++ % praiseLines.size]
+        return praiseQuotes[praiseCursor++ % praiseQuotes.size]
     }
 
     override suspend fun randomCatLine(

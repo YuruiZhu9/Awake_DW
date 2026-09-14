@@ -7,6 +7,7 @@ import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.DailyStats
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
 import com.awakedw.core.model.WaterRecord
@@ -140,7 +141,7 @@ class FakeCopyLibraryRepository : CopyLibraryRepository {
     override suspend fun randomPraise(
         slot: TimeSlot,
         avoidRecent: Int,
-    ): String = "记好了"
+    ): PraiseQuote = PraiseQuote("记好了")
 
     override suspend fun randomCatLine(
         slot: TimeSlot,

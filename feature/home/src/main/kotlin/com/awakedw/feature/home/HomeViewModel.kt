@@ -31,23 +31,40 @@ import javax.inject.Inject
 /** 打卡防抖窗口（规格 §4.1）：窗口内经任一入口的连续触发只记一杯。 */
 const val LOG_DEBOUNCE_MS = 800L
 
-/** 环心打卡确认停留时长（规格 §4.2 第 5 步：约 1.4s 后淡出）。 */
-const val PRAISE_HOLD_MS = 1_400L
+/**
+ * 环心打卡确认停留时长（视觉基线 §12.2）：引文要读完正文与落款两行，
+ * 停留短了会两行都没读完就消失——这正是「不知道该看哪里」的成因之一。
+ */
+const val PRAISE_HOLD_MS = 3_000L
 
-/** 防抖窗口内重复触发时的微提示停留时长：短于夸夸语，只为说明「刚才那下已记过」。 */
+/** 防抖窗口内重复触发时的微提示停留时长：短于打卡引文，只为说明「刚才那下已记过」。 */
 const val REPEAT_HINT_HOLD_MS = 900L
 
 /** 达标反馈状态停留时长（2500ms 自动收敛，不产生奖励或内容解锁）。 */
 const val CELEBRATION_HOLD_MS = 2_500L
 
-/** 猫气泡停留时长（2.0s 收场，独立于环心确认的 1.4s）。 */
-const val CAT_LINE_HOLD_MS = 2_000L
+/**
+ * 猫气泡停留时长：与环心打卡确认同拍（视觉基线 §12.2）。
+ * 两者同时出现、同时收场，任一刻画面上只有一段新文字是一等公民。
+ */
+const val CAT_LINE_HOLD_MS = 3_000L
 
 /** 防抖窗口内重复触发时的提示语：不是报错，只是把「已经记过」说清楚。 */
 const val REPEAT_HINT_TEXT = "刚刚记过了"
 
 /** 撤回成功后的确认语前缀：删掉的是哪一杯，要说清楚，不能默默把数字改小。 */
 const val REVERT_ACK_PREFIX = "已撤回 · "
+
+/**
+ * 环心那一行临时文案：打卡引文（可带落款），或重复提示／撤回回执这类操作说明（无落款）。
+ *
+ * 打卡引文与操作提示共用同一个位置是有意的——它们都发生在使用者刚看着的环心；
+ * 用同一种数据形态表达，环心只需要一套渲染与一套横切动画。
+ */
+data class RingNote(
+    val text: String,
+    val attribution: String? = null,
+)
 
 /** Immutable state for the water logging home screen. */
 data class HomeUiState(
@@ -60,10 +77,10 @@ data class HomeUiState(
     val lastDrinkLabel: String? = null,
     val greeting: String? = null,
     /**
-     * 环心确认行文案（打卡确认短句或重复提示）；null 时环心显示默认的「今日已喝」。
+     * 环心确认行（打卡引文或操作提示）；null 时环心显示默认的「今日已喝」。
      * 与猫咪气泡物理分离：确认发生在刚被看着的位置，猫语留在猫那一行，两者不再抢同一格。
      */
-    val centerNote: String? = null,
+    val centerNote: RingNote? = null,
     val celebrating: Boolean = false,
     val catMood: CatMood = CatMood.IDLE,
     val catLine: String? = null,
@@ -180,7 +197,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val removed = deleteWater.revertLatestToday()
             if (removed != null) {
-                showCenterNote("$REVERT_ACK_PREFIX${removed.amountMl}ml", praiseHoldMs)
+                showCenterNote(RingNote("$REVERT_ACK_PREFIX${removed.amountMl}ml"), praiseHoldMs)
             }
         }
     }
@@ -189,7 +206,7 @@ class HomeViewModel(
     private fun scheduleLog(amountMl: Int? = null) {
         val now = clock.nowEpochMs()
         if (now - lastAcceptedAt < logDebounceMs) {
-            showCenterNote(REPEAT_HINT_TEXT, repeatHintHoldMs)
+            showCenterNote(RingNote(REPEAT_HINT_TEXT), repeatHintHoldMs)
             return
         }
         lastAcceptedAt = now
@@ -202,8 +219,10 @@ class HomeViewModel(
         val epoch = feedbackEpoch
 
         val slot = TimeSlots.slotOfHour(currentHour())
-        // 环心确认：短句池，与猫语各自独立去重，打卡瞬间读到的是一句回应而不是一句格言。
-        showCenterNote(copies.randomPraise(slot), praiseHoldMs)
+        // 环心确认：引文池，与猫语各自独立去重。打卡瞬间读到的是一句引文和它的落款，
+        // 而不是一句自我评价（视觉基线 §12.1）。
+        val quote = copies.randomPraise(slot)
+        showCenterNote(RingNote(text = quote.text, attribution = quote.attribution), praiseHoldMs)
         _uiState.update {
             it.copy(
                 // 当日首次达标为 true；其余打卡（含达标后再打）一律回到普通反馈。
@@ -230,12 +249,12 @@ class HomeViewModel(
 
     /** 环心确认行：写入文案并按时收场；后一次调用换代，旧收场自动失效。 */
     private fun showCenterNote(
-        text: String,
+        note: RingNote,
         holdMs: Long,
     ) {
         centerEpoch += 1
         val epoch = centerEpoch
-        _uiState.update { it.copy(centerNote = text) }
+        _uiState.update { it.copy(centerNote = note) }
         viewModelScope.launch {
             delay(holdMs)
             if (centerEpoch == epoch) {
@@ -247,6 +266,7 @@ class HomeViewModel(
     /**
      * 猫回应序列：抽一句猫语点亮气泡，[happy] 时（打卡场景）同时升 HAPPY；
      * [catLineHoldMs] 后收场——气泡清空、心情按当前小时落回（白天 IDLE / 深夜安睡，零惩罚）。
+     * 打卡场景下该时长与环心打卡引文同值：两者同时出现、同时收场（视觉基线 §12.2）。
      * 以独立 [catEpoch] 防串场：摸猫/新打卡只换代猫自己，不殃及环心确认与达标横幅的收场。
      */
     private fun playCatResponse(

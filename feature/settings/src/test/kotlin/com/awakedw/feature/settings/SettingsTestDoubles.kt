@@ -6,6 +6,7 @@ import com.awakedw.core.domain.contracts.CopyLibraryRepository
 import com.awakedw.core.domain.contracts.UserPreferencesRepository
 import com.awakedw.core.domain.contracts.WaterRepository
 import com.awakedw.core.model.DailyStats
+import com.awakedw.core.model.PraiseQuote
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.UserSettings
@@ -99,11 +100,11 @@ class FakeCopyLibraryRepository(
         avoidRecent: Int,
     ): String = _library.value.groupOf(slot).first()
 
-    /** 打卡确认与猫语来自内置短句池，与可编辑的文案库无关——固定返回即可。 */
+    /** 打卡引文与猫语来自内置池，与可编辑的文案库无关——固定返回即可。 */
     override suspend fun randomPraise(
         slot: TimeSlot,
         avoidRecent: Int,
-    ): String = "记好了"
+    ): PraiseQuote = PraiseQuote("记好了")
 
     override suspend fun randomCatLine(
         slot: TimeSlot,
