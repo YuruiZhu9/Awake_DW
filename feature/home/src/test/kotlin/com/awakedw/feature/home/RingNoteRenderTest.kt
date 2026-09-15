@@ -31,10 +31,10 @@ class RingNoteRenderTest {
 
     @Test
     fun `带落款的引文同时显示正文与落款`() {
-        setContent(RingNote(text = "晚来天欲雪，能饮一杯无", attribution = "白居易"))
+        setContent(RingNote(text = "月光如流水一般", attribution = "朱自清《荷塘月色》"))
 
-        composeRule.onNodeWithText("晚来天欲雪，能饮一杯无").assertIsDisplayed()
-        composeRule.onNodeWithText("—— 白居易").assertIsDisplayed()
+        composeRule.onNodeWithText("月光如流水一般").assertIsDisplayed()
+        composeRule.onNodeWithText("—— 朱自清《荷塘月色》").assertIsDisplayed()
     }
 
     @Test

@@ -47,7 +47,7 @@ class ShortCopiesTest {
             pool.forEach { quote ->
                 assertTrue("$name「${quote.text}」不应为空", quote.text.isNotBlank())
                 assertTrue(
-                    "$name「${quote.text}」应落在 2–15 字（15 是七言联句里那个全角逗号的位置）",
+                    "$name「${quote.text}」应落在 2–15 字，一眼读完",
                     quote.text.length in 2..15,
                 )
                 assertFalse("$name「${quote.text}」不得含 |", quote.text.contains('|'))
@@ -68,19 +68,24 @@ class ShortCopiesTest {
     }
 
     /**
-     * 落款的形态守则：要么是一位作者，要么干脆不写。
+     * 落款的形态守则：要么是「作者《作品名》」的完整出处，要么干脆不写。
      *
      * 测试守不住「出处是否真实」——那靠写作时逐条核对；但守得住**不许拿占位符凑数**：
-     * 空串、超长、带分隔符都会让「小票引文」这一形态崩掉，而「佚名」这类写法
-     * 本质上是在为一句原创句伪造出处。
+     * 空串、只写作者不写作品、带分隔符都会让「小票引文 + 完整出处」这一形态崩掉，
+     * 而「佚名」这类写法本质上是在为一句原创句伪造出处。
      */
     @Test
-    fun `落款要么是作者名要么干脆不写`() {
+    fun `落款要么是完整出处要么干脆不写`() {
         val attributed = praisePools.values.flatten().mapNotNull { it.attribution }
         assertTrue("应有带落款的引文", attributed.isNotEmpty())
         attributed.forEach { name ->
             assertTrue("落款不得为空串", name.isNotBlank())
-            assertTrue("落款「$name」应短于 7 字", name.length in 2..6)
+            assertTrue("落款「$name」应落在 2–14 字", name.length in 2..14)
+            assertTrue(
+                "落款「$name」应为「作者《作品名》」形态",
+                name.startsWith("《").not() && name.indexOf('《') > 0 && name.endsWith("》") &&
+                    name.count { it == '《' } == 1 && name.count { it == '》' } == 1,
+            )
             assertFalse("落款「$name」不得含 |", name.contains('|'))
         }
         praisePools.forEach { (name, pool) ->

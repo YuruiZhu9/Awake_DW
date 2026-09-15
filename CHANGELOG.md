@@ -2,6 +2,18 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v0.6.0-未发布]
+
+### Changed
+- 打卡引文**换装现代白话语录**（使用者逐条圈选，方案见 `docs/superpowers/plans/2026-09-15-v060-praise-corpus-draft.md`）：30 条全部换为「现代中文散文摘句 + 西方文学短句（自译）+ 原创短句」，**不含任何文言**——此前古典诗文摘句的残句感被判违和。落款同步升级为**完整出处「作者《作品名》」**（如「—— 朱自清《荷塘月色》」），不再只署作者名。
+- 深夜青黛主题接入专属主图 `midnight_indigo.jpg`（用户生成、原生暗底、PAINTED 直绘、约 205KB），替代「哥特图反色」回退；`INVERTED_INK` 处理档与 `gothic.jpg` 随之移除（0.6 提案轨道一 / S1）。
+- cat 吉祥物衍生图重制为 640px（显示 108dp，4x 密度下仍有余量；afterdrink 原尺寸本就超运行时 1024 解码上限）：3.23MB → 0.80MB，透明通道与边缘质检通过（0.6 提案 / plan 步骤 6）。
+- Robolectric 锁文件 flake 根治（D6，实施为 `robolectric.dependency.dir` 本地离线目录，详见 0.6.0 plan）：9 个模块的阿里云镜像属性替换为离线目录，运行时零下载零锁文件；全量构建 5m52s 首次通过。
+- 仓库治理（0.6 提案地基 B / D4）：rules §八.4 修订为「仅 Release 包入库、dist 只留最新与里程碑版本」；`dist/` 清理 39 个历史 APK 与 1 份校验文件（约 514MB → 52MB）；删除 `assets/lolita/` 10 张零引用候选图、1 张重复源图；`.gitignore` 增补 `.zcode/` 与 `.robolectric/`。
+
+### Verification
+- 待版本收口时补充；真机验收挂 `docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`。
+
 ## [v0.5.1] - 2026-09-15
 
 ### Changed
