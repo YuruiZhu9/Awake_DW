@@ -33,8 +33,8 @@ android {
             // BatteryIntentLauncherTest 走 Robolectric：需要应用资源与真实 PackageManager 行为。
             isIncludeAndroidResources = true
             all { test ->
-                // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
-                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                // Robolectric 构件走本地离线目录（首次用 tools/sync-robolectric-jars.ps1 同步），绕开运行时下载与锁文件竞争。
+                test.systemProperty("robolectric.dependency.dir", rootProject.file(".robolectric/offline").absolutePath)
             }
         }
     }

@@ -29,7 +29,7 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all { test ->
-                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                test.systemProperty("robolectric.dependency.dir", rootProject.file(".robolectric/offline").absolutePath)
                 test.systemProperty("awake.visualVariant", test.name)
             }
         }

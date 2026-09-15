@@ -35,8 +35,8 @@ android {
             // compose-ui 测试走 Robolectric 路线：需要应用资源与真实组件生命周期。
             isIncludeAndroidResources = true
             all { test ->
-                // 本机网络无法直连 Maven Central，Robolectric 取 android-all 构件时改走阿里云镜像。
-                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
+                // Robolectric 构件走本地离线目录（首次用 tools/sync-robolectric-jars.ps1 同步），绕开运行时下载与锁文件竞争。
+                test.systemProperty("robolectric.dependency.dir", rootProject.file(".robolectric/offline").absolutePath)
                 // Compose+Robolectric 组合测试的 NATIVE 渲染内存峰值大（溢出断言类曾 OOM），给足堆。
                 test.maxHeapSize = "2g"
                 test.systemProperty("awake.visualVariant", test.name)
