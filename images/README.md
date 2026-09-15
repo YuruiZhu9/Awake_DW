@@ -44,6 +44,8 @@ This iteration uses only existing user-provided originals. `tools/prepare-theme-
 
 `ThemeArtwork` keeps each primary frame first and rotates available same-theme candidates every 12 seconds in normal motion mode. Reduced motion keeps the primary frame still. Theme cards show the primary frame only; Gothic, Cleric and Thin Mint keep their dedicated frame without a second code-native border.
 
+> 2026-09-15 清理注记：候选轮换机制已被 0.5.0 新背景取代，上表候选图及旧主图（`blue/green/rose/warm` 系列，共 10 张）经复核确认零代码引用，已从 `app/src/main/assets/lolita/` 移除，不再打入 APK；用户原图仍全部保留在 `images/Lolita/`。另：`Lolita/` 下 `15_29_11.png` 与 `15_29_13.png` 为 md5 完全相同的重复文件，已删除后者。
+
 ## alpha11 圣职可见度调整
 
 2026-09-08：处理脚本对原透明圣职图中的银饰/蕾丝色素作冷银灰增强，再按原 alpha 轮廓合成瓷白底。原 PNG 不覆盖；`cleric.jpg` 变为 246352 字节。运行时使用正常绘画叠加（96%）并降低中心洗染，使边框可见、中心仍可读。
@@ -61,3 +63,9 @@ The user-supplied source PNG files live in `Lolita/new/` and remain untouched. `
 | `Lolita/new/雾紫玫瑰.png` | `lolita/mist_lavender_rose.jpg` | 雾紫玫瑰 |
 
 These four images use their own quiet central paper area and edge-weighted painted decoration, so runtime rendering uses normal painted compositing instead of the former low-opacity multiply treatment. Deep-night indigo continues to use the existing fallback until a dedicated source is confirmed.
+
+## 2026-09-15 深夜青黛专属主图（0.6.0）
+
+- `Lolita/new/深夜青黛.png` → `lolita/midnight_indigo.jpg`（810×1440、JPEG 品质 86、约 205KB），深夜青黛不再用哥特图反色回退；`tools/prepare-new-theme-art.ps1` 已加入该条目，`gothic.jpg` 退出运行时素材。
+- `Lolita/中景装饰层.png`、`Lolita/近景前景层.png`：0.7.0 分层视差试点素材初版。经 alpha 通道检测两张均为真透明 PNG：中景层结构合格（56% 全透明、元素稀疏、色板正确），入库前需低透明噪点清理；前景层约 64% 画面带半透明灰雾（含中央），接入时需中央遮罩或重新生成。两图暂按原图存档，不入 APK。
+- 2026-09-15 cat 衍生图重制：`cat/beforedrink.png`（1024²→640²，1.59MB→387KB）与 `cat/afterdrink.png`（1254²→640²，1.73MB→404KB），双三次缩放、保留透明通道；显示为 108dp 见方（4x 密度 432px，640px 仍有 1.5 倍余量），afterdrink 原尺寸本就超过运行时 1024 解码上限（实际被采样到 627px），观感无损。合计 3.23MB→0.80MB。

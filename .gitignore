@@ -1,6 +1,9 @@
 .superpowers/
 # 本地智能体工作状态（记忆/临时产物），与 .superpowers/ 同类，不入库
 .workbuddy/
+.zcode/
+# Robolectric android-all 离线构件（tools/sync-robolectric-jars.ps1 同步，不入库）
+.robolectric/
 .env.txt
 build/
 local.properties
