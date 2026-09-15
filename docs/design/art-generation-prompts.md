@@ -1,0 +1,56 @@
+# 主题素材生成 Prompt（提案 S1 / S2）
+
+> 2026-09-15 建立，服务于 `v0.6-refinement-charter.md` §9 素材项 S1/S2。绘图工具按使用者习惯（GPT Image）；画幅选竖版最高档（1024×1536 或等效竖图）。
+
+## 0. 系列风格基准（所有 prompt 共同遵守）
+
+现有七张主题主图是同一系列：**手绘水彩 + 纸纹、维多利亚复古信纸感**；装饰母题（缎带蝴蝶结、珍珠链、水晶吊坠、玫瑰、蕾丝帷幔、鸢尾饰件、四角星点）**全部集中在四角与左右边缘**，中央约三分之二留空做阅读区；每主题单一色相、低饱和、无强光影。任何新生成都必须保持：**边缘装饰、中心留空、单一色相、无文字、无人物、无动物、无水印**。
+
+## 1. S1 · 深夜青黛主题主图（1 张）
+
+深夜青黛目前用「哥特图反色」作回退；这张要做成**原生暗底**的夜色信纸，对齐代码配色：背景墨蓝 #0C0E19→#111430，主色月白 #B9D8E0。
+
+### 中文 prompt（直接粘贴）
+
+> 竖版手绘水彩插画，深夜青黛主题的复古信纸设计：墨蓝青黛色的深色水彩纸面，带细腻纸纹与做旧晕染质感。装饰集中在画面四角与左右边缘：月白色与银灰色的蕾丝垂幔、缎带蝴蝶结、成串小珍珠、水滴形水晶吊坠、几朵淡蓝灰色玫瑰与花苞、一弯纤细的月牙、稀疏的四角星点，优雅安静，维多利亚复古少女系。画面中央约三分之二保持深色安静留白，只有隐约纸纹与极淡的菱形暗纹，装饰向中心逐渐淡出、不进入中央。整体低饱和、低对比，柔和月光从上方角落淡淡漫射，无强光源、无浓重阴影。竖长构图 9:16。无文字、无水印、无人物、无动物。
+
+### English prompt
+
+> Delicate vertical watercolor illustration, vintage Victorian stationery design in a deep indigo night palette: dark ink-blue watercolor paper with subtle grain and aged washes. All decorations sit in the four corners and along the side edges: moon-white and silver-grey lace drapery, satin ribbon bows, strings of tiny pearls, teardrop crystal pendants, a few pale blue-grey roses and buds, a slender crescent moon, sparse four-pointed sparkles — elegant, quiet, shabby-chic feminine. Keep the central two-thirds of the canvas as calm dark empty space with only faint paper grain and a barely visible quilted diamond pattern; motifs fade out toward the center and never enter it. Low saturation, low contrast, soft moonlight diffusing from an upper corner, no harsh light or heavy shadows. Vertical 9:16 composition. No text, no watermark, no people, no animals.
+
+### 挑图与交付
+
+- 多生成几张，挑**中心最安静、装饰不侵入中央**的那张；
+- 交付**原图**（不要自行压缩）；运行时衍生图（最长边 1440px、单图 < 350KB）由仓库 tools 流水线处理。
+
+## 2. S2 · 分层视差素材（试点：深夜青黛，2 张透明 PNG）
+
+背景层复用 S1 成品，不需另生成。需要两张**完全透明背景**的 PNG：
+
+### 中景装饰层 · 中文 prompt
+
+> 完全透明背景的 PNG 贴图素材，手绘水彩风格，深夜青黛配色（墨蓝底上的月白与银灰）：稀疏飘散的装饰元素——银灰色小片蕾丝碎片、成串小珍珠、淡蓝玫瑰花瓣、纤细的缎带曲线、少量四角星点。元素中等尺寸、边缘干净、无背景色、无纸纹、无文字；主要分布在画面上下两段，正中央留空。低饱和、柔软安静。
+
+### 近景前景层 · 中文 prompt
+
+> 完全透明背景的 PNG 贴图素材，手绘水彩风格，深夜青黛配色：强景深虚化的近景元素——大的失焦珍珠光斑、模糊的淡蓝花瓣、一条沿画面左缘或右缘垂落的半透明银灰蕾丝边。元素很大很柔、明显失焦、梦幻感；边缘干净、无背景色、无文字；避开画面中央。低饱和、低对比。
+
+### 使用要点
+
+- 生成 S2 时**把 S1 成品作为参考图附上**（GPT Image 支持附图），保证色板一致；
+- AI 的「透明背景」偶尔带白边或光晕——原样交付即可，入库前会做边缘清理与尺寸规整（≤1440px）；
+- 每张各生成几张，挑元素最稀疏、边缘最干净的。
+
+## 3. 其他主题铺开时的替换词表（0.7.0 起用）
+
+只换色相词，结构不变：
+
+| 主题 | 色相词 |
+| - | --- |
+| 晨雾蓝瓷 | 雾霾蓝粉彩、浅色纸面（中心留白为浅色） |
+| 午后藕荷 | 藕荷粉 |
+| 黄昏奶茶 | 奶茶暖棕 |
+| 雾紫玫瑰 | 薰衣草紫 |
+| 黑哥特 | 黑白灰单色 |
+| 白色圣职 | 奶白与淡金 |
+| 薄荷巧克力 | 薄荷绿与可可棕 |
