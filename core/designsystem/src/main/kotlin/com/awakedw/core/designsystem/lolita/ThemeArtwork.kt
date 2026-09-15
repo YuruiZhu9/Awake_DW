@@ -21,7 +21,7 @@ data class ThemeArtwork(
             .distinct()
 }
 
-enum class ArtworkTreatment { PRINTED_INK, INVERTED_INK, PAINTED }
+enum class ArtworkTreatment { PRINTED_INK, PAINTED }
 
 fun themeArtworkOf(id: ThemeId): ThemeArtwork =
     when (id) {
@@ -43,7 +43,12 @@ fun themeArtworkOf(id: ThemeId): ThemeArtwork =
                 opacity = 0.70f,
                 treatment = ArtworkTreatment.PAINTED,
             )
-        ThemeId.NIGHT -> ThemeArtwork("lolita/gothic.jpg", 0.20f, ArtworkTreatment.INVERTED_INK)
+        ThemeId.NIGHT ->
+            ThemeArtwork(
+                asset = "lolita/midnight_indigo.jpg",
+                opacity = 0.72f,
+                treatment = ArtworkTreatment.PAINTED,
+            )
         ThemeId.LAVENDER ->
             ThemeArtwork(
                 asset = "lolita/mist_lavender_rose.jpg",

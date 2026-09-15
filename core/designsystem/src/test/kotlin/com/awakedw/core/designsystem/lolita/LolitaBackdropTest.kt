@@ -11,7 +11,7 @@ class LolitaBackdropTest {
         assertEquals("lolita/morning_blue_porcelain.jpg", lolitaAssetFileOf(ThemeId.EMERALD))
         assertEquals("lolita/afternoon_lotus.jpg", lolitaAssetFileOf(ThemeId.STRAWBERRY))
         assertEquals("lolita/twilight_milk_tea.jpg", lolitaAssetFileOf(ThemeId.CARAMEL))
-        assertEquals("lolita/gothic.jpg", lolitaAssetFileOf(ThemeId.NIGHT))
+        assertEquals("lolita/midnight_indigo.jpg", lolitaAssetFileOf(ThemeId.NIGHT))
         assertEquals("lolita/mist_lavender_rose.jpg", lolitaAssetFileOf(ThemeId.LAVENDER))
         assertEquals("lolita/gothic_frame.jpg", lolitaAssetFileOf(ThemeId.GOTHIC))
         assertEquals("lolita/thin_mint.jpg", lolitaAssetFileOf(ThemeId.THIN_MINT))

@@ -40,6 +40,7 @@ try {
     Convert-ThemeArt '午后藕荷.png' 'afternoon_lotus.jpg'
     Convert-ThemeArt '黄昏奶茶.png' 'twilight_milk_tea.jpg'
     Convert-ThemeArt '雾紫玫瑰.png' 'mist_lavender_rose.jpg'
+    Convert-ThemeArt '深夜青黛.png' 'midnight_indigo.jpg'
 } finally {
     $quality.Dispose()
 }

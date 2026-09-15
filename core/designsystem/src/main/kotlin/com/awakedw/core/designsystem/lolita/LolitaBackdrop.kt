@@ -16,8 +16,6 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -141,33 +139,15 @@ private fun ArtworkLayer(
                                 0.82f to paper.copy(alpha = 0.08f),
                                 1f to paper.copy(alpha = 0f),
                             )
-                        // Invert white-paper art into light ink before screening on a dark surface.
-                        val darkInk =
-                            if (artwork.treatment == ArtworkTreatment.INVERTED_INK) {
-                                ColorFilter.colorMatrix(
-                                    ColorMatrix(
-                                        floatArrayOf(
-                                            -1f, 0f, 0f, 0f, 255f,
-                                            0f, -1f, 0f, 0f, 255f,
-                                            0f, 0f, -1f, 0f, 255f,
-                                            0f, 0f, 0f, 1f, 0f,
-                                        ),
-                                    ),
-                                )
-                            } else {
-                                null
-                            }
                         onDrawBehind {
                             drawImage(
                                 image = source,
                                 dstOffset = androidx.compose.ui.unit.IntOffset(dstOffsetX, dstOffsetY),
                                 dstSize = androidx.compose.ui.unit.IntSize(dstWidth, dstHeight),
                                 alpha = reveal * artwork.opacity,
-                                colorFilter = darkInk,
                                 blendMode =
                                     when (artwork.treatment) {
                                         ArtworkTreatment.PRINTED_INK -> BlendMode.Multiply
-                                        ArtworkTreatment.INVERTED_INK -> BlendMode.Screen
                                         ArtworkTreatment.PAINTED -> BlendMode.SrcOver
                                     },
                             )
