@@ -69,23 +69,31 @@ fun LolitaBackdrop(
         }
     val image = selectedImage ?: primaryImage
 
-    Crossfade(
-        targetState = image,
-        modifier = modifier,
-        animationSpec = tween(durationMillis = if (reduceMotion) 0 else ARTWORK_CROSSFADE_MS),
-        label = "lolitaBackdropArtwork",
-    ) { source ->
-        val reveal =
-            animateFloatAsState(
-                targetValue = if (source == null) 0f else 1f,
-                animationSpec = tween(durationMillis = if (reduceMotion) 0 else 700),
-                label = "lolitaBackdropReveal",
-            ).value
-        ArtworkLayer(
-            source = source,
-            artwork = artwork,
-            spec = spec,
-            reveal = reveal,
+    Box(modifier = modifier) {
+        Crossfade(
+            targetState = image,
+            modifier = Modifier.fillMaxSize(),
+            animationSpec = tween(durationMillis = if (reduceMotion) 0 else ARTWORK_CROSSFADE_MS),
+            label = "lolitaBackdropArtwork",
+        ) { source ->
+            val reveal =
+                animateFloatAsState(
+                    targetValue = if (source == null) 0f else 1f,
+                    animationSpec = tween(durationMillis = if (reduceMotion) 0 else 700),
+                    label = "lolitaBackdropReveal",
+                ).value
+            ArtworkLayer(
+                source = source,
+                artwork = artwork,
+                spec = spec,
+                reveal = reveal,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        // 中景装饰层（alpha13 §13）：叠在主图之上、内容之下；素材为空时整层静默。
+        SceneBackdropLayer(
+            asset = artwork.midgroundAsset,
+            baseOpacity = artwork.midgroundOpacity,
             modifier = Modifier.fillMaxSize(),
         )
     }

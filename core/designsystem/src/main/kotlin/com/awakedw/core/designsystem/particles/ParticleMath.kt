@@ -27,17 +27,17 @@ data class ParticleFrame(
  * 因此 Composable 层无需持有任何随机对象，天然规避重组重采样。
  */
 object ParticleMath {
-    /** 大粒索引（规格 §2.2：2 颗，带辉光）。 */
-    val BIG_INDEX_RANGE = 0..1
+    /** 大粒索引（alpha13 §13 粒子扩容：4 颗，带辉光）。 */
+    val BIG_INDEX_RANGE = 0..3
 
-    /** 中粒索引（8 颗，微辉）。 */
-    val MEDIUM_INDEX_RANGE = 2..9
+    /** 中粒索引（16 颗，微辉）。 */
+    val MEDIUM_INDEX_RANGE = 4..19
 
-    /** 小粒索引（14 颗，无辉光）。 */
-    val SMALL_INDEX_RANGE = 10..23
+    /** 小粒索引（60 颗，无辉光）。 */
+    val SMALL_INDEX_RANGE = 20..79
 
-    /** 圆点粒子总数：大 2 + 中 8 + 小 14。 */
-    const val DOT_COUNT = 24
+    /** 圆点粒子总数：大 4 + 中 16 + 小 60。 */
+    const val DOT_COUNT = 80
 
     /** 固定相位星芒粒子数（由 Composable 层独立绘制，不经本引擎）。 */
     const val STAR_COUNT = 3

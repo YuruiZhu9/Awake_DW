@@ -17,4 +17,15 @@ class LolitaBackdropTest {
         assertEquals("lolita/thin_mint.jpg", lolitaAssetFileOf(ThemeId.THIN_MINT))
         assertEquals("lolita/cleric.jpg", lolitaAssetFileOf(ThemeId.CLERIC))
     }
+
+    @Test
+    fun `中景装饰层仅试点主题配置其余静默`() {
+        // alpha13 §13 分层试点：只有深夜青黛配了中景素材，其余主题必须为 null（整层静默）。
+        assertEquals("lolita/night_midground.png", themeArtworkOf(ThemeId.NIGHT).midgroundAsset)
+        ThemeId.entries
+            .filter { it != ThemeId.NIGHT }
+            .forEach { id ->
+                assertEquals("主题 $id 不应有中景素材", null, themeArtworkOf(id).midgroundAsset)
+            }
+    }
 }

@@ -12,6 +12,10 @@ data class ThemeArtwork(
     val centerWash: Float = if (framed) 0.30f else 0.14f,
     val readingVeil: Float = 0.70f,
     val candidateAssets: List<String> = listOf(asset),
+    /** 中景装饰层（alpha13 §13）：透明 PNG，null 表示该主题暂无分层素材。 */
+    val midgroundAsset: String? = null,
+    /** 中景层基础不透明度，与时段氛围（SceneSpec.midgroundAlpha）相乘生效。 */
+    val midgroundOpacity: Float = 0.55f,
 ) {
     /** Keep the primary asset first and remove blank or duplicate candidates. */
     fun usableAssets(): List<String> =
@@ -48,6 +52,8 @@ fun themeArtworkOf(id: ThemeId): ThemeArtwork =
                 asset = "lolita/midnight_indigo.jpg",
                 opacity = 0.72f,
                 treatment = ArtworkTreatment.PAINTED,
+                midgroundAsset = "lolita/night_midground.png",
+                midgroundOpacity = 0.55f,
             )
         ThemeId.LAVENDER ->
             ThemeArtwork(

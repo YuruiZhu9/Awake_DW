@@ -45,13 +45,15 @@ private const val FLOWER_ALPHA_BASE = 0.14f
 private const val FLOWER_ALPHA_AMPLITUDE = 0.10f
 private const val FLOWER_TURNS = 1
 
-/** 页面职责对应的粒子密度：首页/设置/引导安静，统计/开屏保留标准层次。 */
+/** 页面职责对应的粒子密度：首页/设置/引导安静，统计/开屏保留标准层次。
+ *  alpha13 §13 扩容后标准档 80 颗；安静档取前 24 颗（大 4 + 中 16 + 小 4），
+ *  与扩容前「大中为主 + 少量小粒」的层级结构保持同构。 */
 enum class ParticleDensity(
     internal val dotCount: Int,
     internal val accentAlphaScale: Float,
     internal val radiusScale: Float,
 ) {
-    QUIET(dotCount = 14, accentAlphaScale = 0.42f, radiusScale = 0.30f),
+    QUIET(dotCount = 24, accentAlphaScale = 0.42f, radiusScale = 0.30f),
     STANDARD(dotCount = ParticleMath.DOT_COUNT, accentAlphaScale = 0.65f, radiusScale = 0.65f),
 }
 
@@ -84,6 +86,7 @@ fun FloatingParticles(
 ) {
     val reduceMotion = rememberReduceMotion()
     val style = particleStyleOf(currentThemeSpec().id)
+    val scene = com.awakedw.core.designsystem.scene.rememberSceneSpec()
     val progress = remember { mutableFloatStateOf(0f) }
     if (!reduceMotion) {
         LaunchedEffect(seed) {
@@ -134,7 +137,7 @@ fun FloatingParticles(
                             center = frame.center,
                             radius = radius,
                             color = color,
-                            alpha = frame.alpha * density.accentAlphaScale * focusAlpha,
+                            alpha = frame.alpha * density.accentAlphaScale * scene.particleBoost * focusAlpha,
                             style = style,
                             rotation = p * 360f + index * 23f,
                         )
@@ -150,7 +153,7 @@ fun FloatingParticles(
                             drawText(
                                 textLayoutResult = layout,
                                 color = colorAt(colors, density.dotCount + index),
-                                alpha = (STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle) * density.accentAlphaScale,
+                                alpha = (STAR_ALPHA_BASE + STAR_ALPHA_AMPLITUDE * twinkle) * density.accentAlphaScale * scene.particleBoost,
                                 topLeft =
                                     Offset(
                                         centerX - layout.size.width / 2f,
@@ -171,7 +174,7 @@ fun FloatingParticles(
                                 petalRadius = anchorPx * 0.2f,
                                 rotation = p,
                                 color = colorAt(colors, density.dotCount + ParticleMath.STAR_COUNT + fi),
-                                alpha = flowerAlpha * density.accentAlphaScale,
+                                alpha = flowerAlpha * density.accentAlphaScale * scene.particleBoost,
                             )
                         }
                     }
