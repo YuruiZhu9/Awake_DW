@@ -68,10 +68,22 @@
 - 统计页仍只有今日 / 近七日 / 今日记录，周合计与达标天数未展示；属功能扩张，需新的范围确认。
 - 去向（2026-09-15）：两项候选已并入 0.6 起精致化提案的轨道三，随 0.9.0 一并出方案；在此之前仍单独有效。
 
-## 0.6 起 · 精致化阶段（2026-09-15 提案，同日经用户逐项确认）
+## 0.6.0 · 精致化地基（2026-09-15 立项，代码侧 2026-09-16 完成）
+
+- 计划：`docs/superpowers/plans/2026-09-15-v060-refinement-foundation-plan.md`；语料草案：引文 v2（`2026-09-15-v060-praise-corpus-draft.md`）与文案库（`2026-09-16-v060-copies-corpus-draft.md`）均经使用者圈选后落码。
+- 已完成：仓库清理（dist 514MB→52MB、死素材、cat 衍生图瘦身）、Robolectric 离线根治、深夜青黛专属主图、打卡引文换装现代白话 + 「作者《作品名》」完整出处、心意文案库 108 句第三轮重写；全部模块测试全绿。
+- 待收口：真机补验清单回传（`docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`）→ 升 versionCode 23 出包。
+
+## 0.7.0 · 分层场景一阶（2026-09-16 立项）
+
+- 计划：`docs/superpowers/plans/2026-09-16-v070-layered-scene-plan.md`；基线：`visual-baseline.md` §13（moodboard「深夜信纸，会呼吸」经使用者确认）。
+- 试点深夜青黛：三层视差（背景 / 中景 / 近景失焦）、粒子扩容（QUIET 24 / STANDARD 80）、`SceneSpec` 主题 × 时段插值、动效 token 沉淀；AGSL 留 0.8.0。
+
+## 0.6 起 · 精致化阶段总纲（2026-09-15 提案，同日经用户逐项确认）
+
 - 提案全文：`docs/design/v0.6-refinement-charter.md`。0→1 已于 0.5.1 收口；1→10 按「三轨道 × 两地基」推进：
   地基 A 真机验收闭环（最高优先）、地基 B 治理与仓库清理（dist / 死素材 / 构建环境根治）；
   轨道一 内容策展化（0.6.0：引文库改散文语录制、深夜青黛补图）、
-  轨道二 视觉场景化（0.7.0 分层视差 + 场景状态机；0.8.0 AGSL 氛围层，前置 alpha13 moodboard）、
+  轨道二 视觉场景化（0.7.0 分层视差 + 场景状态机；0.8.0 AGSL 氛围层，前置 alpha13 moodboard——已于 2026-09-16 确认）、
   轨道三 体验纵深（0.9.0：统计周维度、达标仪式、夜间猫）；1.0.0 以完整 Definition of Done 收口。
-- D1–D10 已于 2026-09-15 逐项确认（记录见提案 §9.1）；0.6.0 已立 plan：`docs/superpowers/plans/2026-09-15-v060-refinement-foundation-plan.md`，真机补验清单见 `docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`。
+- D1–D10 已于 2026-09-15 逐项确认（记录见提案 §9.1）。
