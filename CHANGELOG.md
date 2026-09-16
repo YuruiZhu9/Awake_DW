@@ -2,20 +2,27 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [v0.6.0-未发布]
+## [v0.7.0-alpha1] - 2026-09-16 · versionCode 23
+
+> 0.6.0 未独立发包：其全部内容（精致化地基 + 内容策展）随本包首次交付，与 0.7.0 一阶（分层场景试点）合并发布。发布性质为 alpha（rules §八.5）——真机验收进行中，待验收项见 `docs/superpowers/checklists/v0.7.0-alpha1-qa.md`。
+
+### Added
+- **分层场景试点（0.7.0 一阶，alpha13 §13）**：`LolitaBackdrop` 升级为多层场景——深夜青黛新增中景装饰层（透明 PNG `night_midground.png`，810×1440、约 699KB，慢漂移 + 时段氛围插值，减少动态完全静止），其余主题暂不受影响（试点隔离）。新增 `MotionTokens` 动效 token、`SceneSpec` 主题 × 时段氛围规格（中景强度 / 粒子亮度随时段连续过渡）、`SceneBackdropLayer` 场景层组件、素材流水线 `tools/prepare-layer-art.py`。
+- 打卡确认语形态 `PraiseQuote(text, attribution?)`（0.5.1 引入）的落款升级为**完整出处**：「—— 作者《作品名》」。
 
 ### Changed
-- **分层场景试点上线（0.7.0 一阶，alpha13 §13）**：`LolitaBackdrop` 升级为多层场景——深夜青黛新增中景装饰层（透明 PNG `night_midground.png`，810×1440、约 699KB，慢漂移 + 时段氛围插值，减少动态完全静止），其余主题暂不受影响（试点隔离）。新增 `MotionTokens` 动效 token、`SceneSpec` 主题 × 时段氛围规格（中景强度 / 粒子亮度随时段连续过渡）、`SceneBackdropLayer` 场景层组件、素材流水线 `tools/prepare-layer-art.py`。
-- 粒子扩容（alpha13 §13）：标准档 24→**80 颗**（大 4 / 中 16 / 小 60），安静档 14→**24 颗**（大 4 / 中 16 / 小 4，层级结构与扩容前同构）；首页安静档观感变化请重点走查。
-- 心意文案库 108 句**第三轮整体重写**（使用者确认草案；与打卡引文同一条硬规则：零文言、去套话，只写现代白话，用具体的物与动作代替抽象形容）。只换默认值，编辑器与整库可编辑规则不动；守则测试全绿（`docs/superpowers/plans/2026-09-16-v060-copies-corpus-draft.md`）。
-- 打卡引文**换装现代白话语录**（使用者逐条圈选，方案见 `docs/superpowers/plans/2026-09-15-v060-praise-corpus-draft.md`）：30 条全部换为「现代中文散文摘句 + 西方文学短句（自译）+ 原创短句」，**不含任何文言**——此前古典诗文摘句的残句感被判违和。落款同步升级为**完整出处「作者《作品名》」**（如「—— 朱自清《荷塘月色》」），不再只署作者名。
-- 深夜青黛主题接入专属主图 `midnight_indigo.jpg`（用户生成、原生暗底、PAINTED 直绘、约 205KB），替代「哥特图反色」回退；`INVERTED_INK` 处理档与 `gothic.jpg` 随之移除（0.6 提案轨道一 / S1）。
-- cat 吉祥物衍生图重制为 640px（显示 108dp，4x 密度下仍有余量；afterdrink 原尺寸本就超运行时 1024 解码上限）：3.23MB → 0.80MB，透明通道与边缘质检通过（0.6 提案 / plan 步骤 6）。
-- Robolectric 锁文件 flake 根治（D6，实施为 `robolectric.dependency.dir` 本地离线目录，详见 0.6.0 plan）：9 个模块的阿里云镜像属性替换为离线目录，运行时零下载零锁文件；全量构建 5m52s 首次通过。
-- 仓库治理（0.6 提案地基 B / D4）：rules §八.4 修订为「仅 Release 包入库、dist 只留最新与里程碑版本」；`dist/` 清理 39 个历史 APK 与 1 份校验文件（约 514MB → 52MB）；删除 `assets/lolita/` 10 张零引用候选图、1 张重复源图；`.gitignore` 增补 `.zcode/` 与 `.robolectric/`。
+- 粒子扩容（alpha13 §13）：标准档 24→**80 颗**（大 4 / 中 16 / 小 60），安静档 14→**24 颗**（层级结构与扩容前同构）。
+- 心意文案库 108 句**第三轮整体重写**（使用者确认草案；与打卡引文同一条硬规则：零文言、去套话，只写现代白话）。只换默认值，编辑器与整库可编辑规则不动；守则测试全绿。
+- 打卡引文**换装现代白话语录**（使用者逐条圈选）：30 条全部换为「现代中文散文摘句 + 西方文学短句（自译）+ 原创短句」，**不含任何文言**——此前古典诗文摘句的残句感被判违和。
+- 深夜青黛主题接入专属主图 `midnight_indigo.jpg`（用户生成、原生暗底、PAINTED 直绘、约 205KB），替代「哥特图反色」回退；`INVERTED_INK` 处理档与 `gothic.jpg` 随之移除。
+- cat 吉祥物衍生图重制为 640px：3.23MB → 0.80MB，透明通道与边缘质检通过；release 包体随之减小。
+- Robolectric 锁文件 flake 根治（`robolectric.dependency.dir` 本地离线目录）：运行时零下载零锁文件，连续全量构建通过。
+- 仓库治理：rules §八.4 修订为「仅 Release 包入库、dist 只留最新与里程碑版本」；`dist/` 清理 39 个历史 APK 与 1 份校验文件（约 514MB → 52MB）；删除 `assets/lolita/` 10 张零引用候选图与 1 张重复源图；`.gitignore` 增补 `.zcode/` 与 `.robolectric/`。
 
 ### Verification
-- 待版本收口时补充；真机验收挂 `docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`。
+- 全部模块单元测试与 `ktlintCheck build` 全绿；Robolectric 构建连续多轮无锁文件失败。
+- **待真机验收（进行中）**：真机补验清单（0.4–0.5 欠账）+ 0.6/0.7 新增项，汇总于 `docs/superpowers/checklists/v0.7.0-alpha1-qa.md`；完成前本包按 alpha 定位。
+- Release 变体回退 debug 证书（签名环境变量未配置，D7 决定不启用正式 keystore），与 0.4.1 以来一致。
 
 ## [v0.5.1] - 2026-09-15
 
