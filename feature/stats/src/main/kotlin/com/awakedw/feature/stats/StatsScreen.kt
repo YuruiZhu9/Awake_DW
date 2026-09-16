@@ -115,6 +115,11 @@ internal fun StatsContent(
                     StatsFact("记录次数", "${state.badges.cupCount} 次", Modifier.weight(1f))
                     StatsFact("平均间隔", state.badges.avgIntervalLabel, Modifier.weight(1f))
                 }
+                // 0.9.0 近七日摘要：与柱状图同源（含今天），是事实陈述、不引入连续或奖励语义。
+                Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    StatsFact("近七日合计", StatsMath.weekTotalLabel(state.weekTotalMl), Modifier.weight(1f))
+                    StatsFact("近七日达标", StatsMath.weekMetDaysLabel(state.bars.map { it.totalMl }, state.goalMl), Modifier.weight(1f))
+                }
             }
             PaperPanel(title = "近七日") {
                 WeekBarsChart(state.bars, state.goalMl, Modifier.fillMaxWidth())

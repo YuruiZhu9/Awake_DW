@@ -38,12 +38,15 @@ data class StatsBadges(
 /**
  * 统计页一屏状态（规格 §3.3）：徽章行 + 本周柱状图 + 今日时间线。
  * [bars] 末列为今天（仓储契约：weekBars 含今天）；[timeline] 为空时页面展示空态文案。
+ * 0.9.0 起携带近七日摘要：[weekTotalMl] 合计量与 [weekMetDays] 达标天数（均由 [bars] 与目标推导）。
  */
 data class StatsUiState(
     val badges: StatsBadges = StatsBadges(totalMl = 0, cupCount = 0, avgIntervalLabel = DASH_LABEL),
     val bars: List<WeekBar> = emptyList(),
     val goalMl: Int = DEFAULT_GOAL_ML,
     val timeline: List<WaterRecord> = emptyList(),
+    val weekTotalMl: Int = 0,
+    val weekMetDays: Int = 0,
 )
 
 /**
@@ -77,6 +80,7 @@ class StatsViewModel
 
         private suspend fun refresh(goalMl: Int) {
             val stats = water.todayStats()
+            val bars = water.weekBars(daysBack = WEEK_DAYS)
             _uiState.update {
                 it.copy(
                     badges =
@@ -85,9 +89,11 @@ class StatsViewModel
                             cupCount = stats.cupCount,
                             avgIntervalLabel = IntervalLabel.format(stats.avgIntervalMin),
                         ),
-                    bars = water.weekBars(daysBack = WEEK_DAYS),
+                    bars = bars,
                     goalMl = goalMl,
                     timeline = water.todayRecords().filter { it.dayKeyLocal == todayKey() },
+                    weekTotalMl = bars.sumOf { it.totalMl },
+                    weekMetDays = bars.count { it.totalMl >= goalMl },
                 )
             }
         }

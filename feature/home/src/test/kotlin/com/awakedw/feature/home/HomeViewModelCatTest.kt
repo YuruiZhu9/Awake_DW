@@ -27,6 +27,20 @@ import java.time.ZoneId
 internal val NIGHT_BASE_TIME: Long =
     LocalDateTime.of(2026, 8, 27, 22, 0).atZone(ZoneId.of("Asia/Shanghai")).toInstant().toEpochMilli()
 
+/** 常驻入口文案随猫状态一致（0.9.0 轨道三）：安睡态换安睡邀请，其余保持原入口。 */
+class CatHintTest {
+    @Test
+    fun `安睡态入口换安睡邀请且保持常驻语义`() {
+        assertEquals("嘘，我在睡~", catHintOf(CatMood.SLEEPY))
+    }
+
+    @Test
+    fun `清醒与开心态维持原常驻入口`() {
+        assertEquals("点击我试试~", catHintOf(CatMood.IDLE))
+        assertEquals("点击我试试~", catHintOf(CatMood.HAPPY))
+    }
+}
+
 /**
  * 记一杯回应编排——胆大王的反馈（moodboard §6.2 首页接线）：
  * - 打卡成功：猫短暂 HAPPY + 猫语气泡命中**内置猫语池**；气泡按 [CAT_LINE_HOLD_MS]（3.0s）

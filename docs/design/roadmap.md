@@ -74,6 +74,11 @@
 - 已完成：仓库清理（dist 514MB→52MB、死素材、cat 衍生图瘦身）、Robolectric 离线根治、深夜青黛专属主图、打卡引文换装现代白话 + 「作者《作品名》」完整出处、心意文案库 108 句第三轮重写；全部模块测试全绿。
 - 待收口：真机补验清单回传（`docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`）→ 升 versionCode 23 出包。
 
+## 0.9.0 · 体验纵深（2026-09-16 发布，versionCode 26）
+
+- 0.6 提案轨道三全部落地：统计近七日摘要（合计 + 达标天数，0.5.x 候选之一）、达标时刻光环（D10：可动效不做奖励，与缎带同拍、减少动态静默）、夜间猫入口一致性（安睡态文案变体，0.5.x 候选之一，入口仍常驻可点）。
+- 版本 QA：`docs/superpowers/checklists/v0.9.0-qa.md`。
+
 ## 0.8.0 · AGSL 雾光氛围层（2026-09-16 发布，versionCode 25）
 
 - `AgslMistLayer`（alpha13 §13.4）：AGSL 着色器全屏雾光——两路错相 value-noise 缓慢流动、主题 halo 色着色、横向包络护中央阅读列、强度随时段插值、40s 无缝循环。

@@ -49,6 +49,25 @@ object StatsMath {
         goalMl: Int,
     ): List<Boolean> = values.map { it >= goalMl }
 
+    /**
+     * 近七日合计的展示文案：满 1L 用一位小数的升，不足 1L 保留毫升——
+     * 与环心、徽章的「毫升叙事」衔接，避免近两千毫升挤成四位数。
+     */
+    fun weekTotalLabel(totalMl: Int): String =
+        if (totalMl >= 1000) {
+            val liters = totalMl / 1000.0
+            val text = String.format(java.util.Locale.ROOT, "%.1f", liters)
+            if (text.endsWith(".0")) "${text.dropLast(2)} L" else "$text L"
+        } else {
+            "$totalMl ml"
+        }
+
+    /** 近七日达标天数展示：`N/7 天`；窗口恒为七天（含今天），分母固定。 */
+    fun weekMetDaysLabel(
+        values: List<Int>,
+        goalMl: Int,
+    ): String = "${metGoal(values, goalMl).count { it }}/7 天"
+
     /** 柱底标注：今天列写「今」，其余列写当月几号。 */
     fun columnLabels(
         dayKeys: List<String>,

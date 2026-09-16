@@ -83,4 +83,19 @@ class StatsMathTest {
             assertEquals(0f, StatsMath.columnGrowth(0f, index), 0.00001f)
         }
     }
+
+    @Test
+    fun `近七日合计满一升降单位不足一升保留毫升`() {
+        assertEquals("1.9 L", StatsMath.weekTotalLabel(1900))
+        assertEquals("1 L", StatsMath.weekTotalLabel(1000))
+        assertEquals("820 ml", StatsMath.weekTotalLabel(820))
+        assertEquals("0 ml", StatsMath.weekTotalLabel(0))
+    }
+
+    @Test
+    fun `近七日达标天数按目标逐日判定`() {
+        val values = listOf(1600, 800, 2000, 0, 1599, 1601, 1600)
+        assertEquals("4/7 天", StatsMath.weekMetDaysLabel(values, goalMl = 1600))
+        assertEquals("0/7 天", StatsMath.weekMetDaysLabel(listOf(0, 0, 0, 0, 0, 0, 0), goalMl = 1600))
+    }
 }

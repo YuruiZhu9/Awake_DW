@@ -45,14 +45,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
@@ -137,6 +143,20 @@ private val CONTENT_TAIL_BREATHING = 24.dp
  */
 internal const val CELEBRATION_TEXT = "今日份水灵达成 ✨"
 
+/** 达标光环（0.9.0）：单次扩散时长、最大半径（相对环容器短边）与峰值透明度。 */
+private const val HALO_DURATION_MS = 1_200L
+private const val HALO_MAX_SPAN = 0.75f
+private const val HALO_START_SPAN = 0.35f
+private const val HALO_PEAK_ALPHA = 0.30f
+private const val HALO_RING_ALPHA_SCALE = 0.8f
+private const val HALO_RING_RADIUS_SCALE = 0.82f
+
+/**
+ * 常驻入口文案随猫状态一致（0.9.0，轨道三）：安睡态的猫不再说「点击我试试~」，
+ * 而是一句安睡的邀请——入口仍常驻可点（基线 §3 不隐藏），只是语气与状态一致。
+ */
+internal fun catHintOf(mood: CatMood): String = if (mood == CatMood.SLEEPY) "嘘，我在睡~" else "点击我试试~"
+
 /** 达标横幅展开／收回时长：展开略慢于收回，像缎带被人轻轻拉开。 */
 private const val BANNER_ENTER_MS = 260
 private const val BANNER_EXIT_MS = 190
@@ -212,6 +232,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 progress = state.progress,
                 totalMl = state.totalMl,
                 centerNote = state.centerNote,
+                celebrating = state.celebrating,
                 onRingTap = viewModel::tapRing,
             )
             // 达标横幅只在当日首次达标时浮现一次；其余时间零占位。
@@ -380,7 +401,7 @@ internal fun CatRail(
         Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 Text(
-                    text = "点击我试试~",
+                    text = catHintOf(mood),
                     color = spec.chipText,
                     style = MaterialTheme.typography.labelSmall,
                     modifier =
@@ -431,6 +452,7 @@ private fun RingBlock(
     progress: Float,
     totalMl: Int,
     centerNote: RingNote?,
+    celebrating: Boolean,
     onRingTap: (Offset?) -> Unit,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
@@ -440,6 +462,7 @@ private fun RingBlock(
         if (progress >= 1f) {
             BreathingGlow(reduceMotion = reduceMotion)
         }
+        CelebrationHalo(visible = celebrating, reduceMotion = reduceMotion)
         ProgressRing(
             progress = progress,
             modifier =
@@ -460,6 +483,66 @@ private fun RingBlock(
             )
         }
     }
+}
+
+/**
+ * 达标光环（0.9.0 仪式时刻，D10：可动效、不做奖励）：当日首次达标时从环心
+ * 向外扩散一圈柔光与细环，1.2s 单次收场——与缎带同拍，是「今天完成了」的一次
+ * 视觉确认；无积分、无连击、不改变任何记录结果。减少动态下整层静默（缎带仍在）。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun CelebrationHalo(
+    visible: Boolean,
+    reduceMotion: Boolean,
+) {
+    val spec = currentThemeSpec()
+    val progress = remember { mutableFloatStateOf(0f) }
+    if (visible && !reduceMotion) {
+        LaunchedEffect(Unit) {
+            val durationNanos = HALO_DURATION_MS * 1_000_000L
+            var last = withFrameNanos { it }
+            var accumulated = 0L
+            while (accumulated < durationNanos) {
+                val now = withFrameNanos { it }
+                accumulated += now - last
+                last = now
+                progress.floatValue = (accumulated.toFloat() / durationNanos).coerceIn(0f, 1f)
+            }
+            progress.floatValue = 1f
+        }
+    }
+    Box(
+        modifier =
+            Modifier.fillMaxSize().drawWithCache {
+                if (!visible || reduceMotion) return@drawWithCache onDrawBehind { }
+                val maxRadius = size.minDimension * HALO_MAX_SPAN
+                val center = Offset(size.width / 2f, size.height / 2f)
+                onDrawBehind {
+                    val t = progress.floatValue
+                    if (t <= 0f || t >= 1f) return@onDrawBehind
+                    val eased = 1f - (1f - t) * (1f - t)
+                    val radius = maxRadius * (HALO_START_SPAN + (1f - HALO_START_SPAN) * eased)
+                    val alpha = HALO_PEAK_ALPHA * (1f - eased)
+                    drawCircle(
+                        brush =
+                            Brush.radialGradient(
+                                colors = listOf(spec.haloColor.copy(alpha = alpha), Color.Transparent),
+                                center = center,
+                                radius = radius,
+                            ),
+                        radius = radius,
+                        center = center,
+                    )
+                    drawCircle(
+                        color = spec.primary.copy(alpha = alpha * HALO_RING_ALPHA_SCALE),
+                        radius = radius * HALO_RING_RADIUS_SCALE,
+                        center = center,
+                        style = Stroke(width = 1.5.dp.toPx()),
+                    )
+                }
+            },
+    )
 }
 
 /**
