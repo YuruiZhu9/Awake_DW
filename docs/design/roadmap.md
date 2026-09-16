@@ -74,10 +74,11 @@
 - 已完成：仓库清理（dist 514MB→52MB、死素材、cat 衍生图瘦身）、Robolectric 离线根治、深夜青黛专属主图、打卡引文换装现代白话 + 「作者《作品名》」完整出处、心意文案库 108 句第三轮重写；全部模块测试全绿。
 - 待收口：真机补验清单回传（`docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`）→ 升 versionCode 23 出包。
 
-## 0.7.0 · 分层场景一阶（2026-09-16 立项）
+## 0.7.0 · 分层场景一阶（2026-09-16 立项并实施）
 
 - 计划：`docs/superpowers/plans/2026-09-16-v070-layered-scene-plan.md`；基线：`visual-baseline.md` §13（moodboard「深夜信纸，会呼吸」经使用者确认）。
-- 试点深夜青黛：三层视差（背景 / 中景 / 近景失焦）、粒子扩容（QUIET 24 / STANDARD 80）、`SceneSpec` 主题 × 时段插值、动效 token 沉淀；AGSL 留 0.8.0。
+- 已实施：`MotionTokens` 动效 token、`SceneBackdropLayer` 中景层组件、粒子扩容（标准 80 / 安静 24）、`SceneSpec` 时段氛围插值、深夜青黛中景素材接入（其余主题静默不受影响）；designsystem 测试全绿。
+- 待验收：真机帧率与观感（正常 / 减少动态），随 0.6.0 补验同批；近景失焦层素材待使用者重生成后接入；渐变地平线偏移推迟 0.7.1。
 
 ## 0.6 起 · 精致化阶段总纲（2026-09-15 提案，同日经用户逐项确认）
 

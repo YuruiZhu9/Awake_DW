@@ -1,12 +1,24 @@
 # 0.7.0 · 分层场景一阶 plan
 
-- 日期：2026-09-16 立项；基线：`visual-baseline.md` §13（alpha13 场景化方向，2026-09-16 使用者确认 moodboard 后升格）
+- 日期：2026-09-16 立项；**同日步骤 1–6 已实施**（步骤 7 真机帧率待验收）；基线：`visual-baseline.md` §13（alpha13 场景化方向，2026-09-16 使用者确认 moodboard 后升格）
 - 触发：0.6 提案轨道二一阶；moodboard 定调「深夜信纸，会呼吸」。
 - 试点主题：**深夜青黛**（素材最全：专属主图 + 清理后的中景层；暗色对视差最敏感、最容易判断效果），验证后再铺开其余主题。
 
 ## 0. 一句话方案
 
 把 `LolitaBackdrop` 的单层氛围升级为**三层场景**（背景主图 / 中景装饰漂移 / 近景失焦），粒子扩容到 80 档，并为「主题 × 时段」建连续插值的 `SceneSpec`——全部纯 Compose 实现，minSdk 不动，AGSL 留给 0.8.0。
+
+## 实施状态（2026-09-16）
+
+| 步骤 | 状态 |
+| --- | --- |
+| 1 动效 token（`MotionTokens`：场景插值 500ms / reveal 700ms / 漂移 90s / 标准缓动） | ✅ 已实施 |
+| 2 中景层组件（`SceneBackdropLayer`：透明 PNG、cover、确定性慢漂移、减少动态静止、层静默回退） | ✅ 已实施 |
+| 3 素材流水线（`tools/prepare-layer-art.py`：810×1440 + resize 后二次清雾；`night_midground.png` 约 699KB） | ✅ 已实施 |
+| 4 粒子扩容（标准 80 颗 = 大 4 / 中 16 / 小 60；安静 24 颗层级同构；纯函数架构不变） | ✅ 已实施 |
+| 5 `SceneSpec`（时段锚点：中景强度 晨 0.85 / 昼 0.65 / 晚 1.0；粒子亮度 1.15 / 1.0 / 0.85；逐锚点 500ms 插值）。**收敛记录**：渐变地平线偏移需参数化 `GradientBackdrop` 的编译期光晕常量、牵动全部调用点，推迟到 0.7.1；本轮落中景强度 + 粒子亮度两锚点 | ✅ 已实施（含收敛） |
+| 6 试点接入（`ThemeArtwork.midgroundAsset/midgroundOpacity`，NIGHT 配置，其余主题 null 静默；`LolitaBackdrop` 叠层） | ✅ 已实施 |
+| 7 真机帧率与观感验收（正常 / 减少动态；深夜青黛重点） | ⏳ 待真机，随 0.6.0 补验同批 |
 
 ## 1. 非目标（本轮不做）
 
@@ -19,7 +31,7 @@
 
 1. **动效 token 沉淀**：`core:designsystem` 新增 `MotionTokens`（时长 / 缓动 / 弹性常量），把散落各文件的动画常量逐步收敛引用——只收敛本轮触碰的文件，不做全仓大挪移。
 2. **中景/近景层渲染**：新增 `SceneBackdropLayer`（`core:designsystem`）：透明 PNG 层、cover 缩放、确定性慢速漂移（正弦相位，`ParticleMath` 同款纯函数）、按滚动/页面切换的轻微视差偏移；减少动态 → 静止；不进语义树。
-3. **素材接入流水线**：`tools/prepare-layer-art.ps1`（透明 PNG 限尺寸 ≤1440px、清理白边，参数化阈值）；中景清理版已备（`images/Lolita/中景装饰层-clean.png`，25% 雾噪已清）；近景层按 0.6 轮 prompt 重生成（使用者提供或带中央遮罩方案）。
+3. **素材接入流水线**：`tools/prepare-layer-art.py`（透明 PNG 限尺寸 810×1440、resize 后二次清雾）；中景清理版已备（`images/Lolita/中景装饰层-clean.png`，25% 雾噪已清）；近景层按 0.6 轮 prompt 重生成（使用者提供或带中央遮罩方案）。
 4. **粒子扩容**：`ParticleMath` 扩展流场（正弦叠加），密度分档 QUIET 14→24、STANDARD 24→80，draw 相按层批量绘制；维持纯函数 + 只重绘不重组架构；真机帧率不达标则回退 40/16 档。
 5. **SceneSpec**：在 `ThemeSpec` 之上新增场景层（渐变锚点偏移、粒子色族、中景层透明度随时段连续插值），复用 `AnimatedAwakeTheme` 逐锚点 `animateColorAsState` 模式；时段切换无跳变。
 6. **试点接入**：`ThemeArtwork` 为 NIGHT 增加 `midgroundAsset`（向后兼容默认 null，其余主题不受影响）；首页 / 统计 / 设置三页共用。
