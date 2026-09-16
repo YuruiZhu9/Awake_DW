@@ -69,3 +69,4 @@ These four images use their own quiet central paper area and edge-weighted paint
 - `Lolita/new/深夜青黛.png` → `lolita/midnight_indigo.jpg`（810×1440、JPEG 品质 86、约 205KB），深夜青黛不再用哥特图反色回退；`tools/prepare-new-theme-art.ps1` 已加入该条目，`gothic.jpg` 退出运行时素材。
 - `Lolita/中景装饰层.png`、`Lolita/近景前景层.png`：0.7.0 分层视差试点素材初版。经 alpha 通道检测两张均为真透明 PNG：中景层结构合格（56% 全透明、元素稀疏、色板正确），入库前需低透明噪点清理；前景层约 64% 画面带半透明灰雾（含中央），接入时需中央遮罩或重新生成。两图暂按原图存档，不入 APK。
 - 2026-09-15 cat 衍生图重制：`cat/beforedrink.png`（1024²→640²，1.59MB→387KB）与 `cat/afterdrink.png`（1254²→640²，1.73MB→404KB），双三次缩放、保留透明通道；显示为 108dp 见方（4x 密度 432px，640px 仍有 1.5 倍余量），afterdrink 原尺寸本就超过运行时 1024 解码上限（实际被采样到 627px），观感无损。合计 3.23MB→0.80MB。
+- 2026-09-16 中景层清理版：`Lolita/中景装饰层-clean.png`——alpha<12 的雾噪像素归零（约 25%），主体与中央留白不变，作为 0.7.0 分层视差的中景层入库候选；原图保留对照。
