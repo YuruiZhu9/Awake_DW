@@ -17,6 +17,9 @@ object MotionTokens {
     /** 中景层慢漂移周期：慢到只可感知、不可追踪。 */
     const val SCENE_DRIFT_PERIOD_MS = 90_000L
 
+    /** AGSL 雾光流动周期（0.8.0）：40s 一整循环，无缝闭合。 */
+    const val MIST_LOOP_PERIOD_MS = 40_000L
+
     /** 标准缓动：两端柔和，用于一切氛围插值。 */
     val EasingStandard: Easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
 }

@@ -2,6 +2,16 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v0.8.0] - 2026-09-16 · versionCode 25
+
+### Added
+- **AGSL 雾光层（alpha13 §13.4）**：`AgslMistLayer`——全屏动态雾光着色器，两路错相低频 value-noise 缓慢流动，取主题 halo 色低强度着色，横向包络保证中央阅读列弱于边缘；强度随时段氛围插值，40s 无缝循环。**三重门控**：Android 13+（API 33，低版本整层静默、自动回退现有渐变 + 噪点，观感与 0.7.1 完全一致）/ 减少动态关停 / 着色器异常兜底静默。九处页面底座（首页 / 统计 / 设置 / 引导 / 开屏）经 `GradientBackdrop` 一处挂载全部生效。
+- 门控纯函数 `agslSupported` + `AgslGateTest`（版本 × 减少动态矩阵）。
+
+### Verification
+- 全部模块单元测试与 `ktlintCheck build` 全绿（含 lint NewApi 守卫检查）。
+- 待真机观察（**需 Android 13+ 设备**）：雾光流动的克制程度（最高强度约 12% 透明度）、GPU 负载与帧率、八主题色雾观感；Android 12 及以下设备本版观感应与 0.7.1 无差异。
+
 ## [v0.7.1] - 2026-09-16 · versionCode 24
 
 > 版本号纪律（使用者确认）：此后不再使用 alpha/beta 后缀，发布即正式版本号递进；真机验收状态以 QA 披露为准（rules §八.5/§八.7 修订）。0.7.0-alpha1 已由使用者真机走查确认「总体符合预期」。

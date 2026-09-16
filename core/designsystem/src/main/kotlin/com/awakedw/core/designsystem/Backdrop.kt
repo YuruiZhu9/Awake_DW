@@ -116,7 +116,10 @@ fun GradientBackdrop(
                 }
             }
 
-    Box(modifier = backdropModifier)
+    Box(modifier = backdropModifier) {
+        // AGSL 雾光层（0.8.0）：API 33+ 且非减少动态时叠加；三重门控下整层静默，回退即现状。
+        com.awakedw.core.designsystem.gl.AgslMistLayer(modifier = Modifier.matchParentSize())
+    }
 }
 
 /** 地平线偏移的光程换算：shift=±1 时光晕中心移动页面高度的 ±6%，克制但可感。 */
