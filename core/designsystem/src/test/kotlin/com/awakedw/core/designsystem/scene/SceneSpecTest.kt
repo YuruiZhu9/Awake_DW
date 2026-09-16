@@ -18,6 +18,16 @@ class SceneSpecTest {
     }
 
     @Test
+    fun `清晨光晕偏上_夜晚沉底_正午居中`() {
+        val morning = sceneSpecOf(TimeSlot.MORNING)
+        val day = sceneSpecOf(TimeSlot.DAY)
+        val evening = sceneSpecOf(TimeSlot.EVENING)
+        assertTrue(morning.horizonShift < 0f)
+        assertEquals(0f, day.horizonShift, 1e-6f)
+        assertTrue(evening.horizonShift > 0f)
+    }
+
+    @Test
     fun `清晨粒子最亮_夜晚收暗让位中景`() {
         val morning = sceneSpecOf(TimeSlot.MORNING)
         val day = sceneSpecOf(TimeSlot.DAY)

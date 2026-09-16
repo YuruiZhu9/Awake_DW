@@ -25,6 +25,9 @@ class LolitaBackdropLayoutTest {
 
     @Test
     fun `backdrop root consumes the page size instead of collapsing inside crossfade`() {
+        // 场景层（中景漂移 / 近景光斑）含无限帧循环：测试必须关闭时钟自动推进，
+        // 否则 Espresso 永不空闲（visual-baseline §11 测试 gotcha 的既定解法）。
+        composeRule.mainClock.autoAdvance = false
         var measured = IntSize.Zero
         composeRule.setContent {
             AwakeTheme(ThemeId.EMERALD) {

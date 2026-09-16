@@ -61,28 +61,36 @@ fun GradientBackdrop(
             }
         }
     }
+    // 时段地平线偏移（alpha13 §13）：清晨光晕偏上、夜晚沉底；500ms 插值，极低频变化。
+    val horizonShift = com.awakedw.core.designsystem.scene.rememberSceneSpec().horizonShift
 
     val backdropModifier =
         modifier
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithCache {
                 val gradient = Brush.verticalGradient(spec.backgroundGradient)
-                val haloCenter = Offset(size.width / 2f, size.height * HALO_CENTER_Y_FRACTION)
+                val haloCenter =
+                    Offset(
+                        size.width / 2f,
+                        size.height * (HALO_CENTER_Y_FRACTION + horizonShift * HALO_SHIFT_SPAN),
+                    )
                 val haloRadius = (HALO_DIAMETER / 2).toPx()
                 val haloColors = listOf(spec.haloColor.copy(alpha = HALO_ALPHA), Color.Transparent)
                 val haloBrush =
                     Brush.radialGradient(colors = haloColors, center = haloCenter, radius = haloRadius)
                 val washRadius = (WASH_DIAMETER / 2).toPx()
+                val topWashY = size.height * (0.16f + horizonShift * HALO_SHIFT_SPAN * 0.8f)
                 val topWashBrush =
                     Brush.radialGradient(
                         colors = listOf(spec.laceColor.copy(alpha = WASH_ALPHA), Color.Transparent),
-                        center = Offset(size.width * 0.88f, size.height * 0.16f),
+                        center = Offset(size.width * 0.88f, topWashY),
                         radius = washRadius,
                     )
+                val bottomWashY = size.height * (0.86f + horizonShift * HALO_SHIFT_SPAN * 0.5f)
                 val bottomWashBrush =
                     Brush.radialGradient(
                         colors = listOf(spec.haloColor.copy(alpha = WASH_ALPHA * 0.72f), Color.Transparent),
-                        center = Offset(size.width * 0.12f, size.height * 0.86f),
+                        center = Offset(size.width * 0.12f, bottomWashY),
                         radius = washRadius * 0.86f,
                     )
                 val grain = buildGrainPath(size, GRAIN_CELL.toPx(), GRAIN_DOT.toPx())
@@ -91,12 +99,12 @@ fun GradientBackdrop(
                     drawCircle(
                         brush = topWashBrush,
                         radius = washRadius,
-                        center = Offset(size.width * 0.88f, size.height * 0.16f),
+                        center = Offset(size.width * 0.88f, topWashY),
                     )
                     drawCircle(
                         brush = bottomWashBrush,
                         radius = washRadius * 0.86f,
-                        center = Offset(size.width * 0.12f, size.height * 0.86f),
+                        center = Offset(size.width * 0.12f, bottomWashY),
                     )
                     drawCircle(
                         brush = haloBrush,
@@ -110,3 +118,6 @@ fun GradientBackdrop(
 
     Box(modifier = backdropModifier)
 }
+
+/** 地平线偏移的光程换算：shift=±1 时光晕中心移动页面高度的 ±6%，克制但可感。 */
+private const val HALO_SHIFT_SPAN = 0.06f

@@ -96,6 +96,8 @@ fun LolitaBackdrop(
             baseOpacity = artwork.midgroundOpacity,
             modifier = Modifier.fillMaxSize(),
         )
+        // 近景失焦层（0.7.1）：纯代码光斑，八主题通用，避开中央阅读带。
+        BokehLayer(modifier = Modifier.fillMaxSize())
     }
 }
 

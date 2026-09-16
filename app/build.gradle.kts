@@ -15,8 +15,8 @@ android {
         applicationId = "com.awakedw.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23
-        versionName = "0.7.0-alpha1"
+        versionCode = 24
+        versionName = "0.7.1"
     }
 
     compileOptions {

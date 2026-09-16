@@ -74,6 +74,12 @@
 - 已完成：仓库清理（dist 514MB→52MB、死素材、cat 衍生图瘦身）、Robolectric 离线根治、深夜青黛专属主图、打卡引文换装现代白话 + 「作者《作品名》」完整出处、心意文案库 108 句第三轮重写；全部模块测试全绿。
 - 待收口：真机补验清单回传（`docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`）→ 升 versionCode 23 出包。
 
+## 0.7.1 · 场景收全三层 + 地平线演化（2026-09-16 发布，versionCode 24）
+
+- 近景失焦层 `BokehLayer`：纯代码光斑（取主题粒子色族、贴边、中央避让、120s 漂移），八主题通用、无需素材——三层场景（背景 / 中景 / 近景）至此齐备。
+- `SceneSpec.horizonShift` 第三锚点 + `GradientBackdrop` 光晕 / 洗染中心随时段偏移（晨上 / 昼中 / 夜沉）。
+- 版本号纪律（使用者确认）：不再使用 alpha 后缀，发布即正式版本号递进（rules §八.5/§八.7 修订）；0.7.0-alpha1 已由使用者真机确认总体符合预期。
+
 ## 0.7.0 · 分层场景一阶（2026-09-16 立项并实施；同日以 **0.7.0-alpha1 / versionCode 23** 首发）
 
 - 计划：`docs/superpowers/plans/2026-09-16-v070-layered-scene-plan.md`；基线：`visual-baseline.md` §13（moodboard「深夜信纸，会呼吸」经使用者确认）。

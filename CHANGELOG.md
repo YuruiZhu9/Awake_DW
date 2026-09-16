@@ -2,6 +2,21 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v0.7.1] - 2026-09-16 · versionCode 24
+
+> 版本号纪律（使用者确认）：此后不再使用 alpha/beta 后缀，发布即正式版本号递进；真机验收状态以 QA 披露为准（rules §八.5/§八.7 修订）。0.7.0-alpha1 已由使用者真机走查确认「总体符合预期」。
+
+### Added
+- **近景失焦层（alpha13 §13 场景第三层）**：`BokehLayer`——大而柔的失焦光斑贴边分布、中央阅读带避让、120s 慢漂移；纯代码绘制，颜色取自各主题粒子色族，**八主题通用**、无需素材。三层场景（背景主图 / 中景装饰 / 近景失焦）至此齐备。
+- **时段地平线偏移**：`SceneSpec` 新增 `horizonShift` 锚点（晨 -0.5 / 昼 0 / 晚 +0.5），`GradientBackdrop` 的柔光晕与上下洗染中心随之偏移——清晨光晕偏上、夜晚沉底，氛围随时间连续演化。
+
+### Changed
+- `LolitaBackdropLayoutTest` 补 `mainClock.autoAdvance = false`：场景层无限帧循环下 Compose 测试的标准解法（visual-baseline §11 既定 gotcha）。
+
+### Verification
+- 全部模块单元测试与 `ktlintCheck build` 全绿（designsystem 75 项）。
+- 待真机观察：八主题下近景光斑的克制程度（透明度 ≤11%）、地平线偏移的可感性、性能无回退；随日常使用持续走查。
+
 ## [v0.7.0-alpha1] - 2026-09-16 · versionCode 23
 
 > 0.6.0 未独立发包：其全部内容（精致化地基 + 内容策展）随本包首次交付，与 0.7.0 一阶（分层场景试点）合并发布。发布性质为 alpha（rules §八.5）——真机验收进行中，待验收项见 `docs/superpowers/checklists/v0.7.0-alpha1-qa.md`。
