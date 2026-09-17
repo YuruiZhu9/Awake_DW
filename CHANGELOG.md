@@ -2,6 +2,21 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.3.0] - 2026-09-17 · versionCode 32
+
+视觉 refresh 第三阶：全局墨水语言（提案：`docs/design/v1.1-visual-refresh-proposal.md` 方向 A 步骤 3）。
+
+### Added
+- **墨水浸润按压反馈 `Modifier.inkWash`**（core:designsystem）：按住时一团主题色墨在组件内晕开、松手缓缓收干（180ms 洇开 / 260ms 收干，峰值 12% 透明度）——替代 M3 默认涟漪，与信纸/印章的纸墨语言同族。**范围收敛为自有胶囊/卡片级组件**：快捷饮量胶囊、猫入口气泡、设置主题卡、提醒间隔 chip；行级组件与 M3 组件（TextButton、底栏）保留默认反馈。`InkWashTest` 冒烟守护。
+
+### Changed
+- **双纸面板**：`PaperPanel` 外缘描边之内再垫一道低存在感的阳文细框（lace 色 22%）——与「记一杯」印章内框同一语言，纸面有了「裱」过的层次。`LetterSheet` 保持边距线语言不叠加内框。
+- 主题卡与间隔 chip 从 M3 `Surface(onClick)` 重构为 Box + `selectable/clickable`（无涟漪）+ 墨水浸润；选中态、无障碍语义（selected / Role.RadioButton）、触控下限全部保持。
+
+### Verification
+- 全部模块单元测试与 `ktlintCheck build` 全绿；首页八主题、统计三态、设置主题面板截图重拍复查。
+- 待真机观察（非阻塞）：墨水浸润的洇开节奏与克制度（约 12% 峰值）；双纸内框在八主题的可见度（设计为低存在感）；暗色主题选中 chip 上白墨按压的可读性。
+
 ## [v1.2.0] - 2026-09-17 · versionCode 31
 
 视觉 refresh 第二阶：统计页手账化（提案：`docs/design/v1.1-visual-refresh-proposal.md` 方向 A 步骤 2）。

@@ -2,7 +2,12 @@ package com.awakedw.feature.home.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -13,16 +18,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.animation.inkWash
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 
@@ -90,12 +97,16 @@ private fun QuickSipChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    Surface(
-        shape = QUICK_SIP_SHAPE,
-        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.72f)),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
-        onClick = onClick,
-        modifier = modifier.heightIn(min = ControlMinHeight),
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = ControlMinHeight)
+                .clip(QUICK_SIP_SHAPE)
+                .background(spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.72f)))
+                .border(BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)), QUICK_SIP_SHAPE)
+                .inkWash(interactionSource)
+                .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),

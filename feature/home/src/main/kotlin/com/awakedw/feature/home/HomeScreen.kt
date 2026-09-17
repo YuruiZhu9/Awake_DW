@@ -21,6 +21,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +81,7 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
+import com.awakedw.core.designsystem.animation.inkWash
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
@@ -406,6 +408,7 @@ internal fun CatRail(
             }
         }
         Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
+            val hintInteraction = remember { MutableInteractionSource() }
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 Text(
                     text = catHintOf(mood),
@@ -416,7 +419,14 @@ internal fun CatRail(
                             .clip(bubbleShape)
                             .background(spec.chipBg.copy(alpha = 0.96f))
                             .border(0.5.dp, spec.laceColor.copy(alpha = 0.65f), bubbleShape)
-                            .clickable(role = Role.Button, onClickLabel = "摸摸猫咪", onClick = onPet)
+                            .inkWash(hintInteraction)
+                            .clickable(
+                                interactionSource = hintInteraction,
+                                indication = null,
+                                role = Role.Button,
+                                onClickLabel = "摸摸猫咪",
+                                onClick = onPet,
+                            )
                             .heightIn(min = ControlMinHeight)
                             .padding(horizontal = 9.dp, vertical = 10.dp),
                 )

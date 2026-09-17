@@ -2,6 +2,7 @@ package com.awakedw.core.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -45,12 +46,22 @@ fun PaperPanel(
         shadowElevation = 1.dp,
         tonalElevation = 0.dp,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            if (title != null) {
-                PaperSectionTitle(title = title, spec = spec)
-                Spacer(Modifier.height(11.dp))
+        // 双纸（1.3.0 全局墨水语言）：外缘描边之内再垫一道低存在感的阳文细框，
+        // 与「记一杯」印章的内框同一语言——纸面因此有了「裱」过的层次，不再是单层贴片。
+        Box {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .padding(4.dp)
+                    .border(0.8.dp, spec.laceColor.copy(alpha = 0.22f), RoundedCornerShape(17.dp)),
+            )
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                if (title != null) {
+                    PaperSectionTitle(title = title, spec = spec)
+                    Spacer(Modifier.height(11.dp))
+                }
+                content()
             }
-            content()
         }
     }
 }
