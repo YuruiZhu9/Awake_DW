@@ -47,7 +47,7 @@ fun PaperPanel(
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
             if (title != null) {
-                PanelTitle(title = title, spec = spec)
+                PaperSectionTitle(title = title, spec = spec)
                 Spacer(Modifier.height(11.dp))
             }
             content()
@@ -55,14 +55,18 @@ fun PaperPanel(
     }
 }
 
-/** A small editorial title rail: one Lolita detail, kept subordinate to the data. */
+/**
+ * A small editorial title rail: one Lolita detail, kept subordinate to the data.
+ * Public since 1.2.0：手账化后一张纸内也要分节（统计页「今日饮水 / 近七日」同纸共框）。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun PanelTitle(
+fun PaperSectionTitle(
     title: String,
-    spec: ThemeSpec,
+    spec: ThemeSpec = currentThemeSpec(),
+    modifier: Modifier = Modifier,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Spacer(
             modifier =
                 Modifier

@@ -2,6 +2,19 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.2.0] - 2026-09-17 · versionCode 31
+
+视觉 refresh 第二阶：统计页手账化（提案：`docs/design/v1.1-visual-refresh-proposal.md` 方向 A 步骤 2）。
+
+### Changed
+- **手账数据对页**：「今日饮水」与「近七日」合并进一张 `LetterSheet`——总量数字提到 displaySmall（与首页环心同级的版面主角）、细轨进度、发丝事实表格、周图同框共纸；今日时间线单独成「记录页」。「今日饮水」裸标题与两块 PaperPanel 面板语言随之退役（`PaperSectionTitle` 抽为公共分节组件，纸内分节）。
+- **周图为版面主角**：绘图区 160 → 210dp；柱身自上而下的水墨渐染替代平涂色块——像笔迹落在纸上。
+- 0.9.2 的细轨珍珠进度、达标右置、发丝表格、读数一行化全部保留；业务、删除流程、语义键零改动。
+
+### Verification
+- 全部模块单元测试与 `ktlintCheck build` 全绿（settings `ThemePreviewVisualTest` release 变体出现过一次已知的异步装载偶发——0.4.2 记录的同族时序问题，两次重跑含 `--rerun-tasks` 均绿，非本轮回归）；统计页 populated / target-met / empty 截图重拍复查。
+- 待真机观察（非阻塞）：210dp 周图在 360dp 窄屏的柱宽观感；水墨渐染在暗色主题的层次；两张手账纸的翻页节奏。
+
 ## [v1.1.0] - 2026-09-17 · versionCode 30
 
 视觉 refresh 第一阶（1.0 收口后，使用者反馈「值得更激进的优化，而不是在原有的基础上做非常小的修改」；提案：`docs/design/v1.1-visual-refresh-proposal.md`，方向 A「信纸大版面」经授权落地首页）。
