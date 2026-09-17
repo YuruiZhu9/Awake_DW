@@ -81,6 +81,12 @@
 - 已完成：仓库清理（dist 514MB→52MB、死素材、cat 衍生图瘦身）、Robolectric 离线根治、深夜青黛专属主图、打卡引文换装现代白话 + 「作者《作品名》」完整出处、心意文案库 108 句第三轮重写；全部模块测试全绿。
 - 待收口：真机补验清单回传（`docs/superpowers/checklists/v0.4-v0.5-device-acceptance-backlog.md`）→ 升 versionCode 23 出包。
 
+## 0.9.2 · 统计页美观性抛光（2026-09-17 发布，versionCode 28）
+
+- 使用者反馈统计页「不好看」后的呈现层重排（方案：`docs/superpowers/plans/2026-09-17-v092-stats-visual-polish-plan.md`）：三面板统一 `PanelTitle` 饰线轨；M3 进度条换自定义细轨 + 进度头珍珠（去掉 M3 终点圆点的「滑块/假满」感）；达标「已达成」右置主色；事实四格等宽居中 + 发丝分隔（对齐 0.4.0 首页摘要家族规则）；图表读数一行化 + 虚线图例替代说明书散文；空态居中。
+- 新增 `StatsMath.dayReadout` / `todayProgressLabel` 纯函数与测试；`StatsVisualReviewTest` 四场景截图重拍。
+- 业务、持久化键、删除流程、时间线结构零改动。版本 QA：`docs/superpowers/checklists/v0.9.2-qa.md`。
+
 ## 0.9.1 · 细节抛光（2026-09-17 发布，versionCode 27）
 
 - 动效 token 收敛：`MotionTokens` 扩为场景与氛围动效唯一出处——主图横切（900ms）/12s 轮换、光晕 8s 呼吸、粒子 48s 与光斑 120s 循环、猫/光袋共用 1.5s 呼吸单程全部入表；`LolitaBackdrop` 内联 `700` 收敛为 reveal token。交互反馈类一次性节奏留在所属组件。观感零变化。

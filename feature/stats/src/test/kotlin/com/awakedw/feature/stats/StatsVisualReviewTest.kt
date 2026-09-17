@@ -68,8 +68,8 @@ class StatsVisualReviewTest {
             capture(view, id.name.lowercase())
         }
         rule.runOnIdle { font.value = 1.5f }
-        rule.onNodeWithContentDescription("2026-09-04，1000ml").performScrollTo().performClick().assertIsSelected()
-        rule.onNodeWithText("2026-09-04 · 1000ml").assertIsDisplayed()
+        rule.onNodeWithContentDescription("9月4日，1000ml").performScrollTo().performClick().assertIsSelected()
+        rule.onNodeWithText("9月4日 · 1000ml").assertIsDisplayed()
         capture(view, "large-chart")
         rule.onNodeWithText("今日记录 · 5 次").performScrollTo().assertIsDisplayed()
         capture(view, "large-records")
@@ -96,7 +96,7 @@ class StatsVisualReviewTest {
             AwakeTheme(ThemeId.EMERALD) { StatsContent(state) }
         }
 
-        rule.onNodeWithText("· 已达成").assertExists()
+        rule.onNodeWithText("已达成").assertExists()
         capture(view, "target-met")
 
         rule.onNodeWithText(DELETE_HINT_TEXT).performScrollTo().assertIsDisplayed()

@@ -77,6 +77,21 @@ object StatsMath {
             if (key == todayKey) "今" else LocalDate.parse(key).dayOfMonth.toString()
         }
 
+    /** 选中列读数的日期段（0.9.2）：`2026-09-08` → 「9月8日」；解析失败原样返回，不造日期。 */
+    fun dayReadout(dayKey: String): String =
+        runCatching {
+            LocalDate.parse(dayKey).let { "${it.monthValue}月${it.dayOfMonth}日" }
+        }.getOrDefault(dayKey)
+
+    /** 细轨进度的语义读法（0.9.2）：达标即陈述达标；未达标给整数百分比（整除向下取整，不满不虚报）。 */
+    fun todayProgressLabel(
+        totalMl: Int,
+        goalMl: Int,
+    ): String {
+        val goal = goalMl.coerceAtLeast(1)
+        return if (totalMl >= goal) "今日已达标" else "今日进度 ${totalMl * 100 / goal}%"
+    }
+
     /** 刻度顶取「最大柱、目标」中的较大者；全零周退化为目标量本身。 */
     private fun scaleMaxOf(
         values: List<Int>,

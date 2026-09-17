@@ -98,4 +98,21 @@ class StatsMathTest {
         assertEquals("4/7 天", StatsMath.weekMetDaysLabel(values, goalMl = 1600))
         assertEquals("0/7 天", StatsMath.weekMetDaysLabel(listOf(0, 0, 0, 0, 0, 0, 0), goalMl = 1600))
     }
+
+    @Test
+    fun `选中列读数转中文月日异常键原样返回`() {
+        assertEquals("9月8日", StatsMath.dayReadout("2026-09-08"))
+        assertEquals("12月31日", StatsMath.dayReadout("2026-12-31"))
+        // 解析失败不造日期：原样返回原始键。
+        assertEquals("不是日期", StatsMath.dayReadout("不是日期"))
+    }
+
+    @Test
+    fun `细轨进度语义达标即陈述未达标给整除百分比`() {
+        assertEquals("今日已达标", StatsMath.todayProgressLabel(1600, goalMl = 1600))
+        assertEquals("今日已达标", StatsMath.todayProgressLabel(2000, goalMl = 1600))
+        // 1250/1600 = 78.125 → 整除 78，不满不虚报。
+        assertEquals("今日进度 78%", StatsMath.todayProgressLabel(1250, goalMl = 1600))
+        assertEquals("今日进度 0%", StatsMath.todayProgressLabel(0, goalMl = 1600))
+    }
 }

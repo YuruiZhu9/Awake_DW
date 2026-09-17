@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -102,17 +104,37 @@ internal fun WeekBarsChart(
                 "暂无饮水数据",
                 color = spec.greetingSubColor,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(vertical = 24.dp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
             )
             return@Column
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                "${selectedBar?.dayKey.orEmpty()} · ${selectedBar?.totalMl ?: 0}ml",
-                color = spec.greetingColor,
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text("虚线为目标 ${goalMl}ml · 点柱查看", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // 读数（0.9.2）：日期转中文月日，与柱点选即时联动。
+                Text(
+                    "${StatsMath.dayReadout(selectedBar?.dayKey.orEmpty())} · ${selectedBar?.totalMl ?: 0}ml",
+                    color = spec.greetingColor,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f),
+                )
+                // 图例：目标虚线的小样替代「虚线为目标」的说明书散文。
+                Canvas(Modifier.size(width = 18.dp, height = 3.dp)) {
+                    val stroke = GOAL_LINE_WIDTH.toPx()
+                    drawLine(
+                        color = spec.primary.copy(alpha = GOAL_LINE_ALPHA),
+                        start = Offset(0f, size.height / 2f),
+                        end = Offset(size.width, size.height / 2f),
+                        strokeWidth = stroke,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(stroke * 7f, stroke * 5f)),
+                    )
+                }
+                Text("目标 ${goalMl}ml", color = spec.greetingSubColor, style = MaterialTheme.typography.labelSmall)
+            }
         }
         Spacer(Modifier.height(12.dp))
         Box(Modifier.fillMaxWidth().height(CHART_HEIGHT).selectableGroup()) {
@@ -149,7 +171,7 @@ internal fun WeekBarsChart(
                                 role = Role.RadioButton,
                                 onClick = { selectedKey = bar.dayKey },
                             )
-                            .semantics { contentDescription = "${bar.dayKey}，${bar.totalMl}ml" },
+                            .semantics { contentDescription = "${StatsMath.dayReadout(bar.dayKey)}，${bar.totalMl}ml" },
                     )
                 }
             }
