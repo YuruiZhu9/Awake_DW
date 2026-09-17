@@ -12,11 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
-
-/** 呼吸单程时长：1.5s（升/降各一段，×2 = 3s 完整呼吸周期——与 [BREATH_LEG_MS] 同裁定「循环=完整周期」）。 */
-internal const val POCKET_LEG_MS = 1500
 
 /** 呼吸 alpha 下限（简报逐字 0.06f）：光袋最低存在感，弱到不打扰内容。 */
 internal const val POCKET_ALPHA_MIN = 0.06f
@@ -70,7 +68,7 @@ fun LightPocket(
                 targetValue = 1f,
                 animationSpec =
                     infiniteRepeatable(
-                        animation = tween(durationMillis = POCKET_LEG_MS * 2, easing = LinearEasing),
+                        animation = tween(durationMillis = MotionTokens.DURATION_BREATH_LEG_MS * 2, easing = LinearEasing),
                     ),
                 label = "lightPocketPhase",
             )

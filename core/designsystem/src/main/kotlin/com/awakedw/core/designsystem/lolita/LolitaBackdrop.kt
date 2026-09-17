@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -26,9 +27,6 @@ import com.awakedw.core.model.ThemeId
 import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.math.min
-
-private const val ARTWORK_ROTATION_MS = 12_000L
-private const val ARTWORK_CROSSFADE_MS = 900
 
 /** Compatibility helper retained for mapping tests. */
 internal fun lolitaAssetFileOf(themeId: ThemeId): String = themeArtworkOf(themeId).asset
@@ -53,7 +51,7 @@ fun LolitaBackdrop(
         assetIndex = 0
         if (!reduceMotion && cycle.size > 1) {
             while (true) {
-                delay(ARTWORK_ROTATION_MS)
+                delay(MotionTokens.ARTWORK_ROTATION_PERIOD_MS)
                 assetIndex = (assetIndex + 1) % cycle.size
             }
         }
@@ -73,13 +71,13 @@ fun LolitaBackdrop(
         Crossfade(
             targetState = image,
             modifier = Modifier.fillMaxSize(),
-            animationSpec = tween(durationMillis = if (reduceMotion) 0 else ARTWORK_CROSSFADE_MS),
+            animationSpec = tween(durationMillis = if (reduceMotion) 0 else MotionTokens.DURATION_ARTWORK_CROSSFADE_MS),
             label = "lolitaBackdropArtwork",
         ) { source ->
             val reveal =
                 animateFloatAsState(
                     targetValue = if (source == null) 0f else 1f,
-                    animationSpec = tween(durationMillis = if (reduceMotion) 0 else 700),
+                    animationSpec = tween(durationMillis = if (reduceMotion) 0 else MotionTokens.DURATION_SCENE_REVEAL_MS),
                     label = "lolitaBackdropReveal",
                 ).value
             ArtworkLayer(

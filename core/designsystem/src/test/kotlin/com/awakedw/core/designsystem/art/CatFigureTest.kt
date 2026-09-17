@@ -5,6 +5,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.model.CatMood
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -85,7 +86,7 @@ class CatFigureTest {
     @Test
     fun `呼吸周期对齐3秒完整周期`() {
         // 1.5s 单程 ×2（Reverse 回程）= 3s 完整呼吸周期（审查裁定）。
-        assertEquals(1500, BREATH_LEG_MS)
+        assertEquals(1500, MotionTokens.DURATION_BREATH_LEG_MS)
     }
 
     @Test

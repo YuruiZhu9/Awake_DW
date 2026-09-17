@@ -16,6 +16,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.math.PI
@@ -25,8 +26,8 @@ import kotlin.math.sin
 /** 半径锚点：各层半径因子（ParticleMath 半径带）× 该值的像素换算。 */
 private val ANCHOR_SIZE = 40.dp
 
-/** 整个上浮循环的时长（48s）：progress01 走满一圈，粒子恰好无缝回卷一次。 */
-private const val LOOP_NANOS = 48_000_000_000L
+/** 整个上浮循环的时长（48s，token 见 [MotionTokens.PARTICLE_LOOP_PERIOD_MS]）：progress01 走满一圈，粒子恰好无缝回卷一次。 */
+private const val LOOP_NANOS = MotionTokens.PARTICLE_LOOP_PERIOD_MS * 1_000_000L
 
 /** 「✦」星芒字形。 */
 private const val STAR_GLYPH = "✦"

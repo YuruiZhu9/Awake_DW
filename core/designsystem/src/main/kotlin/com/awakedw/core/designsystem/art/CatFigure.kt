@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.CatMood
@@ -46,9 +47,6 @@ internal const val CAT_SEMANTICS = "胆大王"
 
 /** 立绘固定边长（108dp 见方，尺寸语义：常驻首页一角）。 */
 private const val CAT_FIGURE_SIZE_DP = 108
-
-/** 呼吸单程时长：1.5s（1.5s 单程 ×2 = 3s 完整呼吸周期，Reverse 循环；审查裁定「3s 循环」= 完整周期）。 */
-internal const val BREATH_LEG_MS = 1500
 
 /** SLEEPY 轻微低饱和保留系数（0.85f：安睡的柔和感，不降透明度不灰暗——治愈铁律）。 */
 private const val SLEEPY_SATURATION = 0.85f
@@ -153,7 +151,8 @@ fun CatFigure(
                 rememberInfiniteTransition(label = "CatBreath").animateFloat(
                     initialValue = 1f,
                     targetValue = breathTargetOf(mood),
-                    animationSpec = infiniteRepeatable(tween(durationMillis = BREATH_LEG_MS), RepeatMode.Reverse),
+                    // 呼吸单程 1.5s（MotionTokens.DURATION_BREATH_LEG_MS），Reverse 循环 ×2 = 3s 完整周期。
+                    animationSpec = infiniteRepeatable(tween(durationMillis = MotionTokens.DURATION_BREATH_LEG_MS), RepeatMode.Reverse),
                     label = "CatBreathScale",
                 )
             }

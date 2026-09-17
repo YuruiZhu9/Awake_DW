@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.model.ThemeId
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -20,7 +21,7 @@ import org.robolectric.annotation.Config
  * - 组合不崩溃：默认色（主题 haloColor）与显式色两条签名路径都挂载即过（呼吸帧循环下 waitForIdle 不挂起）；
  * - 简报逐字呼吸参数用纯函数直断言：pocketAlpha 三点 0f→0.06f、0.5f→0.14f、1f→0.06f，
  *   并以 0.25/0.75 中点锁定「线性往返」（呼吸不是闪烁——频率克制、无高频脉动）；
- * - 周期对齐：1.5s 单程 ×2 = 3s 完整呼吸周期，与 Task 9 裁定的 CatFigure BREATH_LEG_MS 同值。
+ * - 周期对齐：1.5s 单程 ×2 = 3s 完整呼吸周期，与猫立绘共用 MotionTokens.DURATION_BREATH_LEG_MS。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")
@@ -71,8 +72,7 @@ class LightPocketTest {
 
     @Test
     fun `呼吸周期对齐3秒完整周期且与猫呼吸同裁定`() {
-        // 1.5s 单程（升）×2（降）= 3s 完整呼吸周期；单程时长与 Task 9 CatFigure 同值同裁定。
-        assertEquals(1500, POCKET_LEG_MS)
-        assertEquals(BREATH_LEG_MS, POCKET_LEG_MS)
+        // 1.5s 单程（升）×2（降）= 3s 完整呼吸周期；猫立绘与光袋共用同一 token，同值同裁定是结构保证。
+        assertEquals(1500, MotionTokens.DURATION_BREATH_LEG_MS)
     }
 }

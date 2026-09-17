@@ -31,9 +31,6 @@ private const val HALO_CENTER_Y_FRACTION = 0.34f // 首页进度环大致位于�
 /** 光晕呼吸（设计 §9.5）：alpha 在基准上下的摆幅。 */
 private const val HALO_BREATH_AMPLITUDE = 0.07f
 
-/** 光晕呼吸单程时长（ms）：约 8s 一个完整周期，慢到近乎察觉不到。 */
-private const val HALO_BREATH_PERIOD_MS = 8_000L
-
 /**
  * 全局背景质感底座（规格 §2.1 渐变 + §2.2 质感手法）：
  * 背景渐变底 + 进度环背后柔光晕 + 全屏噪点颗粒层。
@@ -56,7 +53,9 @@ fun GradientBackdrop(
         LaunchedEffect(Unit) {
             while (true) {
                 val now = withFrameNanos { it }
-                val t = (now % (HALO_BREATH_PERIOD_MS * 1_000_000L)).toFloat() / (HALO_BREATH_PERIOD_MS * 1_000_000L)
+                val t =
+                    (now % (MotionTokens.HALO_BREATH_PERIOD_MS * 1_000_000L)).toFloat() /
+                        (MotionTokens.HALO_BREATH_PERIOD_MS * 1_000_000L)
                 breath.floatValue = kotlin.math.sin(t * 2f * kotlin.math.PI.toFloat())
             }
         }

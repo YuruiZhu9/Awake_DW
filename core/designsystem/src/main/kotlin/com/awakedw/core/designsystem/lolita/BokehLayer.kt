@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.scene.rememberSceneSpec
@@ -22,8 +23,8 @@ import kotlin.math.sin
 /** 近景失焦光斑颗数：少而大，只存在于视野边缘。 */
 private const val BOKEH_COUNT = 10
 
-/** 近景层漂移相位循环：120s，与中景层（90s）错开节奏。 */
-private const val BOKEH_LOOP_NANOS = 120_000_000_000L
+/** 近景层漂移相位循环（token 见 [MotionTokens.BOKEH_LOOP_PERIOD_MS]）：120s，与中景层（90s）错开节奏。 */
+private const val BOKEH_LOOP_NANOS = MotionTokens.BOKEH_LOOP_PERIOD_MS * 1_000_000L
 
 /** 中央避让带：光斑锚点必须落在 |x-0.5|≥0.30 或 |y-0.5|≥0.32 的边缘环带内。 */
 private const val CENTER_CLEAR_X = 0.30f
