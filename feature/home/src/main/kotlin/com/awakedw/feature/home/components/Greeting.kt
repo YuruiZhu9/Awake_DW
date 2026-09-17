@@ -59,14 +59,14 @@ internal fun Greeting(
 ) {
     val spec = currentThemeSpec()
     val now = remember { LocalDateTime.now() }
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    // 信纸版式（1.1.0）：问候语是信的开头一句，左起排版——不再居中让环。
+    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
         Text(
             text = customGreeting ?: greetingFor(TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
-            // 问候语用系统衬线（§12 L2）：古典洛丽塔的书卷气，随 ROM 落到宋体/思源宋。
-            // 环顶已有单个结饰，问候语不再保留旧版右侧装饰的空位，保持真正居中。
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
+            // 抬头用系统衬线（§12 L2）并提到 headlineSmall：书信的第一句，版面的第二主角。
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(6.dp))
@@ -75,7 +75,7 @@ internal fun Greeting(
             color = spec.greetingSubColor,
             // 日期副行（§10.4）：小字距让信息行更安静，与上方问候语拉开层次。
             style = MaterialTheme.typography.bodySmall.copy(letterSpacing = 0.3.sp),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
         )
     }
 }

@@ -83,9 +83,9 @@ import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
+import com.awakedw.core.designsystem.components.LetterSheet
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
-import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawThemeOrnament
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
@@ -102,6 +102,13 @@ val HOME_RING_DIAMETER = 196.dp
 
 /** Shared with the splash handover, so the final ring does not jump vertically. */
 val HOME_CONTENT_TOP_PADDING = 24.dp
+
+/**
+ * 开屏交棒（信纸版式 1.1.0）：环心上方布局段的估算高——
+ * 纸顶 18 + 列顶距 + 书信抬头区约 56（抬头一行 + 日期副行）+ 环上间距 12。
+ * 抬头高度随文案浮动，这里是常见一句问候的估算值；交棒是视觉衔接，非像素级契约。
+ */
+val HOME_RING_STACK_ABOVE = 18.dp + HOME_CONTENT_TOP_PADDING + 56.dp + 12.dp
 
 /** 环心数字滚动时长（规格 §4.2 第 3 步：~500ms）。 */
 private const val NUMBER_ROLL_MS = 500
@@ -212,74 +219,74 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = CONTENT_TAIL_BREATHING),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(HOME_CONTENT_TOP_PADDING))
-            // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
-            // 装饰锚点不参与导航，也不挤占问候语的可视宽度；
-            FadeUpOnce {
-                Greeting(
-                    customGreeting = state.greeting,
+            // 信纸载体（1.1.0）：内容收进一张纸，背景主图在纸外呼吸；左边距线是版面骨骼。
+            LetterSheet {
+                // 书信抬头（§5.2 重设计 + 信纸化）：问候语左起，像信的开头一句。
+                FadeUpOnce {
+                    Greeting(
+                        customGreeting = state.greeting,
+                        totalMl = state.totalMl,
+                        goalMl = state.goalMl,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                RingBlock(
+                    progress = state.progress,
                     totalMl = state.totalMl,
-                    goalMl = state.goalMl,
+                    centerNote = state.centerNote,
+                    celebrating = state.celebrating,
+                    onRingTap = viewModel::tapRing,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+                // 达标横幅只在当日首次达标时浮现一次；其余时间零占位。
+                CelebrationBanner(
+                    visible = state.celebrating,
                     modifier = Modifier.fillMaxWidth(),
                 )
-            }
-            Spacer(Modifier.height(10.dp))
-            LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
-            Spacer(Modifier.height(10.dp))
-            RingBlock(
-                progress = state.progress,
-                totalMl = state.totalMl,
-                centerNote = state.centerNote,
-                celebrating = state.celebrating,
-                onRingTap = viewModel::tapRing,
-            )
-            // 达标横幅只在当日首次达标时浮现一次；其余时间零占位。
-            CelebrationBanner(
-                visible = state.celebrating,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(4.dp))
-            FadeUpOnce(delayMillis = 40) {
-                CatRail(
-                    mood = state.catMood,
-                    line = state.catLine,
-                    onPet = viewModel::petCat,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
-            FadeUpOnce(delayMillis = 80) {
-                HomeActionDeck(
-                    cupMl = state.cupMl,
-                    onLog = viewModel::tapLogButton,
-                    onQuickLog = viewModel::quickLog,
-                )
-            }
-            Spacer(Modifier.height(18.dp))
-            FadeUpOnce(delayMillis = 140) {
-                BadgesRow(
-                    cupCount = state.cupCount,
-                    avgIntervalLabel = state.avgIntervalLabel,
-                    lastDrinkLabel = state.lastDrinkLabel,
-                    // 有记录才提供撤回入口；长按「最近一杯」触发确认。
-                    onRevertLast = if (state.lastDrinkLabel != null) ({ revertConfirming = true }) else null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            // 撤回手势的说明放在内容最末端：只在有记录时出现，
-            // 且位于主操作之后，不会挤占首屏的记录按钮。
-            if (state.lastDrinkLabel != null) {
+                Spacer(Modifier.height(4.dp))
+                FadeUpOnce(delayMillis = 40) {
+                    CatRail(
+                        mood = state.catMood,
+                        line = state.catLine,
+                        onPet = viewModel::petCat,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    text = REVERT_HINT_TEXT,
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
+                FadeUpOnce(delayMillis = 80) {
+                    HomeActionDeck(
+                        cupMl = state.cupMl,
+                        onLog = viewModel::tapLogButton,
+                        onQuickLog = viewModel::quickLog,
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                FadeUpOnce(delayMillis = 140) {
+                    BadgesRow(
+                        cupCount = state.cupCount,
+                        avgIntervalLabel = state.avgIntervalLabel,
+                        lastDrinkLabel = state.lastDrinkLabel,
+                        // 有记录才提供撤回入口；长按「最近一杯」触发确认。
+                        onRevertLast = if (state.lastDrinkLabel != null) ({ revertConfirming = true }) else null,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                // 撤回手势的说明放在纸面最末端：只在有记录时出现，
+                // 且位于主操作之后，不会挤占首屏的记录按钮。
+                if (state.lastDrinkLabel != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = REVERT_HINT_TEXT,
+                        color = spec.greetingSubColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }
@@ -454,11 +461,12 @@ private fun RingBlock(
     centerNote: RingNote?,
     celebrating: Boolean,
     onRingTap: (Offset?) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
     val reduceMotion = rememberReduceMotion()
 
-    Box(contentAlignment = Alignment.Center) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
         if (progress >= 1f) {
             BreathingGlow(reduceMotion = reduceMotion)
         }
@@ -622,11 +630,12 @@ fun RingCenterContent(
             text =
                 buildAnnotatedString {
                     append(rolledTotal.toString())
-                    withStyle(SpanStyle(fontSize = 13.sp, fontWeight = FontWeight.Normal)) { append("ml") }
+                    withStyle(SpanStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal)) { append("ml") }
                 },
             color = spec.ringValueText,
-            // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
+            // 环心排版（信纸化 1.1.0：数字是页面第一主角）：display 级衬线，略收字距提精气神，
+            // 与下方拉开字距的小字形成层次。
+            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
         )
         Spacer(Modifier.height(4.dp))
         Box(
