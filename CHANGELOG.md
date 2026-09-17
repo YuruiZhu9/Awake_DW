@@ -2,6 +2,14 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.0.0] - 2026-09-17 · versionCode 29
+
+精致化阶段（0.6 提案）的收口版本，无新增功能面。0.4.0 以来的全部待验收项由 `docs/superpowers/checklists/v1.0-acceptance.md` 合并收口，使用者整体走查回传通过（2026-09-17）。
+
+### Verification
+- F 组工程收口：`gradlew ktlintCheck build` 全绿、生产源码零 TODO/FIXME；全部版本 QA 文档由 1.0 总清单替代成为唯一验收依据；versionCode 顺延出 Release 包入 `dist/`，SHA-256 与签名一致性核验通过。
+- 外观的持续升级转入 1.1.0 视觉refresh（使用者同期反馈「值得更激进的优化」），不阻塞本收口。
+
 ## [v0.9.2] - 2026-09-17 · versionCode 28
 
 ### Changed
