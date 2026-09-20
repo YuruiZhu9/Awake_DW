@@ -2,51 +2,6 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [v1.3.0] - 2026-09-17 · versionCode 32
-
-视觉 refresh 第三阶：全局墨水语言（提案：`docs/design/v1.1-visual-refresh-proposal.md` 方向 A 步骤 3）。
-
-### Added
-- **墨水浸润按压反馈 `Modifier.inkWash`**（core:designsystem）：按住时一团主题色墨在组件内晕开、松手缓缓收干（180ms 洇开 / 260ms 收干，峰值 12% 透明度）——替代 M3 默认涟漪，与信纸/印章的纸墨语言同族。**范围收敛为自有胶囊/卡片级组件**：快捷饮量胶囊、猫入口气泡、设置主题卡、提醒间隔 chip；行级组件与 M3 组件（TextButton、底栏）保留默认反馈。`InkWashTest` 冒烟守护。
-
-### Changed
-- **双纸面板**：`PaperPanel` 外缘描边之内再垫一道低存在感的阳文细框（lace 色 22%）——与「记一杯」印章内框同一语言，纸面有了「裱」过的层次。`LetterSheet` 保持边距线语言不叠加内框。
-- 主题卡与间隔 chip 从 M3 `Surface(onClick)` 重构为 Box + `selectable/clickable`（无涟漪）+ 墨水浸润；选中态、无障碍语义（selected / Role.RadioButton）、触控下限全部保持。
-
-### Verification
-- 全部模块单元测试与 `ktlintCheck build` 全绿；首页八主题、统计三态、设置主题面板截图重拍复查。
-- 待真机观察（非阻塞）：墨水浸润的洇开节奏与克制度（约 12% 峰值）；双纸内框在八主题的可见度（设计为低存在感）；暗色主题选中 chip 上白墨按压的可读性。
-
-## [v1.2.0] - 2026-09-17 · versionCode 31
-
-视觉 refresh 第二阶：统计页手账化（提案：`docs/design/v1.1-visual-refresh-proposal.md` 方向 A 步骤 2）。
-
-### Changed
-- **手账数据对页**：「今日饮水」与「近七日」合并进一张 `LetterSheet`——总量数字提到 displaySmall（与首页环心同级的版面主角）、细轨进度、发丝事实表格、周图同框共纸；今日时间线单独成「记录页」。「今日饮水」裸标题与两块 PaperPanel 面板语言随之退役（`PaperSectionTitle` 抽为公共分节组件，纸内分节）。
-- **周图为版面主角**：绘图区 160 → 210dp；柱身自上而下的水墨渐染替代平涂色块——像笔迹落在纸上。
-- 0.9.2 的细轨珍珠进度、达标右置、发丝表格、读数一行化全部保留；业务、删除流程、语义键零改动。
-
-### Verification
-- 全部模块单元测试与 `ktlintCheck build` 全绿（settings `ThemePreviewVisualTest` release 变体出现过一次已知的异步装载偶发——0.4.2 记录的同族时序问题，两次重跑含 `--rerun-tasks` 均绿，非本轮回归）；统计页 populated / target-met / empty 截图重拍复查。
-- 待真机观察（非阻塞）：210dp 周图在 360dp 窄屏的柱宽观感；水墨渐染在暗色主题的层次；两张手账纸的翻页节奏。
-
-## [v1.1.0] - 2026-09-17 · versionCode 30
-
-视觉 refresh 第一阶（1.0 收口后，使用者反馈「值得更激进的优化，而不是在原有的基础上做非常小的修改」；提案：`docs/design/v1.1-visual-refresh-proposal.md`，方向 A「信纸大版面」经授权落地首页）。
-
-### Added
-- **信纸载体 `LetterSheet`**（core:designsystem）：首页内容收进一张「纸」——纸色与背景拉开一档明度，背景主图在纸外呼吸更多；左侧一条贯穿的边距线 + 顶端珍珠点是版面骨骼。替代旧的横向蕾丝分隔线（`LolitaRule` 在首页退役，同一种语言收成一个元素，不叠加重复图框）。组合冒烟测试 `LetterSheetTest` 守护。
-
-### Changed
-- **尺度提级**：环心今日毫升数从 titleLarge 提到 displaySmall（36sp 衬线）——数字成为页面第一主角；问候语从居中改为左起的「书信抬头」（titleLarge → headlineSmall）。
-- **「记一杯」印章化**：主按钮从胶囊改为方一点的墨印块（10dp 圆角 + 内嵌 0.8dp 阳文细框），铭文加字距半粗；按压回弹与迸发粒子不变。
-- **细钢笔环**：`RING_STROKE_FRACTION` 0.055 → 0.045，外缘蕾丝细线 0.22 → 0.32——环更「钢笔画」，开屏交棒共用同一常量自动一致；`SplashMorph` 环心位置估算同步信纸版式（`HOME_RING_STACK_ABOVE`）。
-- 业务、持久化键、导航、权限、文案与删除流程零改动；三条文字反馈通道位置不变。
-
-### Verification
-- 全部模块单元测试与 `ktlintCheck build` 全绿；首页八主题空态/反馈态截图重拍复查（含深夜/哥特暗底的环可读性）；窄屏溢出与猫盒几何守护测试保持绿。
-- 待真机观察（非阻塞）：信纸与背景的明度层次在八主题下的观感；印章按钮与细环的实机触感；开屏交棒落点（估算公式已同步，仍有约一文字行的容差）。
-
 ## [v1.0.0] - 2026-09-17 · versionCode 29
 
 精致化阶段（0.6 提案）的收口版本，无新增功能面。0.4.0 以来的全部待验收项由 `docs/superpowers/checklists/v1.0-acceptance.md` 合并收口，使用者整体走查回传通过（2026-09-17）。

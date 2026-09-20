@@ -41,8 +41,8 @@ import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.designsystem.ring.RING_STROKE_FRACTION
+import com.awakedw.feature.home.HOME_CONTENT_TOP_PADDING
 import com.awakedw.feature.home.HOME_RING_DIAMETER
-import com.awakedw.feature.home.HOME_RING_STACK_ABOVE
 import com.awakedw.feature.home.RingCenterContent
 import kotlinx.coroutines.delay
 
@@ -67,8 +67,8 @@ private const val RIPPLE_MAX_ALPHA = 0.9f
 /** 形序 Crossfade 时长（ms），与 SplashSequencer 的 MORPH 段一致。 */
 private const val MORPH_CROSSFADE_MS = 250
 
-/** 真首页环心上方布局段（1.1.0 信纸版式）：纸顶 + 顶距 + 书信抬头区约 56 + 环上间距 12，详见 HOME_RING_STACK_ABOVE。 */
-private val RING_CENTER_STACK_DP = HOME_RING_STACK_ABOVE + HOME_RING_DIAMETER / 2
+/** 真首页环心上方固定布局段（HomeScreen 列）：顶距 24 + 问候行内距 6 + 装饰线区 32 + 半环（HOME_RING_DIAMETER/2）。 */
+private val RING_CENTER_STACK_DP = HOME_CONTENT_TOP_PADDING + 6.dp + 32.dp + HOME_RING_DIAMETER / 2
 
 /**
  * 问候语所占高度（titleLarge 一行 + 日期副行一行），随系统字体缩放折算。

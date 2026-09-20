@@ -39,10 +39,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.burst.BurstParticles
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.onPrimarySurface
@@ -54,13 +52,9 @@ internal const val LOG_BUTTON_LABEL = "记一杯"
 /** Press scale for the primary action. */
 private const val PRESS_SCALE = 0.97f
 
-/** 印章外形（1.1.0 信纸化）：比方胶囊更方，像盖在纸上的一枚墨印。 */
-private val STAMP_SHAPE = RoundedCornerShape(10.dp)
-
 /**
- * Primary water logging action（1.1.0 印章化）: a deep ink stamp on the letter sheet —
- * gradient block, inner hairline frame, letterset label, pressed feedback, and a
- * restrained burst that confirms the tap without adding a dialog.
+ * Primary water logging action: a calm gradient capsule with a small drop mark,
+ * pressed feedback, and a restrained burst that confirms the tap without adding a dialog.
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -102,10 +96,10 @@ internal fun LogButton(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 58.dp)
-                    .clip(STAMP_SHAPE)
+                    .heightIn(min = 56.dp)
+                    .clip(RoundedCornerShape(18.dp))
                     .background(Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
-                    .border(1.dp, Color.White.copy(alpha = if (spec.isDark) 0.24f else 0.34f), STAMP_SHAPE)
+                    .border(1.dp, Color.White.copy(alpha = if (spec.isDark) 0.24f else 0.34f), RoundedCornerShape(18.dp))
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -114,17 +108,11 @@ internal fun LogButton(
                         view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                         burstTrigger += 1
                         onTap()
-                    },
+                    }
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
         ) {
-            // 内嵌细框（信纸化 1.1.0）：印章的阳文边——内容与外缘之间的第二道线。
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .padding(4.dp)
-                    .border(0.8.dp, onPrimarySurface(spec).copy(alpha = 0.35f), RoundedCornerShape(6.dp)),
-            )
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
@@ -145,8 +133,7 @@ internal fun LogButton(
                 Text(
                     text = LOG_BUTTON_LABEL,
                     color = onPrimarySurface(spec),
-                    // 印章铭文（1.1.0）：加字距、半粗——「记一杯」读起来像印在纸上的三个字。
-                    style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 3.sp, fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 9.dp),
                 )
                 if (cupMl != null) {

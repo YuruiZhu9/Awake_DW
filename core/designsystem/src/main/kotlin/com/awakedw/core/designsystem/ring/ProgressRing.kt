@@ -31,8 +31,8 @@ import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** 弧线宽度占环最短边长的比例（1.1.0 信纸化：0.055 → 0.045，钢笔线；开屏交棒共用此值自动一致）。 */
-const val RING_STROKE_FRACTION = 0.045f
+/** 弧线宽度占环最短边长的比例。 */
+const val RING_STROKE_FRACTION = 0.055f
 
 /** 进度弧起点：正上方（12 点方向）。 */
 private const val START_ANGLE_DEGREES = -90f
@@ -121,7 +121,7 @@ fun ProgressRing(
                         )
                     // A hairline lace-colored outer edge gives the ring a crafted, paper-cut finish.
                     drawCircle(
-                        color = spec.laceColor.copy(alpha = 0.32f),
+                        color = spec.laceColor.copy(alpha = 0.22f),
                         radius = arcBounds.width / 2f + stroke * 0.46f,
                         center = center,
                         style = Stroke(width = 1.dp.toPx()),

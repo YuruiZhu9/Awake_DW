@@ -33,7 +33,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -48,8 +47,8 @@ import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.WeekBar
 import com.awakedw.feature.stats.StatsMath
 
-/** 柱状图绘图区高度（1.2.0 手账化：160 → 210，周图升级为版面主角）。 */
-private val CHART_HEIGHT = 210.dp
+/** 柱状图绘图区高度。 */
+private val CHART_HEIGHT = 160.dp
 
 /** 柱宽占所在列槽位的比例，留出柱间呼吸感。 */
 private const val BAR_WIDTH_FRACTION = 0.42f
@@ -246,12 +245,5 @@ private fun DrawScope.drawBar(
             bottomLeft = CornerRadius.Zero,
             bottomRight = CornerRadius.Zero,
         )
-    // 水墨渐染（1.2.0 手账化）：柱身自上而下沉墨，像笔迹落在纸上，不再是色块剪贴。
-    val brush =
-        Brush.verticalGradient(
-            colors = listOf(color.copy(alpha = 0.70f), color),
-            startY = size.height - barHeight,
-            endY = size.height,
-        )
-    drawPath(Path().apply { addRoundRect(rect) }, brush)
+    drawPath(Path().apply { addRoundRect(rect) }, color = color)
 }

@@ -44,8 +44,7 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.components.EditorialHeader
-import com.awakedw.core.designsystem.components.LetterSheet
-import com.awakedw.core.designsystem.components.PaperSectionTitle
+import com.awakedw.core.designsystem.components.PaperPanel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -88,24 +87,21 @@ internal fun StatsContent(
         ) {
             Spacer(Modifier.height(8.dp))
             EditorialHeader("统计", "今天的饮水与近七日变化", Icons.Rounded.BarChart)
-            // 手账数据对页（1.2.0）：今日总量与近七日图同在一张纸上，数字是版面主角。
-            LetterSheet {
-                PaperSectionTitle("今日饮水")
-                Spacer(Modifier.height(10.dp))
+            PaperPanel(title = "今日饮水") {
                 Row(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(state.badges.totalMl.toString(), color = spec.greetingColor, style = MaterialTheme.typography.displaySmall)
+                    Text(state.badges.totalMl.toString(), color = spec.greetingColor, style = MaterialTheme.typography.headlineLarge)
                     Text(
                         "ml",
                         color = spec.greetingSubColor,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 7.dp),
+                        modifier = Modifier.padding(bottom = 5.dp),
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(10.dp))
                 TodayProgressLine(
                     totalMl = state.badges.totalMl,
                     goalMl = state.goalMl,
@@ -139,15 +135,11 @@ internal fun StatsContent(
                     FactVerticalHairline()
                     StatsFact("近七日达标", StatsMath.weekMetDaysLabel(state.bars.map { it.totalMl }, state.goalMl), Modifier.weight(1f))
                 }
-                Spacer(Modifier.height(18.dp))
-                PaperSectionTitle("近七日")
-                Spacer(Modifier.height(12.dp))
+            }
+            PaperPanel(title = "近七日") {
                 WeekBarsChart(state.bars, state.goalMl, Modifier.fillMaxWidth())
             }
-            // 手账记录页（1.2.0）：今日时间线单独成「一页」，与数据对页分开翻看。
-            LetterSheet {
-                PaperSectionTitle("今日记录 · ${state.timeline.size} 次")
-                Spacer(Modifier.height(12.dp))
+            PaperPanel(title = "今日记录 · ${state.timeline.size} 次") {
                 TodayTimeline(
                     records = state.timeline,
                     onRequestDelete = { record -> pendingDelete = record },

@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
-import com.awakedw.core.designsystem.animation.inkWash
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
@@ -79,9 +76,6 @@ private val STEP_BUTTON_SHAPE: Shape = RoundedCornerShape(14.dp)
 
 /** 选择 chips 的胶囊圆角：全圆。 */
 private val CHIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
-
-/** 主题卡外形（1.3.0 墨水语言随 Box 重构显式化）。 */
-private val ThemeCardShape = RoundedCornerShape(16.dp)
 
 /**
  * 「目标」区步进器行（§3.4）：标签 + 「− 数值 ＋」。
@@ -358,22 +352,13 @@ private fun ThemeChoiceCard(
     val theme = if (choice == ThemeChoice.FOLLOW_TIME) current else ThemeById.getValue(themeIdOf(choice))
     val cardColor = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f)
     val borderColor = if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)
-    val interactionSource = remember { MutableInteractionSource() }
-    Box(
-        modifier =
-            modifier
-                .heightIn(min = 86.dp)
-                .clip(ThemeCardShape)
-                .background(cardColor)
-                .border(BorderStroke(width = 1.dp, color = borderColor), ThemeCardShape)
-                .inkWash(interactionSource)
-                .selectable(
-                    selected = selected,
-                    interactionSource = interactionSource,
-                    indication = null,
-                    role = Role.RadioButton,
-                    onClick = onClick,
-                ),
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = cardColor,
+        border = BorderStroke(width = 1.dp, color = borderColor),
+        onClick = onClick,
+        selected = selected,
+        modifier = modifier.heightIn(min = 86.dp).semantics { role = Role.RadioButton },
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
@@ -494,21 +479,12 @@ private fun SelectableChip(
     leading: (@Composable () -> Unit)? = null,
 ) {
     val spec = currentThemeSpec()
-    val interactionSource = remember { MutableInteractionSource() }
-    Box(
-        modifier =
-            modifier
-                .heightIn(min = ControlMinHeight)
-                .clip(CHIP_SHAPE)
-                .background(if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f))
-                // 选中 chip 的墨走 onPrimarySurface（主色底上压白墨，深夜也读得出按压）。
-                .inkWash(interactionSource, color = if (selected) onPrimarySurface(spec) else spec.primary)
-                .selectable(
-                    selected = selected,
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick,
-                ),
+    Surface(
+        shape = CHIP_SHAPE,
+        color = if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f),
+        onClick = onClick,
+        selected = selected,
+        modifier = modifier.heightIn(min = ControlMinHeight),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

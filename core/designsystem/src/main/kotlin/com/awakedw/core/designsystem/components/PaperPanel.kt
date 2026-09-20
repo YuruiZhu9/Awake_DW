@@ -2,7 +2,6 @@ package com.awakedw.core.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -46,38 +45,24 @@ fun PaperPanel(
         shadowElevation = 1.dp,
         tonalElevation = 0.dp,
     ) {
-        // 双纸（1.3.0 全局墨水语言）：外缘描边之内再垫一道低存在感的阳文细框，
-        // 与「记一杯」印章的内框同一语言——纸面因此有了「裱」过的层次，不再是单层贴片。
-        Box {
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .padding(4.dp)
-                    .border(0.8.dp, spec.laceColor.copy(alpha = 0.22f), RoundedCornerShape(17.dp)),
-            )
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                if (title != null) {
-                    PaperSectionTitle(title = title, spec = spec)
-                    Spacer(Modifier.height(11.dp))
-                }
-                content()
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            if (title != null) {
+                PanelTitle(title = title, spec = spec)
+                Spacer(Modifier.height(11.dp))
             }
+            content()
         }
     }
 }
 
-/**
- * A small editorial title rail: one Lolita detail, kept subordinate to the data.
- * Public since 1.2.0：手账化后一张纸内也要分节（统计页「今日饮水 / 近七日」同纸共框）。
- */
+/** A small editorial title rail: one Lolita detail, kept subordinate to the data. */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun PaperSectionTitle(
+private fun PanelTitle(
     title: String,
-    spec: ThemeSpec = currentThemeSpec(),
-    modifier: Modifier = Modifier,
+    spec: ThemeSpec,
 ) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(
             modifier =
                 Modifier
