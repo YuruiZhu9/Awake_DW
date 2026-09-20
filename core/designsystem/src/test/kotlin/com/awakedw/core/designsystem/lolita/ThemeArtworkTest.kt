@@ -71,4 +71,20 @@ class ThemeArtworkTest {
                 }
             }
         }
+
+    /** 1.4.0 中景铺开：八主题全部配透明装饰层，打包在位、可解码、单体不超 350KB（WebP 化的体积闸）。 */
+    @Test
+    fun `every theme ships a packaged decodable midground within budget`() =
+        runBlocking {
+            val context = RuntimeEnvironment.getApplication()
+            ThemeId.entries.forEach { id ->
+                val midground = themeArtworkOf(id).midgroundAsset
+                assertNotNull("中景层不应缺席（$id）", midground)
+                val folder = midground!!.substringBeforeLast('/')
+                val name = midground.substringAfterLast('/')
+                assertTrue(context.assets.list(folder)?.contains(name) == true)
+                assertTrue(context.assets.open(midground).use { it.readBytes().size } < 350_000)
+                assertNotNull(loadAssetBitmap(context, midground))
+            }
+        }
 }

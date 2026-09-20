@@ -19,13 +19,15 @@ class LolitaBackdropTest {
     }
 
     @Test
-    fun `中景装饰层仅试点主题配置其余静默`() {
-        // alpha13 §13 分层试点：只有深夜青黛配了中景素材，其余主题必须为 null（整层静默）。
-        assertEquals("lolita/night_midground.png", themeArtworkOf(ThemeId.NIGHT).midgroundAsset)
-        ThemeId.entries
-            .filter { it != ThemeId.NIGHT }
-            .forEach { id ->
-                assertEquals("主题 $id 不应有中景素材", null, themeArtworkOf(id).midgroundAsset)
-            }
+    fun `中景装饰层八主题全员配置画框主题降档`() {
+        // 1.4.0 中景铺开：七主题素材到位，试点隔离退役；WebP 化后深夜也换 .webp。
+        // 画框主题（哥特/圣职/薄巧）中景降档 0.45——与画框细节错开重量，非画框走默认 0.55。
+        assertEquals("lolita/night_midground.webp", themeArtworkOf(ThemeId.NIGHT).midgroundAsset)
+        ThemeId.entries.forEach { id ->
+            val art = themeArtworkOf(id)
+            assertEquals("主题 $id 应有中景素材", true, art.midgroundAsset != null)
+            val expected = if (art.framed) 0.45f else 0.55f
+            assertEquals("主题 $id 中景不透明度", expected, art.midgroundOpacity)
+        }
     }
 }

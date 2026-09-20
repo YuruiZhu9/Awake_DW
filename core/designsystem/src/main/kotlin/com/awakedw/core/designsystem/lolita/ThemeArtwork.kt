@@ -29,49 +29,73 @@ enum class ArtworkTreatment { PRINTED_INK, PAINTED }
 
 fun themeArtworkOf(id: ThemeId): ThemeArtwork =
     when (id) {
+        // 1.4.0 背景透明度：主图全线降档（真机反馈「透明度太浅」），纸色透出来、画当氛围不当照片；
+        // 画框主题（哥特/圣职/薄巧）降幅保守——框内细节密度高，透太多会碎。
         ThemeId.EMERALD ->
             ThemeArtwork(
                 asset = "lolita/morning_blue_porcelain.jpg",
-                opacity = 0.74f,
+                opacity = 0.56f,
                 treatment = ArtworkTreatment.PAINTED,
+                midgroundAsset = "lolita/morning_midground.webp",
             )
         ThemeId.STRAWBERRY ->
             ThemeArtwork(
                 asset = "lolita/afternoon_lotus.jpg",
-                opacity = 0.72f,
+                opacity = 0.55f,
                 treatment = ArtworkTreatment.PAINTED,
+                midgroundAsset = "lolita/afternoon_midground.webp",
             )
         ThemeId.CARAMEL ->
             ThemeArtwork(
                 asset = "lolita/twilight_milk_tea.jpg",
-                opacity = 0.70f,
+                opacity = 0.54f,
                 treatment = ArtworkTreatment.PAINTED,
+                midgroundAsset = "lolita/twilight_midground.webp",
             )
         ThemeId.NIGHT ->
             ThemeArtwork(
                 asset = "lolita/midnight_indigo.jpg",
-                opacity = 0.72f,
+                opacity = 0.58f,
                 treatment = ArtworkTreatment.PAINTED,
-                midgroundAsset = "lolita/night_midground.png",
+                midgroundAsset = "lolita/night_midground.webp",
                 midgroundOpacity = 0.55f,
             )
         ThemeId.LAVENDER ->
             ThemeArtwork(
                 asset = "lolita/mist_lavender_rose.jpg",
-                opacity = 0.72f,
+                opacity = 0.55f,
                 treatment = ArtworkTreatment.PAINTED,
+                midgroundAsset = "lolita/lavender_midground.webp",
             )
-        ThemeId.GOTHIC -> ThemeArtwork("lolita/gothic_frame.jpg", 0.80f, ArtworkTreatment.PAINTED, framed = true)
+        ThemeId.GOTHIC ->
+            ThemeArtwork(
+                asset = "lolita/gothic_frame.jpg",
+                opacity = 0.66f,
+                treatment = ArtworkTreatment.PAINTED,
+                framed = true,
+                midgroundAsset = "lolita/gothic_midground.webp",
+                midgroundOpacity = 0.45f,
+            )
         ThemeId.CLERIC ->
             ThemeArtwork(
-                "lolita/cleric.jpg",
-                0.96f,
-                ArtworkTreatment.PAINTED,
+                asset = "lolita/cleric.jpg",
+                opacity = 0.82f,
+                treatment = ArtworkTreatment.PAINTED,
                 framed = true,
                 centerWash = 0.10f,
                 readingVeil = 0.48f,
+                midgroundAsset = "lolita/cleric_midground.webp",
+                midgroundOpacity = 0.45f,
             )
-        ThemeId.THIN_MINT -> ThemeArtwork("lolita/thin_mint.jpg", 0.60f, ArtworkTreatment.PAINTED, framed = true)
+        ThemeId.THIN_MINT ->
+            ThemeArtwork(
+                asset = "lolita/thin_mint.jpg",
+                opacity = 0.52f,
+                treatment = ArtworkTreatment.PAINTED,
+                framed = true,
+                midgroundAsset = "lolita/thin_mint_midground.webp",
+                midgroundOpacity = 0.45f,
+            )
     }
 
 /** Stable pseudo-random order; recomposition cannot reshuffle the artwork. */
