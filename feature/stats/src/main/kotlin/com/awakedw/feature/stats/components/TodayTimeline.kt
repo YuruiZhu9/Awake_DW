@@ -5,18 +5,17 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,9 +60,6 @@ private const val COLLAPSED_RECORD_LIMIT = 5
 /** 小水滴圆点直径。 */
 private val DROP_DOT_SIZE = 8.dp
 
-/** 行与行之间的呼吸间距。 */
-private val ROW_SPACING = 8.dp
-
 /** 逐条入场的错峰步长（§10.3）：前若干行依次晚 40ms，长列表不再累积等待。 */
 private const val ROW_ENTRANCE_STAGGER_MS = 40
 
@@ -74,8 +70,9 @@ private const val ROW_ENTRANCE_MAX_STAGGERED = 6
 private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
- * 今日时间线（规格 §3.3 第 3 条）：每杯一个小水滴圆点 + HH:mm，右侧「{ml}ml」，时间升序。
- * 今日一杯未喝时整块居中显示空态文案；超过五条时默认只保留最近五条，点击后可展开。
+ * 今日时间线（规格 §3.3 第 3 条；1.5.0 去卡片化改发丝行）：每杯一行——小水滴圆点 +
+ * HH:mm，右侧「{ml}ml」，行与行之间只压一道发丝线，时间升序。今日一杯未喝时整块
+ * 居中显示空态文案；超过五条时默认只保留最近五条，点击后可展开。
  *
  * [onRequestDelete] 非空时每条可长按发起删除（由调用方弹确认框）：
  * 记错的一杯要能收回，纠错入口就放在对应那一行上。
@@ -112,11 +109,12 @@ internal fun TodayTimeline(
                 records
             }
 
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
-        ) {
+        Column(modifier = modifier.fillMaxWidth()) {
             visibleRecords.forEachIndexed { index, record ->
+                if (index > 0) {
+                    // 行间发丝线（1.5.0）：唯一的分隔语言，替代旧胶囊底。
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(spec.laceColor.copy(alpha = 0.22f)))
+                }
                 FadeUpOnce(delayMillis = minOf(index, ROW_ENTRANCE_MAX_STAGGERED) * ROW_ENTRANCE_STAGGER_MS) {
                     TimelineRow(record = record, spec = spec, onRequestDelete = onRequestDelete)
                 }
@@ -155,7 +153,7 @@ internal fun TodayTimeline(
                     text = DELETE_HINT_TEXT,
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 2.dp),
+                    modifier = Modifier.padding(top = 6.dp),
                 )
             }
         }
@@ -194,7 +192,6 @@ private fun TimelineRow(
                 .fillMaxWidth()
                 .heightIn(min = ControlMinHeight)
                 .then(longPressModifier)
-                .background(spec.ringTrack.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                 .semantics {
                     contentDescription =
                         if (onRequestDelete == null) {
@@ -212,7 +209,8 @@ private fun TimelineRow(
                             )
                     }
                 }
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                // 发丝行（1.5.0）：无胶囊底，靠上下内边距撑出行高与触控目标。
+                .padding(horizontal = 2.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
