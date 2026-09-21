@@ -119,13 +119,6 @@ fun ProgressRing(
                             x = center.x - arcBounds.width / 2f,
                             y = center.y - arcBounds.height / 2f,
                         )
-                    // A hairline lace-colored outer edge gives the ring a crafted, paper-cut finish.
-                    drawCircle(
-                        color = spec.laceColor.copy(alpha = 0.22f),
-                        radius = arcBounds.width / 2f + stroke * 0.46f,
-                        center = center,
-                        style = Stroke(width = 1.dp.toPx()),
-                    )
                     drawCircle(
                         color = spec.ringTrack,
                         radius = arcBounds.width / 2f,
@@ -155,9 +148,16 @@ fun ProgressRing(
                                 x = center.x + arcBounds.width / 2f * cos(endAngle).toFloat(),
                                 y = center.y + arcBounds.height / 2f * sin(endAngle).toFloat(),
                             )
+                        // 弧端珠扣（1.7.0）：与统计页细轨珍珠同一件饰语言——浅珠居弧端，外绕一圈发丝晕。
                         drawCircle(
-                            color = spec.laceColor.copy(alpha = 0.76f),
-                            radius = stroke * 0.22f,
+                            color = spec.laceColor.copy(alpha = 0.40f),
+                            radius = stroke * 0.52f,
+                            center = end,
+                            style = Stroke(width = 1.dp.toPx()),
+                        )
+                        drawCircle(
+                            color = spec.laceColor.copy(alpha = 0.90f),
+                            radius = stroke * 0.30f,
                             center = end,
                         )
                     }

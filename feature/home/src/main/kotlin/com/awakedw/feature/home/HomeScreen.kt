@@ -626,8 +626,9 @@ fun RingCenterContent(
                     withStyle(SpanStyle(fontSize = 13.sp, fontWeight = FontWeight.Normal)) { append("ml") }
                 },
             color = spec.ringValueText,
-            // 环心排版（§10.4）：数值略收紧字距提精气神，与下方拉开字距的小字形成层次。
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
+            // 环心排版（1.7.0 英雄化）：数字升到 displaySmall 衬线——与统计页 hero 数字同语言，
+            // 收紧字距提精气神，与下方拉开字距的小字形成层次；问候语（headlineSmall）退回其下。
+            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
         )
         Spacer(Modifier.height(4.dp))
         Box(
