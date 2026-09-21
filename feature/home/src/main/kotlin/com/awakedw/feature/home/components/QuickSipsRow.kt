@@ -93,7 +93,8 @@ private fun QuickSipChip(
     Surface(
         shape = QUICK_SIP_SHAPE,
         color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.72f)),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.52f)),
+        // 减边（1.6.0）：快捷量是次级路径，描边降到近可不见——靠底色与主按钮分层。
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.30f)),
         onClick = onClick,
         modifier = modifier.heightIn(min = ControlMinHeight),
     ) {

@@ -63,9 +63,9 @@ internal fun Greeting(
         Text(
             text = customGreeting ?: greetingFor(TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
-            // 问候语用系统衬线（§12 L2）：古典洛丽塔的书卷气，随 ROM 落到宋体/思源宋。
-            // 环顶已有单个结饰，问候语不再保留旧版右侧装饰的空位，保持真正居中。
-            style = MaterialTheme.typography.titleLarge,
+            // 问候语（1.6.0 提级 headlineSmall 衬线）：信的开头一句要有分量，
+            // 但仍是衬托环心主角的第二层级（stoic 式编辑排版）。
+            style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )

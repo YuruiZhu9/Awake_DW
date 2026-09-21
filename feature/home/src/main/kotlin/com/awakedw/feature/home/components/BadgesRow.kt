@@ -1,19 +1,19 @@
 package com.awakedw.feature.home.components
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -29,14 +29,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.currentThemeSpec
-import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 
 /** 撤回动作的无障碍标签，长按与屏幕阅读器共用同一措辞。 */
 internal const val REVERT_LAST_CUP_LABEL = "撤回这一杯"
 
 /**
- * 首页事实摘要：把原先三枚高频胶囊收敛成一张安静的纸面数据条。
- * 仍然只表达今日杯数、最近一杯和平均间隔，不承载连续、奖励或收藏语义。
+ * 首页事实摘要（1.6.0 去盒）：撤掉面板底与描边，改为顶部一道发丝线 + 三格等宽居中——
+ * 与统计页指标格（1.5.0）同语言。仍然只表达今日杯数、最近一杯和平均间隔，
+ * 不承载连续、奖励或收藏语义。
  *
  * [onRevertLast] 非空时长按「最近一杯」可撤回刚记的那一杯——
  * 记录是自己按下的，就应当可以自己收回；副标题里说明长按可撤回，避免隐藏手势无从发现。
@@ -51,15 +51,10 @@ internal fun BadgesRow(
     onRevertLast: (() -> Unit)? = null,
 ) {
     val spec = currentThemeSpec()
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.26f)),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.34f)),
-        tonalElevation = 0.dp,
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(spec.laceColor.copy(alpha = 0.28f)))
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.Top,
         ) {

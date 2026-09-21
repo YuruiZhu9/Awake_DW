@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -89,9 +91,6 @@ internal fun showsBottomBar(route: String?): Boolean = route in MAIN_TAB_ROUTES
 
 private val MAIN_TAB_ROUTES: List<String> =
     listOf(AwakeDestination.Home.route, AwakeDestination.Stats.route, AwakeDestination.Settings.route)
-
-/** 底部栏选中指示器的低透明度。 */
-private const val TAB_INDICATOR_ALPHA = 0.14f
 
 /** 页签转场上移幅度（§10.2：位移 ≤12dp）。 */
 private val TAB_TRANSITION_RISE_DP = 8.dp
@@ -260,7 +259,8 @@ interface AwakeNavGraphEntryPoint {
     fun scheduler(): ReminderScheduler
 }
 
-/** 底部三标签：选中色取当前主题 primary，底色取 chipBg——随主题平滑换肤。 */
+/** 底部三标签（1.6.0 轻量化）：半透明底、发丝描边、零阴影、无胶囊指示——
+ *  选中态只靠主色点亮图标与文字，安静得像画布的一部分（stoic/TIDE 式）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun AwakeBottomBar(
@@ -269,9 +269,9 @@ private fun AwakeBottomBar(
     onSelect: (AwakeDestination) -> Unit,
 ) {
     Surface(
-        color = spec.chipBg.copy(alpha = 0.94f),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.34f)),
-        shadowElevation = 2.dp,
+        color = spec.chipBg.copy(alpha = 0.82f),
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.18f)),
+        shadowElevation = 0.dp,
     ) {
         Column {
             BottomBarTrim(spec = spec)
@@ -281,14 +281,19 @@ private fun AwakeBottomBar(
                         selected = currentRoute == tab.destination.route,
                         onClick = { onSelect(tab.destination) },
                         icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                        label = { Text(text = tab.label) },
+                        label = {
+                            Text(
+                                text = tab.label,
+                                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                            )
+                        },
                         colors =
                             NavigationBarItemDefaults.colors(
                                 selectedIconColor = spec.primary,
                                 selectedTextColor = spec.primary,
-                                unselectedIconColor = spec.chipText,
-                                unselectedTextColor = spec.chipText,
-                                indicatorColor = spec.primary.copy(alpha = TAB_INDICATOR_ALPHA),
+                                unselectedIconColor = spec.greetingSubColor,
+                                unselectedTextColor = spec.greetingSubColor,
+                                indicatorColor = Color.Transparent,
                             ),
                     )
                 }

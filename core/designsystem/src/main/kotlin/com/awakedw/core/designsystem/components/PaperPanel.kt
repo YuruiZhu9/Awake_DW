@@ -41,8 +41,9 @@ fun PaperPanel(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.58f)),
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.36f)),
-        shadowElevation = 1.dp,
+        // 扁平化（1.6.0 stoic/Kakao 式）：描边降到近可不见、零阴影——面板靠明度差立住，不再「描框」。
+        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.16f)),
+        shadowElevation = 0.dp,
         tonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {

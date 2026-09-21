@@ -120,10 +120,10 @@ class BadgesRowLayoutTest {
             descriptions.map {
                 rule.onNodeWithContentDescription(it).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
             }
-        // All configurations are mdpi: 14dp side insets, 8dp inter-column gaps.
-        val expectedWidth = (panel.width - 28f - 8f * (facts.size - 1)) / facts.size
-        assertEquals(14f, facts.first().left - panel.left, 1f)
-        assertEquals(14f, panel.right - facts.last().right, 1f)
+        // All configurations are mdpi. 1.6.0 去盒后侧内边距 14→6dp（发丝线已到满宽），列间距仍 8dp。
+        val expectedWidth = (panel.width - 12f - 8f * (facts.size - 1)) / facts.size
+        assertEquals(6f, facts.first().left - panel.left, 1f)
+        assertEquals(6f, panel.right - facts.last().right, 1f)
         facts.forEach {
             assertEquals(expectedWidth, it.width, 1f)
             assertEquals(facts.first().top, it.top, 1f)

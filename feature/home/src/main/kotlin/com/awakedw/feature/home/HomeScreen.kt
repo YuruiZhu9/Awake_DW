@@ -240,7 +240,8 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 visible = state.celebrating,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(4.dp))
+            // 间距节奏（1.6.0 呼吸感）：区块靠更大的纵向留白分节，不靠框——4/8/18 → 10/14/24。
+            Spacer(Modifier.height(10.dp))
             FadeUpOnce(delayMillis = 40) {
                 CatRail(
                     mood = state.catMood,
@@ -249,7 +250,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(14.dp))
             // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
             FadeUpOnce(delayMillis = 80) {
                 HomeActionDeck(
@@ -258,7 +259,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     onQuickLog = viewModel::quickLog,
                 )
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(24.dp))
             FadeUpOnce(delayMillis = 140) {
                 BadgesRow(
                     cupCount = state.cupCount,
