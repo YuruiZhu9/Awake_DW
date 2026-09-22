@@ -1,9 +1,15 @@
 package com.awakedw.app
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -35,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -44,6 +51,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -51,6 +59,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.awakedw.core.common.AppClock
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.motionDurationMillis
@@ -92,12 +101,27 @@ internal fun showsBottomBar(route: String?): Boolean = route in MAIN_TAB_ROUTES
 private val MAIN_TAB_ROUTES: List<String> =
     listOf(AwakeDestination.Home.route, AwakeDestination.Stats.route, AwakeDestination.Settings.route)
 
-/** 页签转场上移幅度（§10.2：位移 ≤12dp）。 */
-private val TAB_TRANSITION_RISE_DP = 8.dp
+/** 页签转场横向视差幅度（§10.2：位移 ≤12dp）。 */
+private val TAB_TRANSITION_SLIDE_DP = 10.dp
 
-/** 页签转场时长：淡入/上移 200ms，淡出稍快。 */
-private const val TAB_TRANSITION_MS = 200
-private const val TAB_TRANSITION_FADE_OUT_MS = 160
+/** 页签转场微缩放起始值：极轻的前后层次，可感知而不可察变。 */
+private const val TAB_TRANSITION_SCALE = 0.99f
+
+/** 底栏选中图标静置放大：spring 弹入后停在一档轻强调上。 */
+private const val TAB_SELECTED_ICON_SCALE = 1.08f
+
+/** 页签转场时长：淡入/视差 240ms，淡出稍快。 */
+private const val TAB_TRANSITION_MS = 240
+private const val TAB_TRANSITION_FADE_OUT_MS = 170
+
+/** 页签序（1.9.0 方向感知转场）：主三页按底栏次序编号，引导页/未知路由视为 -1。 */
+private fun tabIndex(route: String?): Int =
+    when (route) {
+        AwakeDestination.Home.route -> 0
+        AwakeDestination.Stats.route -> 1
+        AwakeDestination.Settings.route -> 2
+        else -> -1
+    }
 
 /**
  * 导航壳：冷启动先进 [SplashMorph] 续场（点击或 ~1.2s 后放行），随后挂载导航图。
@@ -156,8 +180,19 @@ private fun AwakeShell(
             }
         },
     ) { contentPadding ->
-        // 页签转场（§10.2，克制基调）：淡入 + 8dp 轻上移，替代默认生硬淡入。
-        val risePx = if (reduceMotion) 0 else with(LocalDensity.current) { TAB_TRANSITION_RISE_DP.toPx().toInt() }
+        // 页签转场（1.9.0 顺畅感一阶）：方向感知的横向视差——去程自右轻入、回程自左轻入，
+        // 位移 ≤12dp（§10.2 纪律不变），配 EasingStandard 与 0.99 微缩放；减少动态时位移与缩放归零。
+        val slidePx = if (reduceMotion) 0 else with(LocalDensity.current) { TAB_TRANSITION_SLIDE_DP.toPx().toInt() }
+        val enterForTab: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+            val forward = tabIndex(targetState.destination.route) >= tabIndex(initialState.destination.route)
+            val sign = if (forward) 1 else -1
+            fadeIn(animationSpec = tween(transitionMs, easing = MotionTokens.EasingStandard)) +
+                slideInHorizontally(animationSpec = tween(transitionMs, easing = MotionTokens.EasingStandard)) { sign * slidePx } +
+                scaleIn(
+                    initialScale = if (reduceMotion) 1f else TAB_TRANSITION_SCALE,
+                    animationSpec = tween(transitionMs, easing = MotionTokens.EasingStandard),
+                )
+        }
         NavHost(
             navController = navController,
             startDestination = startDestinationFor(onboardingDone = onboardingDone),
@@ -165,16 +200,10 @@ private fun AwakeShell(
                 Modifier
                     .fillMaxSize()
                     .padding(contentPadding),
-            enterTransition = {
-                fadeIn(animationSpec = tween(transitionMs)) +
-                    slideInVertically(animationSpec = tween(transitionMs)) { risePx }
-            },
-            exitTransition = { fadeOut(animationSpec = tween(fadeOutMs)) },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(transitionMs)) +
-                    slideInVertically(animationSpec = tween(transitionMs)) { risePx }
-            },
-            popExitTransition = { fadeOut(animationSpec = tween(fadeOutMs)) },
+            enterTransition = enterForTab,
+            exitTransition = { fadeOut(animationSpec = tween(fadeOutMs, easing = MotionTokens.EasingStandard)) },
+            popEnterTransition = enterForTab,
+            popExitTransition = { fadeOut(animationSpec = tween(fadeOutMs, easing = MotionTokens.EasingStandard)) },
         ) {
             composable(AwakeDestination.Onboarding.route) {
                 OnboardingScreen(onComplete = { navigateHomeAfterOnboarding(navController) })
@@ -280,7 +309,30 @@ private fun AwakeBottomBar(
                     NavigationBarItem(
                         selected = currentRoute == tab.destination.route,
                         onClick = { onSelect(tab.destination) },
-                        icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
+                        icon = {
+                            // 选中图标 spring 弹入并停在一档轻强调上（1.9.0）；减少动态静默。
+                            val selectedTab = currentRoute == tab.destination.route
+                            val reduce = rememberReduceMotion()
+                            val iconScale =
+                                if (reduce) {
+                                    1f
+                                } else {
+                                    animateFloatAsState(
+                                        targetValue = if (selectedTab) TAB_SELECTED_ICON_SCALE else 1f,
+                                        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
+                                        label = "tabIconScale",
+                                    ).value
+                                }
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                modifier =
+                                    Modifier.graphicsLayer {
+                                        scaleX = iconScale
+                                        scaleY = iconScale
+                                    },
+                            )
+                        },
                         label = {
                             Text(
                                 text = tab.label,

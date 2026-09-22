@@ -40,9 +40,6 @@ object MotionTokens {
     /** AGSL 雾光流动周期（0.8.0）：40s 一整循环，无缝闭合。 */
     const val MIST_LOOP_PERIOD_MS = 40_000L
 
-    /** 液面波动循环周期（1.8.0 环体液化）：相位整周回绕无缝，慢到只可感知。 */
-    const val LIQUID_WAVE_PERIOD_MS = 7_000L
-
     /** 标准缓动：两端柔和，用于一切氛围插值。 */
     val EasingStandard: Easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
 }
