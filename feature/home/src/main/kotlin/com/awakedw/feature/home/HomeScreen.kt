@@ -99,10 +99,11 @@ import com.awakedw.feature.home.components.EDITORIAL_HERO_GAP
 import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
 import com.awakedw.feature.home.components.EditorialHeroValue
 import com.awakedw.feature.home.components.EditorialHomeMasthead
-import com.awakedw.feature.home.components.HomeActionDeck
+import com.awakedw.feature.home.components.EditorialPrimaryAction
+import com.awakedw.feature.home.components.HomeQuickAmounts
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
-val HOME_RING_DIAMETER = 148.dp
+val HOME_RING_DIAMETER = 132.dp
 
 /** Shared with the splash handover, so the final ring does not jump vertically. */
 val HOME_CONTENT_TOP_PADDING = EDITORIAL_HOME_TOP_PADDING
@@ -226,18 +227,26 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(14.dp))
             FadeUpOnce(delayMillis = 40) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.spacedBy(EDITORIAL_HERO_GAP),
                 ) {
-                    EditorialHeroValue(
-                        totalMl = state.totalMl,
-                        goalMl = state.goalMl,
+                    Column(
                         modifier = Modifier.weight(1f),
-                    )
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        EditorialHeroValue(
+                            totalMl = state.totalMl,
+                            goalMl = state.goalMl,
+                        )
+                        EditorialPrimaryAction(
+                            cupMl = state.cupMl,
+                            onLog = viewModel::tapLogButton,
+                        )
+                    }
                     RingBlock(
                         progress = state.progress,
                         totalMl = state.totalMl,
@@ -254,16 +263,15 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 visible = state.celebrating,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(18.dp))
-            // 记录动作前置到英雄区之后：视觉层级从「看见」自然进入「立即做」。
+            Spacer(Modifier.height(12.dp))
             FadeUpOnce(delayMillis = 80) {
-                HomeActionDeck(
+                HomeQuickAmounts(
                     cupMl = state.cupMl,
-                    onLog = viewModel::tapLogButton,
                     onQuickLog = viewModel::quickLog,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(14.dp))
             // 猫咪保留常驻入口，但退为页边注，不再挡在主操作之前。
             FadeUpOnce(delayMillis = 120) {
                 CatRail(
