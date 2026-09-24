@@ -2,6 +2,21 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.0.1] - 2026-09-24 · versionCode 42
+
+2.0.0 首屏节奏修正：收紧英雄区留白，并将主记录按钮并入英雄版面带，避免进度环上下留白叠加后把主操作推得过低。
+
+### Fixed
+- 紧凑进度环 148dp → 132dp，明确退为精密仪表。
+- 主按钮与英雄数字同处左侧版面带，快捷饮量留在其下；主操作不再等待整个环区结束后才出现。
+- 刊头到英雄区 24dp → 14dp，英雄区到快捷饮量 18dp → 12dp。
+
+### Verification
+- `EditorialHomeLayoutTest`、`:feature:home:ktlintCheck`、`:app:compileDebugKotlin` 与 `:app:assembleRelease` 通过；Release 包版本、签名与 SHA-256 已核验。
+
+### Unchanged
+- 饮水业务、记录/撤回、防抖、持久化键、导航、权限、猫咪入口和三条文字反馈通道不变。
+
 ## [v2.0.0] - 2026-09-24 · versionCode 41
 
 首页「信纸的正脸」结构突破：本轮不再停留在间距、透明度与动效微调，直接重排首页的信息层级。
