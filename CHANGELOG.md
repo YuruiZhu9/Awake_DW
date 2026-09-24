@@ -2,6 +2,23 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.9.1] - 2026-09-24 · versionCode 40
+
+阅读场与视觉稳态：在主题背景与页面内容之间加入共享的柔和阅读层，让插画退到边缘氛围，首页、统计、我的与引导页的内容保持同一套对比度语言。
+
+### Added
+- **共享 `ReadingField`**：根据主题明暗使用纸面/墨面低透明度渐隐场，中心更安静、边缘保留插画呼吸；不进入语义树，不持有业务状态，不引入新素材、网络、随机或模糊滤镜。
+- `ReadingFieldTest`：覆盖八主题的确定性透明度预算与明暗方向。
+
+### Unchanged
+- 饮水业务、记录/撤回与删除流程、持久化键、导航、权限、常驻猫咪入口与三条文字反馈通道均未改变。
+- 八主题色板、现有本地艺术素材与减少动态策略均未改变。
+
+### Verification
+- `ReadingFieldTest`、`ktlintCheck`、`:app:assembleRelease` 通过；Release 包版本、签名与 SHA-256 已核验。
+- 完整 `testDebugUnitTest` 在当前受限环境中仍受既有 Robolectric native runtime 加载失败影响，未将该环境问题误报为视觉改动通过；详见 `docs/superpowers/checklists/v1.9.1-qa.md`。
+- **真机闸门**：八主题、360/411dp、大字体、减少动态、API 26–32 回退路径的阅读场重量与帧率仍待人工验收。
+
 ## [v1.9.0] - 2026-09-22 · versionCode 39
 
 动效系统一阶 + 环体液化回退（长程路线第二作提前入场）。
