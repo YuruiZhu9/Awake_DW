@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
+import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.components.EditorialHeader
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -76,6 +77,7 @@ internal fun StatsContent(
     Box(Modifier.fillMaxSize()) {
         GradientBackdrop(spec, Modifier.matchParentSize())
         LolitaBackdrop(spec, Modifier.matchParentSize())
+        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             spec.particleColors,
             Modifier.matchParentSize(),

@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
@@ -104,6 +105,7 @@ fun OnboardingScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),

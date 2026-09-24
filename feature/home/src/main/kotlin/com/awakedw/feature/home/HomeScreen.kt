@@ -78,6 +78,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
+import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
@@ -198,6 +199,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         // 轻量装饰层：渐变之上、内容之下；只提供主题氛围，不表达“今日内容”。
         FloatingParticles(
             colors = spec.particleColors,

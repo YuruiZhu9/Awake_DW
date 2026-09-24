@@ -41,6 +41,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
+import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.SurfaceCornerRadius
 import com.awakedw.core.designsystem.components.EditorialHeader
 import com.awakedw.core.designsystem.components.PaperPanel
@@ -102,6 +103,7 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
+        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
