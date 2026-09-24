@@ -86,7 +86,6 @@ import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
-import com.awakedw.core.designsystem.lolita.LolitaRule
 import com.awakedw.core.designsystem.lolita.drawThemeOrnament
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
@@ -95,14 +94,18 @@ import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.model.CatMood
 import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.CatBubble
-import com.awakedw.feature.home.components.Greeting
+import com.awakedw.feature.home.components.CompactRingCenterContent
+import com.awakedw.feature.home.components.EDITORIAL_HERO_GAP
+import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
+import com.awakedw.feature.home.components.EditorialHeroValue
+import com.awakedw.feature.home.components.EditorialHomeMasthead
 import com.awakedw.feature.home.components.HomeActionDeck
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
-val HOME_RING_DIAMETER = 196.dp
+val HOME_RING_DIAMETER = 148.dp
 
 /** Shared with the splash handover, so the final ring does not jump vertically. */
-val HOME_CONTENT_TOP_PADDING = 24.dp
+val HOME_CONTENT_TOP_PADDING = EDITORIAL_HOME_TOP_PADDING
 
 /** 环心数字滚动时长（规格 §4.2 第 3 步：~500ms）。 */
 private const val NUMBER_ROLL_MS = 500
@@ -217,43 +220,42 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(HOME_CONTENT_TOP_PADDING))
-            // 问候语行（§5.2 重设计 + 审查修复）：Box 叠层——问候语真居中（fillMaxWidth，与下方进度环同轴），
-            // 装饰锚点不参与导航，也不挤占问候语的可视宽度；
             FadeUpOnce {
-                Greeting(
+                EditorialHomeMasthead(
                     customGreeting = state.greeting,
-                    totalMl = state.totalMl,
-                    goalMl = state.goalMl,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(10.dp))
-            LolitaRule(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp))
-            Spacer(Modifier.height(10.dp))
-            RingBlock(
-                progress = state.progress,
-                totalMl = state.totalMl,
-                centerNote = state.centerNote,
-                celebrating = state.celebrating,
-                onRingTap = viewModel::tapRing,
-            )
-            // 达标横幅只在当日首次达标时浮现一次；其余时间零占位。
+            Spacer(Modifier.height(24.dp))
+            FadeUpOnce(delayMillis = 40) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(EDITORIAL_HERO_GAP),
+                ) {
+                    EditorialHeroValue(
+                        totalMl = state.totalMl,
+                        goalMl = state.goalMl,
+                        modifier = Modifier.weight(1f),
+                    )
+                    RingBlock(
+                        progress = state.progress,
+                        totalMl = state.totalMl,
+                        centerNote = state.centerNote,
+                        celebrating = state.celebrating,
+                        onRingTap = viewModel::tapRing,
+                        diameter = HOME_RING_DIAMETER,
+                        compact = true,
+                    )
+                }
+            }
+            // 达标横幅仍紧贴环下，保持三条文字反馈通道的物理分区。
             CelebrationBanner(
                 visible = state.celebrating,
                 modifier = Modifier.fillMaxWidth(),
             )
-            // 间距节奏（1.6.0 呼吸感）：区块靠更大的纵向留白分节，不靠框——4/8/18 → 10/14/24。
-            Spacer(Modifier.height(10.dp))
-            FadeUpOnce(delayMillis = 40) {
-                CatRail(
-                    mood = state.catMood,
-                    line = state.catLine,
-                    onPet = viewModel::petCat,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            Spacer(Modifier.height(14.dp))
-            // 主操作组紧跟进度环：立即记录是第一层级，快捷饮量是同组的次级路径。
+            Spacer(Modifier.height(18.dp))
+            // 记录动作前置到英雄区之后：视觉层级从「看见」自然进入「立即做」。
             FadeUpOnce(delayMillis = 80) {
                 HomeActionDeck(
                     cupMl = state.cupMl,
@@ -261,19 +263,26 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     onQuickLog = viewModel::quickLog,
                 )
             }
-            Spacer(Modifier.height(24.dp))
-            FadeUpOnce(delayMillis = 140) {
+            Spacer(Modifier.height(18.dp))
+            // 猫咪保留常驻入口，但退为页边注，不再挡在主操作之前。
+            FadeUpOnce(delayMillis = 120) {
+                CatRail(
+                    mood = state.catMood,
+                    line = state.catLine,
+                    onPet = viewModel::petCat,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(18.dp))
+            FadeUpOnce(delayMillis = 160) {
                 BadgesRow(
                     cupCount = state.cupCount,
                     avgIntervalLabel = state.avgIntervalLabel,
                     lastDrinkLabel = state.lastDrinkLabel,
-                    // 有记录才提供撤回入口；长按「最近一杯」触发确认。
                     onRevertLast = if (state.lastDrinkLabel != null) ({ revertConfirming = true }) else null,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            // 撤回手势的说明放在内容最末端：只在有记录时出现，
-            // 且位于主操作之后，不会挤占首屏的记录按钮。
             if (state.lastDrinkLabel != null) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -448,7 +457,7 @@ private fun IdleCatAccent(modifier: Modifier = Modifier) {
     }
 }
 
-/** 今日饮水环：数值与环顶丝带；打卡确认在环心，猫语在猫那一行，各归其位。 */
+/** 今日饮水仪表：2.0 版将英雄数字移出环心，环退为紧凑精密仪表；打卡确认仍在环心。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun RingBlock(
@@ -457,26 +466,33 @@ private fun RingBlock(
     centerNote: RingNote?,
     celebrating: Boolean,
     onRingTap: (Offset?) -> Unit,
+    diameter: androidx.compose.ui.unit.Dp = HOME_RING_DIAMETER,
+    compact: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
     val reduceMotion = rememberReduceMotion()
 
-    Box(contentAlignment = Alignment.Center) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (progress >= 1f) {
-            BreathingGlow(reduceMotion = reduceMotion)
+            BreathingGlow(reduceMotion = reduceMotion, diameter = diameter)
         }
         CelebrationHalo(visible = celebrating, reduceMotion = reduceMotion)
         ProgressRing(
             progress = progress,
             modifier =
                 Modifier
-                    .size(HOME_RING_DIAMETER)
+                    .size(diameter)
                     .onGloballyPositioned { coordinates ->
                         ringCenter = Offset(coordinates.size.width / 2f, coordinates.size.height / 2f)
                     },
             onRingTap = { onRingTap(ringCenter) },
         ) {
-            RingCenterContent(totalMl = totalMl, reduceMotion = reduceMotion, centerNote = centerNote)
+            if (compact) {
+                CompactRingCenterContent(progress = progress, centerNote = centerNote)
+            } else {
+                RingCenterContent(totalMl = totalMl, reduceMotion = reduceMotion, centerNote = centerNote)
+            }
         }
         Box(Modifier.matchParentSize()) {
             RingBow(
@@ -693,7 +709,10 @@ private fun RingNoteText(
 /** 满环微光呼吸（规格 §4.2 第 6 步「满环微光呼吸」）：柔光晕在环后缓缓起伏。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun BreathingGlow(reduceMotion: Boolean) {
+private fun BreathingGlow(
+    reduceMotion: Boolean,
+    diameter: androidx.compose.ui.unit.Dp = HOME_RING_DIAMETER,
+) {
     val spec = currentThemeSpec()
     val glowAlpha =
         if (reduceMotion) {
@@ -715,7 +734,7 @@ private fun BreathingGlow(reduceMotion: Boolean) {
     Box(
         modifier =
             Modifier
-                .size(HOME_RING_DIAMETER)
+                .size(diameter)
                 .drawBehind {
                     drawCircle(color = spec.haloColor.copy(alpha = glowAlpha), radius = size.minDimension / 2f)
                 },
