@@ -2,6 +2,19 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.0.2] - 2026-09-28 · versionCode 43
+
+修正 2.0.1 首页在正常手机竖屏有效内容高度中的空间失衡：移除不等高的英雄左右列，不再把 CTA 挤进窄栏。
+
+### Fixed
+- 英雄行只保留今日饮水英雄数值与 132dp 紧凑环，垂直居中；问候调整至 headlineSmall 但仍允许自然换行。
+- 「记一杯」恢复全内容宽度，紧接英雄行；快捷饮量作为次级路径继续位于其下。
+- SplashMorph 落点估算同步新的上方留白。
+
+### Verification
+- 360dp × 520dp 有效内容视口、1.3× 字体几何回归通过：主按钮宽度、英雄行高度、环心垂直平衡、按钮与英雄区间距及首屏下界均有断言。
+- `:feature:home:ktlintCheck`、`:feature:home:testDebugUnitTest --tests com.awakedw.feature.home.HomeScreenOverflowTest`、`:app:compileDebugKotlin`、`:app:assembleRelease` 通过；Release 包 SHA-256 `c10e13e6961846eb1b7aec92e9892282e206f42724296fa8711b39ce77043817` 已核验。
+- **真机验收仍待完成**；520dp 是保守有效内容视口代理，不等同于真机确认。
 ## [v2.0.1] - 2026-09-24 · versionCode 42
 
 2.0.0 首屏节奏修正：收紧英雄区留白，并将主记录按钮并入英雄版面带，避免进度环上下留白叠加后把主操作推得过低。
