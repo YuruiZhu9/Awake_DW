@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -99,8 +100,8 @@ import com.awakedw.feature.home.components.EDITORIAL_HERO_GAP
 import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
 import com.awakedw.feature.home.components.EditorialHeroValue
 import com.awakedw.feature.home.components.EditorialHomeMasthead
-import com.awakedw.feature.home.components.EditorialPrimaryAction
 import com.awakedw.feature.home.components.HomeQuickAmounts
+import com.awakedw.feature.home.components.LogButton
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 132.dp
@@ -230,23 +231,15 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             Spacer(Modifier.height(14.dp))
             FadeUpOnce(delayMillis = 40) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.fillMaxWidth().testTag("home-hero-band"),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(EDITORIAL_HERO_GAP),
                 ) {
-                    Column(
+                    EditorialHeroValue(
+                        totalMl = state.totalMl,
+                        goalMl = state.goalMl,
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        EditorialHeroValue(
-                            totalMl = state.totalMl,
-                            goalMl = state.goalMl,
-                        )
-                        EditorialPrimaryAction(
-                            cupMl = state.cupMl,
-                            onLog = viewModel::tapLogButton,
-                        )
-                    }
+                    )
                     RingBlock(
                         progress = state.progress,
                         totalMl = state.totalMl,
@@ -255,6 +248,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         onRingTap = viewModel::tapRing,
                         diameter = HOME_RING_DIAMETER,
                         compact = true,
+                        modifier = Modifier.testTag("home-progress-ring"),
                     )
                 }
             }
@@ -263,8 +257,16 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 visible = state.celebrating,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             FadeUpOnce(delayMillis = 80) {
+                LogButton(
+                    onTap = viewModel::tapLogButton,
+                    cupMl = state.cupMl,
+                    modifier = Modifier.fillMaxWidth().testTag("home-primary-action"),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            FadeUpOnce(delayMillis = 100) {
                 HomeQuickAmounts(
                     cupMl = state.cupMl,
                     onQuickLog = viewModel::quickLog,

@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 /** The compact spacing contract used by the 2.0 editorial home composition. */
 val EDITORIAL_HOME_TOP_PADDING = 22.dp
 val EDITORIAL_HERO_GAP = 18.dp
-val EDITORIAL_MASTHEAD_ESTIMATE = 60.dp
+val EDITORIAL_MASTHEAD_ESTIMATE = 52.dp
 
 /** Stable Chinese weekday labels for the date masthead. */
 internal fun editorialDateLabel(dateTime: LocalDateTime): String {
@@ -79,7 +79,7 @@ internal fun EditorialHomeMasthead(
         Text(
             text = customGreeting ?: greetingFor(com.awakedw.core.common.TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
-            style = MaterialTheme.typography.headlineLarge.copy(fontFamily = FontFamily.Serif),
+            style = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Serif),
             textAlign = TextAlign.Start,
         )
     }

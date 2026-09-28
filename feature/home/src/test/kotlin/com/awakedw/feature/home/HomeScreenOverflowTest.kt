@@ -12,6 +12,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
@@ -91,7 +92,39 @@ class HomeScreenOverflowTest {
         assertCatClearOfButtons(cat, button, smallSip, fullSip, state = "滚到底态")
     }
 
-    /** 组装假仓库 + 大字体（fontScale 1.3）环境并挂载首页，随后显式走时放行首帧。 */
+    /** 360dp × 520dp conservative effective content viewport geometry audit. */
+    @Test
+    @Config(qualifiers = "w360dp-h520dp")
+    fun `effective portrait viewport keeps hero balanced and primary action wide and high`() {
+        setContentWithLargeFont()
+
+        val viewport = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        val hero = composeRule.onNodeWithTag("home-hero-band").fetchSemanticsNode().boundsInRoot
+        val ring = composeRule.onNodeWithTag("home-progress-ring").fetchSemanticsNode().boundsInRoot
+        val button = composeRule.onNodeWithTag("home-primary-action").fetchSemanticsNode().boundsInRoot
+
+        assertTrue(
+            "primary action should span the content column: button=$button viewport=$viewport",
+            button.width >= viewport.width * 0.82f,
+        )
+        assertTrue(
+            "hero band must not grow far beyond the ring: hero=$hero ring=$ring",
+            hero.height <= ring.height + 48f,
+        )
+        assertTrue(
+            "ring should stay vertically balanced in hero band: hero=$hero ring=$ring",
+            kotlin.math.abs(hero.center.y - ring.center.y) <= 20f,
+        )
+        assertTrue(
+            "primary action should remain in the upper 72% of usable content viewport: button=$button viewport=$viewport",
+            button.bottom <= viewport.height * 0.72f,
+        )
+        assertTrue(
+            "primary action should closely follow the hero band: hero=$hero button=$button",
+            button.top - hero.bottom in 0f..18f,
+        )
+    }
+
     private fun setContentWithLargeFont() {
         val clock = FakeClock(BASE_TIME)
         val water = FakeWaterRepository(clock)

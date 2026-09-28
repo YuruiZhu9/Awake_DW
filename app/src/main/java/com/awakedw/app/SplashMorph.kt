@@ -68,7 +68,7 @@ private const val RIPPLE_MAX_ALPHA = 0.9f
 private const val MORPH_CROSSFADE_MS = 250
 
 // 2.0 编辑部式首页的交棒落点：刊头估算高度 + 英雄区间距 + 紧凑环半径。
-private val RING_CENTER_STACK_DP = HOME_CONTENT_TOP_PADDING + EDITORIAL_MASTHEAD_ESTIMATE + 24.dp + HOME_RING_DIAMETER / 2
+private val RING_CENTER_STACK_DP = HOME_CONTENT_TOP_PADDING + EDITORIAL_MASTHEAD_ESTIMATE + 10.dp + HOME_RING_DIAMETER / 2
 
 /** 自然放行后的交棒等待：Crossfade 已走完，只留半拍防尾帧截断。 */
 private const val NATURAL_HANDOVER_MS = 40L
