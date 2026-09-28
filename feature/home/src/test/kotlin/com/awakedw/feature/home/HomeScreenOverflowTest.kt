@@ -102,6 +102,7 @@ class HomeScreenOverflowTest {
         val hero = composeRule.onNodeWithTag("home-hero-band").fetchSemanticsNode().boundsInRoot
         val ring = composeRule.onNodeWithTag("home-progress-ring").fetchSemanticsNode().boundsInRoot
         val button = composeRule.onNodeWithTag("home-primary-action").fetchSemanticsNode().boundsInRoot
+        val rail = composeRule.onNodeWithTag("home-cat-rail").fetchSemanticsNode().boundsInRoot
 
         assertTrue(
             "primary action should span the content column: button=$button viewport=$viewport",
@@ -123,9 +124,38 @@ class HomeScreenOverflowTest {
             "primary action should closely follow the hero band: hero=$hero button=$button",
             button.top - hero.bottom in 0f..18f,
         )
+        assertTrue(
+            "cat rail must stay a single row even at large font: rail=$rail",
+            rail.height <= 100f,
+        )
     }
 
-    private fun setContentWithLargeFont() {
+    /**
+     * 2.0.3 一屏收敛（视觉基线 §17）：360dp × 640dp、fontScale 1.0、有一条今日记录——
+     * 从刊头到撤回说明的整页内容必须落在一屏内，无须滚动即可读完；
+     * 猫栏保持单行高度，防止提示胶囊再次竖叠回猫立绘上方。
+     */
+    @Test
+    fun `正常字体下有记录的整页一屏读完且猫栏单行`() {
+        setContentWithLargeFont(fontScale = 1.0f, seedToday = true)
+
+        val rootHeight = composeRule.onRoot().fetchSemanticsNode().size.height.toFloat()
+        val hint = composeRule.onNode(hasText(REVERT_HINT_TEXT)).fetchSemanticsNode().boundsInRoot
+        val rail = composeRule.onNodeWithTag("home-cat-rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            "整页（含撤回说明）应在一屏内读完（根高 $rootHeight）：$hint",
+            hint.bottom <= rootHeight,
+        )
+        assertTrue(
+            "猫栏应保持单行高度：$rail",
+            rail.height <= 100f,
+        )
+    }
+
+    private fun setContentWithLargeFont(
+        fontScale: Float = LARGE_FONT_SCALE,
+        seedToday: Boolean = false,
+    ) {
         val clock = FakeClock(BASE_TIME)
         val water = FakeWaterRepository(clock)
         val prefs = FakePrefsRepository(UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD))
@@ -145,13 +175,18 @@ class HomeScreenOverflowTest {
             AwakeTheme(themeId = ThemeId.EMERALD) {
                 val current = LocalDensity.current
                 CompositionLocalProvider(
-                    LocalDensity provides Density(density = current.density, fontScale = LARGE_FONT_SCALE),
+                    LocalDensity provides Density(density = current.density, fontScale = fontScale),
                 ) {
                     HomeScreen(viewModel = viewModel)
                 }
             }
         }
         advanceClock(FIRST_FRAME_MS)
+        if (seedToday) {
+            // 铺三条今日记录：事实条与撤回说明进入有数据态，这才是整页的最高形态。
+            composeRule.runOnIdle { water.seedToday(60, 30) }
+            advanceClock(FIRST_FRAME_MS)
+        }
     }
 
     /**

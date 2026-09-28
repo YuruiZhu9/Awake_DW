@@ -35,6 +35,12 @@ val EDITORIAL_HOME_TOP_PADDING = 22.dp
 val EDITORIAL_HERO_GAP = 18.dp
 val EDITORIAL_MASTHEAD_ESTIMATE = 52.dp
 
+/** 刊头→英雄行：与 SplashMorph 交棒落点估算里的 +10dp 对齐（2.0.3 一屏收敛）。 */
+val EDITORIAL_MASTHEAD_TO_HERO_GAP = 10.dp
+
+/** 英雄行→主按钮：保持被几何断言守护的贴身节奏（0..18dp 区间）。 */
+val EDITORIAL_HERO_TO_ACTION_GAP = 10.dp
+
 /** Stable Chinese weekday labels for the date masthead. */
 internal fun editorialDateLabel(dateTime: LocalDateTime): String {
     val weekday =
@@ -70,7 +76,7 @@ internal fun EditorialHomeMasthead(
 ) {
     val now = LocalDateTime.now()
     val spec = currentThemeSpec()
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = editorialDateLabel(now),
             color = spec.greetingSubColor,

@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -97,7 +96,9 @@ import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.CatBubble
 import com.awakedw.feature.home.components.CompactRingCenterContent
 import com.awakedw.feature.home.components.EDITORIAL_HERO_GAP
+import com.awakedw.feature.home.components.EDITORIAL_HERO_TO_ACTION_GAP
 import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
+import com.awakedw.feature.home.components.EDITORIAL_MASTHEAD_TO_HERO_GAP
 import com.awakedw.feature.home.components.EditorialHeroValue
 import com.awakedw.feature.home.components.EditorialHomeMasthead
 import com.awakedw.feature.home.components.HomeQuickAmounts
@@ -137,11 +138,17 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
-/** Mascot gets its own flow row after the factual summary, so it never covers statistics. */
+/** 紧凑猫栏最小高度：提示胶囊与猫立绘单行并置，不再把提示竖叠在猫上方（2.0.3 一屏收敛）。 */
 private val CAT_RAIL_HEIGHT = 92.dp
 
+/** 猫立绘尺寸：猫栏的最高者，与提示胶囊并排后整栏仍贴住 92dp 下限。 */
+private val CAT_FIGURE_SIZE = 84.dp
+
+/** 无回应纸饰在回应列里的最小高度：只是一道缝线，不再按整栏高撑开。 */
+private val IDLE_ACCENT_MIN_HEIGHT = 32.dp
+
 /** Small end spacing; the mascot row itself provides the required breathing room. */
-private val CONTENT_TAIL_BREATHING = 24.dp
+private val CONTENT_TAIL_BREATHING = 20.dp
 
 /**
  * 达标横幅文案（视觉规格 §4.2 第 6 步）。只表达「今天够了」，
@@ -228,7 +235,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(EDITORIAL_MASTHEAD_TO_HERO_GAP))
             FadeUpOnce(delayMillis = 40) {
                 Row(
                     modifier = Modifier.fillMaxWidth().testTag("home-hero-band"),
@@ -257,7 +264,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 visible = state.celebrating,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(EDITORIAL_HERO_TO_ACTION_GAP))
             FadeUpOnce(delayMillis = 80) {
                 LogButton(
                     onTap = viewModel::tapLogButton,
@@ -265,7 +272,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth().testTag("home-primary-action"),
                 )
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             FadeUpOnce(delayMillis = 100) {
                 HomeQuickAmounts(
                     cupMl = state.cupMl,
@@ -273,17 +280,17 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
             // 猫咪保留常驻入口，但退为页边注，不再挡在主操作之前。
             FadeUpOnce(delayMillis = 120) {
                 CatRail(
                     mood = state.catMood,
                     line = state.catLine,
                     onPet = viewModel::petCat,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("home-cat-rail"),
                 )
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(12.dp))
             FadeUpOnce(delayMillis = 160) {
                 BadgesRow(
                     cupCount = state.cupCount,
@@ -294,7 +301,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 )
             }
             if (state.lastDrinkLabel != null) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = REVERT_HINT_TEXT,
                     color = spec.greetingSubColor,
@@ -394,8 +401,9 @@ private fun CelebrationBanner(
 }
 
 /**
- * Compact mascot rail: the cat stays in the first viewport near the ring while the
- * factual summary remains untouched below the action deck.
+ * Compact mascot rail: the resident hint sits atop the response column and the cat
+ * figure stays beside it, so the whole margin note holds a single row (~92dp)
+ * instead of stacking the hint chip above the cat (2.0.3 single-viewport compaction).
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -412,16 +420,11 @@ internal fun CatRail(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (line == null) {
-            IdleCatAccent(modifier = Modifier.weight(1f))
-        } else {
-            // 气泡只承载猫语，并按内容宽度内缩，短句不再撑成一条空盒子。
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                CatBubble(text = line)
-            }
-        }
-        Column(modifier = Modifier.width(112.dp), horizontalAlignment = Alignment.End) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
                 Text(
                     text = catHintOf(mood),
                     color = spec.chipText,
@@ -436,10 +439,18 @@ internal fun CatRail(
                             .padding(horizontal = 9.dp, vertical = 10.dp),
                 )
             }
-            Box(modifier = Modifier.size(84.dp).align(Alignment.Start), contentAlignment = Alignment.Center) {
-                LightPocket(modifier = Modifier.matchParentSize())
-                CatFigure(mood = mood, onPet = onPet, figureSize = 84.dp)
+            if (line == null) {
+                IdleCatAccent(modifier = Modifier.fillMaxWidth())
+            } else {
+                // 气泡只承载猫语，并按内容宽度内缩，短句不再撑成一条空盒子。
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                    CatBubble(text = line)
+                }
             }
+        }
+        Box(modifier = Modifier.size(CAT_FIGURE_SIZE), contentAlignment = Alignment.Center) {
+            LightPocket(modifier = Modifier.matchParentSize())
+            CatFigure(mood = mood, onPet = onPet, figureSize = CAT_FIGURE_SIZE)
         }
     }
 }
@@ -449,7 +460,7 @@ internal fun CatRail(
 @Composable
 private fun IdleCatAccent(modifier: Modifier = Modifier) {
     val spec = currentThemeSpec()
-    Canvas(modifier.heightIn(min = CAT_RAIL_HEIGHT)) {
+    Canvas(modifier.heightIn(min = IDLE_ACCENT_MIN_HEIGHT)) {
         val centerY = size.height / 2f
         val left = 10.dp.toPx()
         val right = (size.width - 10.dp.toPx()).coerceAtLeast(left)
