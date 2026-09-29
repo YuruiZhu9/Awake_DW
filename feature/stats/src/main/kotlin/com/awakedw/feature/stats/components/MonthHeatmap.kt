@@ -104,7 +104,7 @@ internal fun MonthHeatmap(
                         .background(
                             when (index) {
                                 0 -> spec.ringTrack.copy(alpha = 0.55f)
-                                else -> spec.primary.copy(alpha = HEAT_ALPHAS[index + 1])
+                                else -> spec.primary.copy(alpha = HEAT_ALPHAS[index])
                             },
                         ),
                 )
