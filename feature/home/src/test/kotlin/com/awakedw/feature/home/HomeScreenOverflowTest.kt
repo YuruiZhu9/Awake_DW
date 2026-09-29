@@ -131,24 +131,39 @@ class HomeScreenOverflowTest {
     }
 
     /**
-     * 2.0.3 一屏收敛（视觉基线 §17）：360dp × 640dp、fontScale 1.0、有一条今日记录——
-     * 从刊头到撤回说明的整页内容必须落在一屏内，无须滚动即可读完；
-     * 猫栏保持单行高度，防止提示胶囊再次竖叠回猫立绘上方。
+     * 2.2.0 减法验收（视觉基线 §20）：360dp × 640dp、fontScale 1.0、有今日记录——
+     * 事实条与撤回说明撤出首页后，猫栏是整页最后一块，必须一屏读完且保持单行高度。
      */
     @Test
     fun `正常字体下有记录的整页一屏读完且猫栏单行`() {
         setContentWithLargeFont(fontScale = 1.0f, seedToday = true)
 
         val rootHeight = composeRule.onRoot().fetchSemanticsNode().size.height.toFloat()
-        val hint = composeRule.onNode(hasText(REVERT_HINT_TEXT)).fetchSemanticsNode().boundsInRoot
         val rail = composeRule.onNodeWithTag("home-cat-rail").fetchSemanticsNode().boundsInRoot
         assertTrue(
-            "整页（含撤回说明）应在一屏内读完（根高 $rootHeight）：$hint",
-            hint.bottom <= rootHeight,
+            "整页（猫栏为最后一块）应在一屏内读完（根高 $rootHeight）：$rail",
+            rail.bottom <= rootHeight,
         )
         assertTrue(
             "猫栏应保持单行高度：$rail",
-            rail.height <= 100f,
+            rail.height <= 76f,
+        )
+    }
+
+    /**
+     * 2.2.0 减法的核心验收（比 2.0.3 收紧一档）：360dp × 520dp ≈ 中小屏真机的有效内容视口
+     * （整屏再扣状态栏、系统导航与底栏），fontScale 1.3 —— 整页必须无滚动读完。
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h520dp")
+    fun `减法后中小屏大字体整页无滚动读完`() {
+        setContentWithLargeFont(fontScale = 1.3f, seedToday = true)
+
+        val rootHeight = composeRule.onRoot().fetchSemanticsNode().size.height.toFloat()
+        val rail = composeRule.onNodeWithTag("home-cat-rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            "520dp 视口 + fontScale 1.3 整页应无滚动读完（根高 $rootHeight）：$rail",
+            rail.bottom <= rootHeight,
         )
     }
 
@@ -183,7 +198,7 @@ class HomeScreenOverflowTest {
         }
         advanceClock(FIRST_FRAME_MS)
         if (seedToday) {
-            // 铺三条今日记录：事实条与撤回说明进入有数据态，这才是整页的最高形态。
+            // 铺三条今日记录：进度环与庆祝相关状态进入有数据态，这才是整页的最高形态。
             composeRule.runOnIdle { water.seedToday(60, 30) }
             advanceClock(FIRST_FRAME_MS)
         }

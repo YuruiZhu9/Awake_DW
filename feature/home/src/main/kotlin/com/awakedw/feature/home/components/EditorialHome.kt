@@ -137,15 +137,31 @@ internal fun EditorialHeroValue(
     }
 }
 
-/** Compact ring center: progress is the instrument; praise/revert copy still owns the ring center. */
+/** Compact ring center: progress is the instrument; drag preview, praise and revert copy own it in turn. */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun CompactRingCenterContent(
     progress: Float,
     centerNote: RingNote?,
+    dragPreviewMl: Int? = null,
     spec: ThemeSpec = currentThemeSpec(),
 ) {
-    if (centerNote == null) {
+    if (dragPreviewMl != null) {
+        // 拖环预览临时态（2.2.0 环即把手）：拖动中环心跟手陈述事实，不落库；松手由提交/取消收场。
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "+${dragPreviewMl}ml",
+                color = spec.ringValueText,
+                style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
+            )
+            Spacer(Modifier.width(1.dp))
+            Text(
+                text = "松手记录",
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+            )
+        }
+    } else if (centerNote == null) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "${(progress.coerceIn(0f, 1f) * 100).toInt()}%",

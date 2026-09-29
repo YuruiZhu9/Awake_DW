@@ -83,7 +83,6 @@ import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
-import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.drawThemeOrnament
@@ -92,7 +91,6 @@ import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.model.CatMood
-import com.awakedw.feature.home.components.BadgesRow
 import com.awakedw.feature.home.components.CatBubble
 import com.awakedw.feature.home.components.CompactRingCenterContent
 import com.awakedw.feature.home.components.EDITORIAL_HERO_GAP
@@ -138,14 +136,14 @@ private val BOW_WIDTH = 46.dp
 private val BOW_HEIGHT = 28.dp
 private val BOW_LIFT = 2.dp
 
-/** 紧凑猫栏最小高度：提示胶囊与猫立绘单行并置，不再把提示竖叠在猫上方（2.0.3 一屏收敛）。 */
-private val CAT_RAIL_HEIGHT = 92.dp
+/** 紧凑猫栏最小高度：提示胶囊与猫立绘单行并置（2.2.0 收紧：立绘缩小，整栏让位给内容）。 */
+private val CAT_RAIL_HEIGHT = 72.dp
 
-/** 猫立绘尺寸：猫栏的最高者，与提示胶囊并排后整栏仍贴住 92dp 下限。 */
-private val CAT_FIGURE_SIZE = 84.dp
+/** 猫立绘尺寸：猫栏的最高者，与提示胶囊并排后整栏仍贴住 72dp 下限。 */
+private val CAT_FIGURE_SIZE = 64.dp
 
 /** 无回应纸饰在回应列里的最小高度：只是一道缝线，不再按整栏高撑开。 */
-private val IDLE_ACCENT_MIN_HEIGHT = 32.dp
+private val IDLE_ACCENT_MIN_HEIGHT = 24.dp
 
 /** Small end spacing; the mascot row itself provides the required breathing room. */
 private val CONTENT_TAIL_BREATHING = 20.dp
@@ -175,12 +173,6 @@ private const val BANNER_ENTER_MS = 260
 private const val BANNER_EXIT_MS = 190
 
 /**
- * 撤回手势的说明行。长按是隐藏手势，必须在界面上写出来——
- * 只放进无障碍描述，看得见的用户就永远发现不了。
- */
-internal const val REVERT_HINT_TEXT = "长按「最近一杯」可以撤回刚记的那一杯"
-
-/**
  * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,
  * the primary log action, and an optional mascot response.
  *
@@ -201,7 +193,6 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
     val view = LocalView.current
-    var revertConfirming by remember { mutableStateOf(false) }
 
     // 达标庆祝瞬间的一次轻震（§10.3）：与横幅浮现同拍，克制不喧哗。
     LaunchedEffect(state.celebrating) {
@@ -253,6 +244,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         centerNote = state.centerNote,
                         celebrating = state.celebrating,
                         onRingTap = viewModel::tapRing,
+                        dragPreviewMl = state.ringDragMl,
+                        onRingDrag = viewModel::ringDragPreview,
+                        onRingDragEnd = viewModel::ringDragCommit,
                         diameter = HOME_RING_DIAMETER,
                         compact = true,
                         modifier = Modifier.testTag("home-progress-ring"),
@@ -282,6 +276,8 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             }
             Spacer(Modifier.height(10.dp))
             // 猫咪保留常驻入口，但退为页边注，不再挡在主操作之前。
+            // 2.2.0 减法：事实摘要与撤回入口撤出首页（统计页已有同款事实与带确认的删除），
+            // 猫栏成为整页的最后一块——首页从「仪表+报表」回到「环 + 一件事」。
             FadeUpOnce(delayMillis = 120) {
                 CatRail(
                     mood = state.catMood,
@@ -290,41 +286,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth().testTag("home-cat-rail"),
                 )
             }
-            Spacer(Modifier.height(12.dp))
-            FadeUpOnce(delayMillis = 160) {
-                BadgesRow(
-                    cupCount = state.cupCount,
-                    avgIntervalLabel = state.avgIntervalLabel,
-                    lastDrinkLabel = state.lastDrinkLabel,
-                    onRevertLast = if (state.lastDrinkLabel != null) ({ revertConfirming = true }) else null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (state.lastDrinkLabel != null) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = REVERT_HINT_TEXT,
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
         }
-    }
-
-    if (revertConfirming) {
-        AwakeConfirmDialog(
-            title = "撤回这一杯",
-            body = "会删掉今天最后记下的那一杯，今日进度同步减少。",
-            confirmLabel = "撤回",
-            destructive = true,
-            onConfirm = {
-                viewModel.revertLatestCup()
-                revertConfirming = false
-            },
-            onDismiss = { revertConfirming = false },
-        )
     }
 }
 
@@ -487,6 +449,9 @@ private fun RingBlock(
     centerNote: RingNote?,
     celebrating: Boolean,
     onRingTap: (Offset?) -> Unit,
+    dragPreviewMl: Int? = null,
+    onRingDrag: ((Float) -> Unit)? = null,
+    onRingDragEnd: ((Float) -> Unit)? = null,
     diameter: androidx.compose.ui.unit.Dp = HOME_RING_DIAMETER,
     compact: Boolean = false,
     modifier: Modifier = Modifier,
@@ -508,9 +473,11 @@ private fun RingBlock(
                         ringCenter = Offset(coordinates.size.width / 2f, coordinates.size.height / 2f)
                     },
             onRingTap = { onRingTap(ringCenter) },
+            onRingDrag = onRingDrag,
+            onRingDragEnd = onRingDragEnd,
         ) {
             if (compact) {
-                CompactRingCenterContent(progress = progress, centerNote = centerNote)
+                CompactRingCenterContent(progress = progress, centerNote = centerNote, dragPreviewMl = dragPreviewMl)
             } else {
                 RingCenterContent(totalMl = totalMl, reduceMotion = reduceMotion, centerNote = centerNote)
             }

@@ -99,16 +99,13 @@ class HomeVisualReviewTest {
     }
 
     /**
-     * 有记录时的首页：这才是使用者日常看到的状态，也是撤回说明行所在的位置。
-     * 空态自检看不到这些，单靠断言又判断不了"那行小字压在不同主题背景上还读得出来吗"，所以八个主题各留一张图。
-     *
-     * 小屏（360×640 @1.3×）上事实条与说明行本就落在首屏之外，需要滚动才能看到——
-     * 那是既有基线允许的，所以这里改用常见机型尺寸（411×891）复核：
-     * 说明行必须与它所描述的事实条同屏出现，否则这行提示等于白写。
+     * 有记录时的首页：这才是使用者日常看到的状态。
+     * 空态自检看不到这些，八个主题各留一张图留档——常驻猫提示、英雄数值与进度环
+     * 在各主题背景上的可读性以此复核（2.2.0 减法后撤回说明行已不在首页）。
      */
     @Test
     @Config(qualifiers = "w411dp-h891dp-mdpi")
-    fun `populated home keeps revert disclosure visible next to the fact row`() {
+    fun `populated home keeps the resident cat hint readable across themes`() {
         disableSystemAnimations()
         val theme = mutableStateOf(ThemeId.THIN_MINT)
         val clock = FakeClock(1_760_000_000_000L)
@@ -135,15 +132,15 @@ class HomeVisualReviewTest {
             }
         }
 
-        // 铺三杯今日记录：事实条、撤回说明行与进度环都进入有数据状态。
+        // 铺三杯今日记录：进度环进入有数据状态，常驻猫提示保持可点。
         composeRule.runOnIdle { water.seedToday(60, 30) }
         settle()
-        composeRule.onNodeWithText(REVERT_HINT_TEXT).assertIsDisplayed()
+        composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
 
         ThemeId.entries.forEach { id ->
             composeRule.runOnIdle { theme.value = id }
             settle()
-            composeRule.onNodeWithText(REVERT_HINT_TEXT).assertIsDisplayed()
+            composeRule.onNodeWithText("点击我试试~").assertIsDisplayed()
             capture("home-populated-${id.name.lowercase()}")
         }
     }

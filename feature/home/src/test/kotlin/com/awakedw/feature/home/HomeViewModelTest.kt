@@ -333,6 +333,64 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `拖环预览把扫过角换算成毫升写入临时态阈值内为空`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.ringDragPreview(90f)
+            runCurrent()
+            assertEquals(60, h.viewModel.uiState.value.ringDragMl)
+
+            h.viewModel.ringDragPreview(5f)
+            runCurrent()
+            assertEquals(null, h.viewModel.uiState.value.ringDragMl)
+            assertEquals(0, h.water.addCount)
+        }
+
+    @Test
+    fun `拖环松手达阈值走同一闸门成笔且清空预览`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.ringDragPreview(180f)
+            runCurrent()
+            assertEquals(130, h.viewModel.uiState.value.ringDragMl)
+
+            h.viewModel.ringDragCommit(180f)
+            runCurrent()
+            assertEquals(null, h.viewModel.uiState.value.ringDragMl)
+            assertEquals(1, h.water.addCount)
+            assertEquals(130, h.viewModel.uiState.value.totalMl)
+        }
+
+    @Test
+    fun `拖环松手阈值内静默取消不成笔`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.ringDragCommit(10f)
+            runCurrent()
+
+            assertEquals(0, h.water.addCount)
+            assertEquals(null, h.viewModel.uiState.value.centerNote)
+        }
+
+    @Test
+    fun `拖环提交与按钮共用同一防抖窗口`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.ringDragCommit(360f)
+            runCurrent()
+            assertEquals(1, h.water.addCount)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(1, h.water.addCount)
+            assertEquals(RingNote(REPEAT_HINT_TEXT), h.viewModel.uiState.value.centerNote)
+        }
+
+    @Test
     fun `最近一杯时刻浮出徽章数据`() =
         runTest {
             val h = harness(testScheduler)

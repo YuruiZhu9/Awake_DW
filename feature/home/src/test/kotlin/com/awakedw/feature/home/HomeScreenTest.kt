@@ -3,11 +3,8 @@ package com.awakedw.feature.home
 import android.os.Looper
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
@@ -64,11 +61,9 @@ class HomeScreenTest {
             // 环境约束（2.0.3 记录）：Robolectric 下 EditorialHeroValue 三个文本节点
             // 在本机长期为未测量态（bounds 0,0,0,0），assertIsDisplayed 恒假——
             // 其可见性几何由 HomeScreenOverflowTest 的有效视口断言与真机验收兜底，
-            // 这里只断言状态语义（数值滚动、防抖合并、撤回链路）。
+            // 这里只断言状态语义（数值滚动、防抖合并）。
             composeRule.onNodeWithText("0ml").assertExists()
             composeRule.onNodeWithText("记一杯").assertIsDisplayed()
-            // 今日还没有记录：没有可撤回的对象，说明行也不该出现。
-            composeRule.onNodeWithText(REVERT_HINT_TEXT).assertDoesNotExist()
 
             composeRule.onNodeWithText("记一杯").performClick()
             composeRule.onNodeWithText("记一杯").performClick()
@@ -76,8 +71,6 @@ class HomeScreenTest {
 
             composeRule.onNodeWithText("250ml").assertExists()
             assertEquals(1, water.addCount)
-            // 有了记录：长按「最近一杯」可撤回，这行小字必须看得见，不能只写在无障碍描述里。
-            composeRule.onNodeWithText(REVERT_HINT_TEXT).assertIsDisplayed()
 
             clock.ms += WINDOW_GAP_MS
             composeRule.onNodeWithText("记一杯").performClick()
@@ -85,62 +78,6 @@ class HomeScreenTest {
 
             composeRule.onNodeWithText("500ml").assertExists()
             assertEquals(2, water.addCount)
-        }
-
-    /**
-     * 撤回的完整链路：长按「最近一杯」→ 弹确认 → 取消则原地不动 → 确认才真的收回。
-     *
-     * ViewModel 层已有撤回语义的单测，但「长按打开确认、取消不做任何事、确认才落库」这条 UI 接线
-     * 此前无人覆盖——而它守着的恰恰是四个破坏性操作（撤回/删除记录/删除文案/整库恢复默认）
-     * 共用的 `AwakeConfirmDialog`。破坏性操作最怕的就是确认框形同虚设。
-     */
-    @Test
-    fun `long press on the last cup confirms before reverting and cancel changes nothing`() =
-        runTest {
-            val clock = FakeClock(BASE_TIME)
-            val water = FakeWaterRepository(clock)
-            val prefs = FakePrefsRepository(UserSettings(themeChoice = ThemeChoice.FIXED_EMERALD))
-            val viewModel =
-                HomeViewModel(
-                    clock = clock,
-                    observeHome = ObserveHomeUseCase(water, prefs),
-                    logWater = LogWaterUseCase(water, prefs, clock),
-                    deleteWater = DeleteWaterRecordUseCase(water),
-                    copies = FakeCopyLibraryRepository(),
-                    sound = FakeSoundPlayer(),
-                )
-
-            composeRule.mainClock.autoAdvance = false
-            composeRule.setContent {
-                AwakeTheme(themeId = ThemeId.EMERALD) {
-                    HomeScreen(viewModel = viewModel)
-                }
-            }
-            advanceClock(FIRST_FRAME_MS)
-
-            composeRule.onNodeWithText("记一杯").performClick()
-            advanceClock(RENDER_SETTLE_MS)
-            assertEquals(250, viewModel.uiState.value.totalMl)
-
-            // 事实条用 clearAndSetSemantics 暴露内容描述，长按目标按描述定位。
-            val lastCup = composeRule.onNodeWithContentDescription("最近一杯", substring = true)
-            lastCup.performTouchInput { longClick() }
-            advanceClock(RENDER_SETTLE_MS)
-            composeRule.onNodeWithText("撤回这一杯").assertIsDisplayed()
-
-            // 取消：什么都不该发生。
-            composeRule.onNodeWithText("取消").performClick()
-            advanceClock(RENDER_SETTLE_MS)
-            composeRule.onNodeWithText("撤回这一杯").assertDoesNotExist()
-            assertEquals(250, viewModel.uiState.value.totalMl)
-
-            // 再来一次并确认：这一杯才真的被收回。
-            lastCup.performTouchInput { longClick() }
-            advanceClock(RENDER_SETTLE_MS)
-            composeRule.onNodeWithText("撤回").performClick()
-            advanceClock(RENDER_SETTLE_MS)
-            assertEquals(0, viewModel.uiState.value.totalMl)
-            assertEquals(0, viewModel.uiState.value.cupCount)
         }
 
     private companion object {

@@ -34,7 +34,8 @@ internal fun sipAmount(cupMl: Int): Int = roundTo10(cupMl / 2)
 
 internal fun cupAndHalfAmount(cupMl: Int): Int = roundTo10(cupMl * 3 / 2)
 
-private fun roundTo10(v: Int): Int = (v + 5) / 10 * 10
+/** 就近取整到 10 的倍数；拖环换算（RingDragMath）与快捷量共用同一把刻度。 */
+internal fun roundTo10(v: Int): Int = (v + 5) / 10 * 10
 
 /** 快捷胶囊文案（与「一杯容量」对齐）：讲清各自相当于几杯，不让毫升数孤零零地悬着。 */
 internal fun sipLabel(cupMl: Int): String = "小口 ${sipAmount(cupMl)}ml"

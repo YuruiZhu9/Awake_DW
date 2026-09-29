@@ -81,6 +81,11 @@ data class HomeUiState(
      * 与猫咪气泡物理分离：确认发生在刚被看着的位置，猫语留在猫那一行，两者不再抢同一格。
      */
     val centerNote: RingNote? = null,
+    /**
+     * 拖环预览的临时毫升数（环即把手）：拖动中跟手显示「+Nml · 松手记录」，
+     * 阈值内为 null（环心维持原样）。松手即清空，成笔与否由提交阈值决定。
+     */
+    val ringDragMl: Int? = null,
     val celebrating: Boolean = false,
     val catMood: CatMood = CatMood.IDLE,
     val catLine: String? = null,
@@ -179,6 +184,18 @@ class HomeViewModel(
     /** 环区点按记录；[offsetPx] 为环心在环区内的坐标（备用锚点），与按钮共用闸门。 */
     fun tapRing(offsetPx: Offset?) {
         scheduleLog()
+    }
+
+    /** 拖环预览（环即把手）：把当前扫过角换算为毫升写入临时态；阈值内为 null，环心不显示预览。 */
+    fun ringDragPreview(sweptDegrees: Float) {
+        _uiState.update { it.copy(ringDragMl = RingDragMath.sweepToMl(sweptDegrees, it.cupMl)) }
+    }
+
+    /** 拖环松手提交：清预览；达提交阈值才与按钮/快捷量共用同一防抖闸门成笔。 */
+    fun ringDragCommit(sweptDegrees: Float) {
+        _uiState.update { it.copy(ringDragMl = null) }
+        val ml = RingDragMath.sweepToMl(sweptDegrees, _uiState.value.cupMl)
+        if (ml != null) scheduleLog(ml)
     }
 
     /** 摸猫：戳一下胆大王，抽一句短句回应（同 [catLineHoldMs] 收场，心情不动）+ 一声呼噜。 */
