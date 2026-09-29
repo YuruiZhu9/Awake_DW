@@ -198,4 +198,30 @@ class StatsViewModelTest {
 
             assertEquals(listOf(0, 0, 0), h.viewModel.uiState.value.rhythm.map { it.totalMl })
         }
+
+    @Test
+    fun `年度信纸随记录就位并陈述当年事实`() =
+        runTest {
+            val h = harness(testScheduler)
+            h.water.seedToday(60, 30)
+            runCurrent()
+
+            // 三杯共 750ml（<1L 保留毫升），首杯 10:00 落在早段、白天两杯合计 500ml 为最常时段。
+            assertEquals(
+                listOf(
+                    "2026 年，共记下 750 ml、3 杯。",
+                    "喝得最多的时段是白天。",
+                ),
+                h.viewModel.uiState.value.yearLetterLines,
+            )
+        }
+
+    @Test
+    fun `空库时年度信纸整节静默`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+
+            assertTrue(h.viewModel.uiState.value.yearLetterLines.isEmpty())
+        }
 }

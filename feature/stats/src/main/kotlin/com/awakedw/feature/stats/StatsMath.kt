@@ -121,6 +121,13 @@ data class RhythmSlice(
     val totalMl: Int,
 )
 
+/** 年度信纸的事实（2.3.0）：全年总量、杯数与最常饮水的时段；零记录年不写信。 */
+data class YearLetterData(
+    val totalMl: Int,
+    val cupCount: Int,
+    val topSlot: TimeSlot,
+)
+
 /**
  * 统计档案的纯换算（2.1.0）：月历热力网格、热力档位、时段节律聚合与两条摘要文案。
  * 只做事实陈述，不引入成就、连续或奖励语义（D10）。
@@ -211,4 +218,40 @@ object ArchiveMath {
     fun rhythmSummary(slices: List<RhythmSlice>): String =
         slices.joinToString(separator = "，") { "${slotLabel(it.slot)} ${it.totalMl}ml" }
             .let { "近七日时段分布：$it" }
+
+    /**
+     * 年度信纸的纯聚合（2.3.0）：把一年窗口内的记录合计为总量与杯数，
+     * 时段沿用 [TimeSlots] 三分桶，并列时取固定顺序（早→白天→晚）的第一个。
+     * [records] 为空返回 null——当年还没有任何记录时不写信。
+     */
+    fun yearLetter(
+        records: List<WaterRecord>,
+        zone: ZoneId,
+    ): YearLetterData? {
+        if (records.isEmpty()) return null
+        val slotTotals = mutableMapOf<TimeSlot, Int>()
+        records.forEach { record ->
+            val hour = Instant.ofEpochMilli(record.drankAtEpochMs).atZone(zone).hour
+            val slot = TimeSlots.slotOfHour(hour)
+            slotTotals[slot] = (slotTotals[slot] ?: 0) + record.amountMl
+        }
+        val topSlot =
+            listOf(TimeSlot.MORNING, TimeSlot.DAY, TimeSlot.EVENING)
+                .maxByOrNull { slotTotals[it] ?: 0 } ?: TimeSlot.MORNING
+        return YearLetterData(
+            totalMl = records.sumOf { it.amountMl },
+            cupCount = records.size,
+            topSlot = topSlot,
+        )
+    }
+
+    /** 信纸正文两行（2.3.0）：只陈述事实，现代白话；总量沿用周合计的升/毫升双格式。 */
+    fun letterLines(
+        data: YearLetterData,
+        year: Int,
+    ): List<String> =
+        listOf(
+            "$year 年，共记下 ${StatsMath.weekTotalLabel(data.totalMl)}、${data.cupCount} 杯。",
+            "喝得最多的时段是${slotLabel(data.topSlot)}。",
+        )
 }

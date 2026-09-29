@@ -56,6 +56,8 @@ data class StatsUiState(
     val monthSummary: String = "",
     val rhythm: List<RhythmSlice> = emptyList(),
     val rhythmSummary: String = "",
+    /** 年度信纸正文（2.3.0）：两行事实；当年零记录时为空，整节静默。 */
+    val yearLetterLines: List<String> = emptyList(),
 )
 
 /**
@@ -96,6 +98,12 @@ class StatsViewModel
                 water.weekBars(daysBack = today.dayOfMonth).associate { it.dayKey to it.totalMl }
             val monthCells = ArchiveMath.monthCells(todayKey(), monthTotals)
             val rhythm = ArchiveMath.rhythmOf(water.recentRecords(daysBack = WEEK_DAYS), clock.zone())
+            // 年度信纸（2.3.0）：daysBack = 今天是一年中的第几天，恰好覆盖 1 月 1 日至今。
+            val letter =
+                ArchiveMath.yearLetter(
+                    records = water.recentRecords(daysBack = today.dayOfYear),
+                    zone = clock.zone(),
+                )
             _uiState.update {
                 it.copy(
                     badges =
@@ -114,6 +122,7 @@ class StatsViewModel
                     monthSummary = ArchiveMath.monthSummary(monthCells, goalMl),
                     rhythm = rhythm,
                     rhythmSummary = ArchiveMath.rhythmSummary(rhythm),
+                    yearLetterLines = letter?.let { ArchiveMath.letterLines(it, today.year) } ?: emptyList(),
                 )
             }
         }

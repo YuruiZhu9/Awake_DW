@@ -141,4 +141,82 @@ class ArchiveMathTest {
         assertEquals("晚", ArchiveMath.slotLabel(TimeSlot.EVENING))
         assertEquals("近七日时段分布：早 400ml，白天 300ml，晚 0ml", ArchiveMath.rhythmSummary(slices))
     }
+
+    @Test
+    fun `年度信纸聚合总量杯数并拾取最常时段`() {
+        fun record(
+            id: Long,
+            hour: Int,
+            minute: Int,
+            amountMl: Int,
+        ): WaterRecord {
+            val at = LocalDateTime.of(2026, 8, 27, hour, minute).atZone(zone).toInstant().toEpochMilli()
+            return WaterRecord(id = id, amountMl = amountMl, drankAtEpochMs = at, dayKeyLocal = "2026-08-27")
+        }
+
+        val letter =
+            ArchiveMath.yearLetter(
+                records =
+                    listOf(
+                        record(1, hour = 8, minute = 0, amountMl = 250),
+                        record(2, hour = 14, minute = 30, amountMl = 300),
+                        record(3, hour = 23, minute = 0, amountMl = 200),
+                    ),
+                zone = zone,
+            )!!
+
+        assertEquals(750, letter.totalMl)
+        assertEquals(3, letter.cupCount)
+        // 白天 300ml 为最常时段。
+        assertEquals(TimeSlot.DAY, letter.topSlot)
+    }
+
+    @Test
+    fun `年度信纸并列时段取固定顺序的第一个`() {
+        fun record(
+            id: Long,
+            hour: Int,
+            amountMl: Int,
+        ): WaterRecord {
+            val at = LocalDateTime.of(2026, 8, 27, hour, 0).atZone(zone).toInstant().toEpochMilli()
+            return WaterRecord(id = id, amountMl = amountMl, drankAtEpochMs = at, dayKeyLocal = "2026-08-27")
+        }
+
+        val letter =
+            ArchiveMath.yearLetter(
+                records =
+                    listOf(
+                        record(1, hour = 8, amountMl = 250),
+                        record(2, hour = 14, amountMl = 250),
+                        record(3, hour = 23, amountMl = 250),
+                    ),
+                zone = zone,
+            )!!
+
+        // 早/白天/晚三段并列：取固定顺序的「早」。
+        assertEquals(TimeSlot.MORNING, letter.topSlot)
+    }
+
+    @Test
+    fun `零记录年不写信`() {
+        assertEquals(null, ArchiveMath.yearLetter(emptyList(), zone))
+    }
+
+    @Test
+    fun `信纸正文两行随总量切换升与毫升`() {
+        assertEquals(
+            listOf(
+                "2026 年，共记下 8.2 L、33 杯。",
+                "喝得最多的时段是早。",
+            ),
+            ArchiveMath.letterLines(YearLetterData(totalMl = 8240, cupCount = 33, topSlot = TimeSlot.MORNING), year = 2026),
+        )
+        assertEquals(
+            listOf(
+                "2026 年，共记下 820 ml、3 杯。",
+                "喝得最多的时段是白天。",
+            ),
+            ArchiveMath.letterLines(YearLetterData(totalMl = 820, cupCount = 3, topSlot = TimeSlot.DAY), year = 2026),
+        )
+    }
 }

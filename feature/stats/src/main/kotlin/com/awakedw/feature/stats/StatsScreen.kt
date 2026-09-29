@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -173,6 +174,24 @@ internal fun StatsContent(
                 onRequestDelete = { record -> pendingDelete = record },
                 modifier = Modifier.fillMaxWidth(),
             )
+            // —— 年度信纸（2.3.0）：页尾一封信，只陈述当年的事实；零记录整节静默 ——
+            if (state.yearLetterLines.isNotEmpty()) {
+                StatsSectionLabel("年度信纸")
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    state.yearLetterLines.forEach { line ->
+                        Text(
+                            text = line,
+                            color = spec.greetingColor,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif),
+                        )
+                    }
+                    Text(
+                        text = YEAR_LETTER_SIGN_OFF,
+                        color = spec.greetingSubColor,
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
+                    )
+                }
+            }
             Spacer(Modifier.height(12.dp))
         }
     }
@@ -194,6 +213,9 @@ internal fun StatsContent(
 
 /** 分节间距（1.5.0）：去卡片后区块靠更大的纵向留白分节——呼吸感来自间距而非框。 */
 private val SECTION_GAP = 22.dp
+
+/** 年度信纸的落款（2.3.0）：现代白话，不出现称谓，不构成催促。 */
+private const val YEAR_LETTER_SIGN_OFF = "新的一年，也按时喝水。"
 
 /** 分节微标签的字距：小、疏、静，Nike 式层级耳语。 */
 private const val SECTION_LABEL_SPACING = 2.5f
