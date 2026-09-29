@@ -2,6 +2,24 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.1.0] - 2026-09-29 · versionCode 45
+
+统计页「档案化」：回应方向研究（mobbin 三轮采集 + 2025–26 健康类趋势，见 `docs/design/2026-09-29-future-directions-research.md`），把统计页从「摘要」推进为「档案」。纯事实陈述，无成就/奖励语义。
+
+### Added
+- **本月热力**（Zero 式月历）：周一首行月历网格，每格深浅按当日总量距目标的五档主色梯度，今天主色描边圈出，未来日期淡显留空；图例「少□□□□■多」。
+- **时段节律**（Slopes 式堆叠分布条）：近七日早/白天/晚构成，单色三段堆叠条 + 图例行（色点 + 标签 + 毫升数）；时段分类学沿用 `TimeSlots`，不放百分比。近七日零记录时整节静默。
+- 语义等价：月历容器整体摘要（有记录/达标天数）、堆叠条分布读法，TalkBack 不逐格走 31 个数字。
+- 数据层只读新增 `WaterRepository.recentRecords(daysBack)`（带时间戳的近 N 天记录）；月热力复用既有 `weekBars`，零新增查询。
+
+### Unchanged
+- 饮水业务写入、记录/撤回/删除、防抖、持久化键、导航、权限、首页与设置零改动；既有 hero、指标格、近七日柱图、时间线结构与风格保持。
+
+### Verification
+- 新增 `ArchiveMathTest`（网格几何/档位边界/节律聚合/摘要文案）、`StatsViewModelTest` 3 例、`RoomWaterRepositoryTest` 窗口用例。
+- 全仓库 `ktlintCheck build --rerun-tasks` 强制重跑全绿（5m21s，1175 任务全执行，非缓存；首跑因 settings/domain/notification 替身缺新方法失败，修复后重跑）。
+- Release 包版本/签名/SHA-256 已核验（见版本 QA）；**真机验收仍待完成**。
+
 ## [v2.0.3] - 2026-09-28 · versionCode 44
 
 回应「首页长度远超手机页面」反馈：不动编辑部式构图与任何业务语义，只做整页高度收敛，并修复 2.0.0 起遗留的测试环境失败。
