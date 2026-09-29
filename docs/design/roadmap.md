@@ -4,6 +4,13 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.1.0 · 统计页「档案化」（2026-09-29 实施）
+
+- 计划：`docs/superpowers/plans/2026-09-29-v210-stats-archive-plan.md`；方向研究：`docs/design/2026-09-29-future-directions-research.md`（mobbin 三轮采集 + M3 Expressive/喝水品类趋势，使用者确认按序实施）。
+- 落地长程路线预排的「统计纵深」：新增**本月热力**（Zero 式月历，主色五档深浅，圈出今天）与**时段节律**（近七日早/白天/晚 Slopes 式堆叠条 + 图例，复用 TimeSlots 分类学）；纯事实、无奖励语义（D10）。
+- 数据侧仅新增只读 `recentRecords(daysBack)`；月热力复用 `weekBars`。业务写入、持久化键、导航、首页零改动。
+- 发布：`versionCode 45 / versionName 2.1.0`；APK 随发布提交入 `dist/`。
+
 ## 2.0.3 · 首页一屏收敛（2026-09-28 已发布）
 
 - 计划：`docs/superpowers/plans/2026-09-28-v203-home-single-viewport-plan.md`；版本 QA：`docs/superpowers/checklists/v2.0.3-qa.md`。
