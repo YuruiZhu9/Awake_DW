@@ -58,6 +58,13 @@ class RoomWaterRepository
 
         override suspend fun todayRecords(): List<WaterRecord> = dao.recordsFor(currentDayKey()).map { it.toDomain() }
 
+        override suspend fun recentRecords(daysBack: Int): List<WaterRecord> {
+            require(daysBack > 0) { "daysBack 必须为正数" }
+            val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
+            val from = today.minusDays((daysBack - 1).toLong()).toDayKey()
+            return dao.recordsSince(from).map { it.toDomain() }
+        }
+
         private fun currentDayKey(): String = clock.nowEpochMs().toDayKey(clock.zone())
 
         /** 杯数 <2 时无平均间隔可言；否则取首尾时间跨度 /(n-1)，换算为分钟并四舍五入。 */

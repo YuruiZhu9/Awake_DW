@@ -1,6 +1,11 @@
 package com.awakedw.feature.stats
 
+import com.awakedw.core.common.TimeSlots
+import com.awakedw.core.model.TimeSlot
+import com.awakedw.core.model.WaterRecord
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * 统计页周柱状图的纯几何换算（设计规格 §3.3 第 2 条）。
@@ -99,4 +104,111 @@ object StatsMath {
     ): Int = (values.maxOrNull() ?: 0).coerceAtLeast(goalMl).coerceAtLeast(1)
 
     private fun bandHeight(chartHeight: Float): Float = chartHeight * SCALE_FRACTION
+}
+
+/** 月历热力的一个格子；[isFuture] 的格子尚未到来，只占位不上色。 */
+data class MonthCell(
+    val dayNumber: Int,
+    val dayKey: String,
+    val totalMl: Int,
+    val isToday: Boolean,
+    val isFuture: Boolean,
+)
+
+/** 时段节律的一段：某时段在统计窗口内的合计毫升数（零也有位置，图例保持稳定）。 */
+data class RhythmSlice(
+    val slot: TimeSlot,
+    val totalMl: Int,
+)
+
+/**
+ * 统计档案的纯换算（2.1.0）：月历热力网格、热力档位、时段节律聚合与两条摘要文案。
+ * 只做事实陈述，不引入成就、连续或奖励语义（D10）。
+ */
+object ArchiveMath {
+    /**
+     * 本月网格：周一首行，月初的空位用 `null` 占位；
+     * 1 日到月末逐日生成，未来日期 [MonthCell.isFuture] 为真（数据只到今天）。
+     * [todayKey] 解析失败返回空列表——不造日期。
+     */
+    fun monthCells(
+        todayKey: String,
+        totalsByDay: Map<String, Int>,
+    ): List<MonthCell?> {
+        val today = runCatching { LocalDate.parse(todayKey) }.getOrNull() ?: return emptyList()
+        val leadBlanks = today.dayOfWeek.value - 1 // 周一 = 1 → 无偏移；周日 = 7 → 六个空位
+        val cells = MutableList<MonthCell?>(leadBlanks) { null }
+        for (day in 1..today.lengthOfMonth()) {
+            val date = today.withDayOfMonth(day)
+            val key = date.toString()
+            cells +=
+                MonthCell(
+                    dayNumber = day,
+                    dayKey = key,
+                    totalMl = totalsByDay[key] ?: 0,
+                    isToday = day == today.dayOfMonth,
+                    isFuture = day > today.dayOfMonth,
+                )
+        }
+        return cells
+    }
+
+    /** 热力档位 0–4：0 为未饮；达标即最高档；中间按距目标的三等分就近落档。 */
+    fun heatLevel(
+        totalMl: Int,
+        goalMl: Int,
+    ): Int =
+        when {
+            totalMl <= 0 -> 0
+            totalMl >= goalMl -> 4
+            totalMl * 3 >= goalMl * 2 -> 3
+            totalMl * 3 >= goalMl -> 2
+            else -> 1
+        }
+
+    /** 月历的语义摘要： TalkBack 读一句事实，不逐格走 31 个数字。 */
+    fun monthSummary(
+        cells: List<MonthCell?>,
+        goalMl: Int,
+    ): String {
+        val real = cells.filterNotNull().filterNot { it.isFuture }
+        val recorded = real.count { it.totalMl > 0 }
+        val met = real.count { it.totalMl >= goalMl }
+        return "本月有记录 $recorded 天，达标 $met 天"
+    }
+
+    /** 月标题：`2026-09-28` → 「9月」；解析失败返回空串，由调用方决定退路。 */
+    fun monthTitle(todayKey: String): String = runCatching { "${LocalDate.parse(todayKey).monthValue}月" }.getOrDefault("")
+
+    /**
+     * 近七日时段节律：记录按 `TimeSlots`（早/白天/晚）分桶合计，顺序固定、零段保留。
+     * 时段语言与心意文案库、问候语完全一致，不新增第四个时段。
+     */
+    fun rhythmOf(
+        records: List<WaterRecord>,
+        zone: ZoneId,
+    ): List<RhythmSlice> {
+        val totals = mutableMapOf<TimeSlot, Int>()
+        records.forEach { record ->
+            val hour = Instant.ofEpochMilli(record.drankAtEpochMs).atZone(zone).hour
+            val slot = TimeSlots.slotOfHour(hour)
+            totals[slot] = (totals[slot] ?: 0) + record.amountMl
+        }
+        return listOf(TimeSlot.MORNING, TimeSlot.DAY, TimeSlot.EVENING).map { slot ->
+            RhythmSlice(slot = slot, totalMl = totals[slot] ?: 0)
+        }
+    }
+
+    /** 节律图例的单字标签：现代白话，与堆叠条的三段一一对应。 */
+    fun slotLabel(slot: TimeSlot): String =
+        when (slot) {
+            TimeSlot.MORNING -> "早"
+            TimeSlot.DAY -> "白天"
+            TimeSlot.EVENING -> "晚"
+        }
+
+    /** 堆叠条的语义读法：一段一句事实，供 TalkBack 一次读完。 */
+    fun rhythmSummary(slices: List<RhythmSlice>): String =
+        slices.joinToString(separator = "，") { "${slotLabel(it.slot)} ${it.totalMl}ml" }
+            .let { "近七日时段分布：$it" }
 }

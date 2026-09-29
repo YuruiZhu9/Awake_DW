@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 /** 徽章缺省文案：无平均间隔可言时显示破折号。 */
@@ -39,6 +41,8 @@ data class StatsBadges(
  * 统计页一屏状态（规格 §3.3）：徽章行 + 本周柱状图 + 今日时间线。
  * [bars] 末列为今天（仓储契约：weekBars 含今天）；[timeline] 为空时页面展示空态文案。
  * 0.9.0 起携带近七日摘要：[weekTotalMl] 合计量与 [weekMetDays] 达标天数（均由 [bars] 与目标推导）。
+ * 2.1.0 档案化起携带 [monthCells]/[monthSummary]/[monthLabel]（本月热力）与
+ * [rhythm]/[rhythmSummary]（近七日时段节律），均为纯事实派生，无成就语义。
  */
 data class StatsUiState(
     val badges: StatsBadges = StatsBadges(totalMl = 0, cupCount = 0, avgIntervalLabel = DASH_LABEL),
@@ -47,6 +51,11 @@ data class StatsUiState(
     val timeline: List<WaterRecord> = emptyList(),
     val weekTotalMl: Int = 0,
     val weekMetDays: Int = 0,
+    val monthCells: List<MonthCell?> = emptyList(),
+    val monthLabel: String = "",
+    val monthSummary: String = "",
+    val rhythm: List<RhythmSlice> = emptyList(),
+    val rhythmSummary: String = "",
 )
 
 /**
@@ -81,6 +90,12 @@ class StatsViewModel
         private suspend fun refresh(goalMl: Int) {
             val stats = water.todayStats()
             val bars = water.weekBars(daysBack = WEEK_DAYS)
+            val today = todayDate()
+            // 本月热力复用 weekBars：daysBack = 今天几号，恰好覆盖本月 1 日至今（见 2.1.0 计划 §2.6）。
+            val monthTotals =
+                water.weekBars(daysBack = today.dayOfMonth).associate { it.dayKey to it.totalMl }
+            val monthCells = ArchiveMath.monthCells(todayKey(), monthTotals)
+            val rhythm = ArchiveMath.rhythmOf(water.recentRecords(daysBack = WEEK_DAYS), clock.zone())
             _uiState.update {
                 it.copy(
                     badges =
@@ -94,9 +109,16 @@ class StatsViewModel
                     timeline = water.todayRecords().filter { it.dayKeyLocal == todayKey() },
                     weekTotalMl = bars.sumOf { it.totalMl },
                     weekMetDays = bars.count { it.totalMl >= goalMl },
+                    monthCells = monthCells,
+                    monthLabel = ArchiveMath.monthTitle(todayKey()),
+                    monthSummary = ArchiveMath.monthSummary(monthCells, goalMl),
+                    rhythm = rhythm,
+                    rhythmSummary = ArchiveMath.rhythmSummary(rhythm),
                 )
             }
         }
+
+        private fun todayDate(): LocalDate = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
 
         private fun todayKey(): String = clock.nowEpochMs().toDayKey(clock.zone())
     }

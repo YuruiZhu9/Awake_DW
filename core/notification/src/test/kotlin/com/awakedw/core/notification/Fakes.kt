@@ -15,6 +15,7 @@ import com.awakedw.core.model.WeekBar
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -64,6 +65,13 @@ class FakeWaterRepository(
     override suspend fun weekBars(daysBack: Int): List<WeekBar> = emptyList()
 
     override suspend fun todayRecords(): List<WaterRecord> = records.toList()
+
+    override suspend fun recentRecords(daysBack: Int): List<WaterRecord> {
+        require(daysBack > 0)
+        val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
+        val from = today.minusDays((daysBack - 1).toLong()).toString()
+        return records.filter { it.dayKeyLocal >= from }.sortedBy { it.drankAtEpochMs }
+    }
 
     override suspend fun delete(recordId: Long) {
         records.removeAll { it.id == recordId }

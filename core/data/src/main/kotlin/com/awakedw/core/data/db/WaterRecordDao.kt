@@ -25,6 +25,10 @@ interface WaterRecordDao {
     @Query("SELECT * FROM water_record WHERE day_key_local = :day ORDER BY drank_at_epoch_ms ASC")
     suspend fun recordsFor(day: String): List<WaterRecordEntity>
 
+    /** 自某本地日（含）起的全部记录，时间升序；day_key_local 字典序即时间序。 */
+    @Query("SELECT * FROM water_record WHERE day_key_local >= :from ORDER BY drank_at_epoch_ms ASC")
+    suspend fun recordsSince(from: String): List<WaterRecordEntity>
+
     @Query(SUMS_BETWEEN_SQL)
     suspend fun sumsBetween(
         from: String,

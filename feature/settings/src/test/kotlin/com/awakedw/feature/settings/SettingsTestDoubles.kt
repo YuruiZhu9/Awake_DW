@@ -181,4 +181,6 @@ class FakeWaterRepository(
     override suspend fun weekBars(daysBack: Int): List<WeekBar> = emptyList()
 
     override suspend fun todayRecords(): List<WaterRecord> = emptyList()
+
+    override suspend fun recentRecords(daysBack: Int): List<WaterRecord> = emptyList()
 }

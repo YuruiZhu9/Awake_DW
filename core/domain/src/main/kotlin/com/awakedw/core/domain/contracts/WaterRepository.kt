@@ -22,4 +22,7 @@ interface WaterRepository {
 
     /** 今日记录，时间升序。 */
     suspend fun todayRecords(): List<WaterRecord>
+
+    /** 含今天的最近 [daysBack] 天记录，时间升序；缺数天自然为空。 */
+    suspend fun recentRecords(daysBack: Int = 7): List<WaterRecord>
 }

@@ -84,6 +84,13 @@ class FakeWaterRepository(
 
     override suspend fun todayRecords(): List<WaterRecord> = recordsOf(currentDayKey()).sortedBy { it.drankAtEpochMs }
 
+    override suspend fun recentRecords(daysBack: Int): List<WaterRecord> {
+        require(daysBack > 0)
+        val today = Instant.ofEpochMilli(clock.ms).atZone(clock.zone()).toLocalDate()
+        val from = today.minusDays((daysBack - 1).toLong()).toString()
+        return records.filter { it.dayKeyLocal >= from }.sortedBy { it.drankAtEpochMs }
+    }
+
     /** 删除一笔并回落当日总量，模拟 Room 行数流触发的重算。 */
     override suspend fun delete(recordId: Long) {
         val removed = records.firstOrNull { it.id == recordId } ?: return

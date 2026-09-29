@@ -118,6 +118,13 @@ class FakeWaterRepository(
     override suspend fun todayRecords(): List<WaterRecord> =
         records.filter { it.dayKeyLocal == currentDayKey() }.sortedBy { it.drankAtEpochMs }
 
+    override suspend fun recentRecords(daysBack: Int): List<WaterRecord> {
+        require(daysBack > 0)
+        val today = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
+        val from = today.minusDays((daysBack - 1).toLong()).toDayKey()
+        return records.filter { it.dayKeyLocal >= from }.sortedBy { it.drankAtEpochMs }
+    }
+
     private fun currentDayKey(): String = clock.nowEpochMs().toDayKey(clock.zone())
 
     private fun todayTotal(): Int = records.filter { it.dayKeyLocal == currentDayKey() }.sumOf { it.amountMl }

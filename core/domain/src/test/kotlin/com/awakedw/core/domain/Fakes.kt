@@ -94,6 +94,14 @@ class FakeWaterRepository(
 
     override suspend fun todayRecords(): List<WaterRecord> = recorded.filter { it.dayKeyLocal == currentDayKey() }
 
+    override suspend fun recentRecords(daysBack: Int): List<WaterRecord> {
+        require(daysBack > 0)
+        val from =
+            Instant.ofEpochMilli(clock.nowEpochMs()).atZone(clock.zone()).toLocalDate()
+                .minusDays((daysBack - 1).toLong()).toString()
+        return recorded.filter { it.dayKeyLocal >= from }.sortedBy { it.drankAtEpochMs }
+    }
+
     private fun avgIntervalOf(records: List<WaterRecord>): Int? {
         if (records.size < 2) return null
         val spanMs = (records.last().drankAtEpochMs - records.first().drankAtEpochMs).toDouble()

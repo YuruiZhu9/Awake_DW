@@ -166,4 +166,26 @@ class RoomWaterRepositoryTest {
             assertEquals(listOf(250, 250), repo.todayRecords().map { it.amountMl })
         }
     }
+
+    @Test
+    fun `recentRecords按窗口回推且时间升序`() {
+        runBlocking {
+            // 今天（2026-08-20）前推 7 天窗口自 08-14 起：08-13 的记录不入窗，08-14 的边界日入窗。
+            clock.ms = tenOclock(minuteOffset = -7L * 24 * 60 - 60)
+            repo.addCup(111)
+            clock.ms = tenOclock(minuteOffset = -6L * 24 * 60 - 60)
+            repo.addCup(222)
+            clock.ms = tenOclock()
+            repo.addCup(250)
+            clock.ms = tenOclock(60L)
+            repo.addCup(333)
+
+            val records = repo.recentRecords(daysBack = 7)
+
+            assertEquals(listOf(222, 250, 333), records.map { it.amountMl })
+            assertTrue(records.zipWithNext().all { (a, b) -> a.drankAtEpochMs <= b.drankAtEpochMs })
+            // 缺省参数与显式 7 天一致。
+            assertEquals(records, repo.recentRecords())
+        }
+    }
 }

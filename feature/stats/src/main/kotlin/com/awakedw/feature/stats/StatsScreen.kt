@@ -49,6 +49,8 @@ import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.WaterRecord
+import com.awakedw.feature.stats.components.MonthHeatmap
+import com.awakedw.feature.stats.components.RhythmBars
 import com.awakedw.feature.stats.components.TodayTimeline
 import com.awakedw.feature.stats.components.WeekBarsChart
 
@@ -145,6 +147,25 @@ internal fun StatsContent(
             // —— 近七日：图表直接浮在背景上，无容器 ——
             StatsSectionLabel("近七日")
             WeekBarsChart(state.bars, state.goalMl, Modifier.fillMaxWidth())
+            // —— 时段节律（2.1.0）：近七日早/白天/晚构成；整段零记录时整节静默 ——
+            if (state.rhythm.any { it.totalMl > 0 }) {
+                StatsSectionLabel("时段节律 · 近七日")
+                RhythmBars(
+                    slices = state.rhythm,
+                    summary = state.rhythmSummary,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            // —— 本月热力（2.1.0）：档案骨架，始终呈现 ——
+            if (state.monthCells.isNotEmpty()) {
+                StatsSectionLabel(state.monthLabel)
+                MonthHeatmap(
+                    cells = state.monthCells,
+                    goalMl = state.goalMl,
+                    summary = state.monthSummary,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             // —— 今日记录：发丝行，无卡片 ——
             StatsSectionLabel("今日记录 · ${state.timeline.size} 次")
             TodayTimeline(

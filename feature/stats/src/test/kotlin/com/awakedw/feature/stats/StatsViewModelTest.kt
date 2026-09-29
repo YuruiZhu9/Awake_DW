@@ -159,4 +159,43 @@ class StatsViewModelTest {
             assertEquals("—", state.badges.avgIntervalLabel)
             assertEquals(0, state.bars.last().totalMl)
         }
+
+    @Test
+    fun `本月热力标记今天未来格留空并给出档案摘要`() =
+        runTest {
+            val h = harness(testScheduler)
+            h.water.seedToday()
+            runCurrent()
+
+            val state = h.viewModel.uiState.value
+            assertEquals("8月", state.monthLabel)
+            val today = state.monthCells.filterNotNull().last { !it.isFuture }
+            assertTrue(today.isToday)
+            assertEquals(27, today.dayNumber)
+            assertEquals(250, today.totalMl)
+            assertTrue(state.monthCells.filterNotNull().filter { it.isFuture }.all { it.totalMl == 0 })
+            assertEquals("本月有记录 1 天，达标 0 天", state.monthSummary)
+        }
+
+    @Test
+    fun `时段节律把近七日聚合为早白天晚三段`() =
+        runTest {
+            val h = harness(testScheduler)
+            // seedToday：首杯 10:00（早），其后 60/30 分钟 → 11:00、11:30（白天）。
+            h.water.seedToday(60, 30)
+            runCurrent()
+
+            val state = h.viewModel.uiState.value
+            assertEquals(listOf(250, 500, 0), state.rhythm.map { it.totalMl })
+            assertEquals("近七日时段分布：早 250ml，白天 500ml，晚 0ml", state.rhythmSummary)
+        }
+
+    @Test
+    fun `空库时节律为三段全零切片`() =
+        runTest {
+            val h = harness(testScheduler)
+            runCurrent()
+
+            assertEquals(listOf(0, 0, 0), h.viewModel.uiState.value.rhythm.map { it.totalMl })
+        }
 }
