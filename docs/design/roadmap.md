@@ -4,6 +4,13 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.2.0 · 手感升级：环即把手（2026-09-29 实施）
+
+- 计划：`docs/superpowers/plans/2026-09-29-v220-ring-drag-plan.md`。方向：研究稿候选 C × v2.0 方向三「环即把手」（使用者确认推进）。
+- 环从显示件变操纵件：沿环拖动即注水（整圈=一杯容量），切向/滚动仲裁保纵向滚动，点按等价路径保留；记账复用 `scheduleLog` 闸门。弹簧一阶：进度弧 tween→近临界 spring，预览 150ms 收场；减少动态全直显。
+- 桌面小部件候选**使用者否决**（2026-09-29「感觉没必要」），移出队列。
+- 发布：`versionCode 46 / versionName 2.2.0`；APK 随发布提交入 `dist/`。
+
 ## 2.1.0 · 统计页「档案化」（2026-09-29 实施）
 
 - 计划：`docs/superpowers/plans/2026-09-29-v210-stats-archive-plan.md`；方向研究：`docs/design/2026-09-29-future-directions-research.md`（mobbin 三轮采集 + M3 Expressive/喝水品类趋势，使用者确认按序实施）。
