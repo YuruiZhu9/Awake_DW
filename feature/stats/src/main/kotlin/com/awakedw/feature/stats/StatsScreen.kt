@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,15 +50,14 @@ import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.feature.stats.components.MonthHeatmap
-import com.awakedw.feature.stats.components.RhythmBars
 import com.awakedw.feature.stats.components.TodayTimeline
-import com.awakedw.feature.stats.components.WeekBarsChart
+import com.awakedw.feature.stats.components.WeekRecordList
 
 /**
- * 统计页（1.5.0 去卡片化，参照 Ultrahuman / Zero / Nike Run Club 的健康仪表盘模式，
- * 见 docs/design/mobbin-reference-notes.md）：内容直接浮在透气的背景上——
- * hero 是「微标签 + 大号衬线数字」，指标格只有顶部发丝线（零盒子），周图无容器，
- * 时间线是发丝分隔的行。分节标题走微字距小标签；洛丽塔饰线轨留在首页与设置。
+ * 统计页（2.5.0 去图表化，回应使用者反馈「统计的意义在于记录，柱状图会增加焦虑」）：
+ * 全页只有记录的形态——今日 hero 与细轨、文本事实格、周记录列表（发丝行）、
+ * 本月日历（三档：未饮/有记录/达标）与今日记录时间线。柱状图、分布条与年度信纸已撤除，
+ * 周统计与月统计足够（使用者确认）。分节标题走微字距小标签。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -145,19 +143,14 @@ internal fun StatsContent(
                 StatsFact("近七日合计", StatsMath.weekTotalLabel(state.weekTotalMl), Modifier.weight(1f))
                 StatsFact("近七日达标", StatsMath.weekMetDaysLabel(state.bars.map { it.totalMl }, state.goalMl), Modifier.weight(1f))
             }
-            // —— 近七日：图表直接浮在背景上，无容器 ——
+            // —— 近七日：周记录列表（2.5.0 去图表化）——每天一行发丝行，今天在最上 ——
             StatsSectionLabel("近七日")
-            WeekBarsChart(state.bars, state.goalMl, Modifier.fillMaxWidth())
-            // —— 时段节律（2.1.0）：近七日早/白天/晚构成；整段零记录时整节静默 ——
-            if (state.rhythm.any { it.totalMl > 0 }) {
-                StatsSectionLabel("时段节律 · 近七日")
-                RhythmBars(
-                    slices = state.rhythm,
-                    summary = state.rhythmSummary,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            // —— 本月热力（2.1.0）：档案骨架，始终呈现 ——
+            WeekRecordList(
+                bars = state.bars,
+                todayKey = state.todayKey,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            // —— 本月（2.1.0 引入，2.5.0 三档降噪）：日历即记录 ——
             if (state.monthCells.isNotEmpty()) {
                 StatsSectionLabel(state.monthLabel)
                 MonthHeatmap(
@@ -174,24 +167,6 @@ internal fun StatsContent(
                 onRequestDelete = { record -> pendingDelete = record },
                 modifier = Modifier.fillMaxWidth(),
             )
-            // —— 年度信纸（2.3.0）：页尾一封信，只陈述当年的事实；零记录整节静默 ——
-            if (state.yearLetterLines.isNotEmpty()) {
-                StatsSectionLabel("年度信纸")
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    state.yearLetterLines.forEach { line ->
-                        Text(
-                            text = line,
-                            color = spec.greetingColor,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif),
-                        )
-                    }
-                    Text(
-                        text = YEAR_LETTER_SIGN_OFF,
-                        color = spec.greetingSubColor,
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
-                    )
-                }
-            }
             Spacer(Modifier.height(12.dp))
         }
     }
@@ -213,9 +188,6 @@ internal fun StatsContent(
 
 /** 分节间距（1.5.0）：去卡片后区块靠更大的纵向留白分节——呼吸感来自间距而非框。 */
 private val SECTION_GAP = 22.dp
-
-/** 年度信纸的落款（2.3.0）：现代白话，不出现称谓，不构成催促。 */
-private const val YEAR_LETTER_SIGN_OFF = "新的一年，也按时喝水。"
 
 /** 分节微标签的字距：小、疏、静，Nike 式层级耳语。 */
 private const val SECTION_LABEL_SPACING = 2.5f

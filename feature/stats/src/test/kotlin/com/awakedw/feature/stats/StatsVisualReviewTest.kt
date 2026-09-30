@@ -9,11 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
@@ -55,6 +53,7 @@ class StatsVisualReviewTest {
                 (2..8).map { WeekBar("2026-09-0$it", if (it == 8) 1250 else it * 250) },
                 1600,
                 (1..5).map { WaterRecord(it.toLong(), 250, 1_788_854_400_000L + it * 3_600_000L, "2026-09-08") },
+                todayKey = "2026-09-08",
             )
         rule.setContent {
             view = LocalView.current
@@ -68,9 +67,9 @@ class StatsVisualReviewTest {
             capture(view, id.name.lowercase())
         }
         rule.runOnIdle { font.value = 1.5f }
-        rule.onNodeWithContentDescription("9月4日，1000ml").performScrollTo().performClick().assertIsSelected()
-        rule.onNodeWithText("9月4日 · 1000ml").assertIsDisplayed()
-        capture(view, "large-chart")
+        // 周记录列表（2.5.0 去图表化）：今天一行翻在最上，大字体下不丢内容。
+        rule.onNodeWithContentDescription("今天，1250ml").performScrollTo().assertIsDisplayed()
+        capture(view, "large-week")
         rule.onNodeWithText("今日记录 · 5 次").performScrollTo().assertIsDisplayed()
         capture(view, "large-records")
     }

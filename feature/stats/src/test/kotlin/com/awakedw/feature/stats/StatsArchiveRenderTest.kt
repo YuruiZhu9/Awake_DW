@@ -2,11 +2,11 @@ package com.awakedw.feature.stats
 
 import android.provider.Settings
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.model.ThemeId
-import com.awakedw.core.model.TimeSlot
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.core.model.WeekBar
 import org.junit.Rule
@@ -18,9 +18,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * 2.1.0 两节新内容（本月热力 + 时段节律）在填充态下的整页渲染测试：
- * 旧的可视化回归用旧四参构造，monthCells/rhythm 全为默认空值——新组件从未被渲染过，
- * 真机打开统计页闪退而测试全绿的盲区正是这里。此测试把两节全部填满数据。
+ * 2.5.0 去图表化后的统计页填充态整页渲染测试：周记录列表 + 本月日历都要真的组装出来。
+ * 此测试的前身（2.1.0）曾暴露「新组件零渲染覆盖 → 真机必崩」的盲区，形态更新后继续守这一层。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w360dp-h740dp-mdpi")
@@ -30,7 +29,7 @@ class StatsArchiveRenderTest {
     val rule = createComposeRule()
 
     @Test
-    fun `filled month heatmap and rhythm bars render without crashing`() {
+    fun `周记录列表与月历填充渲染不崩溃`() {
         Settings.Global.putFloat(
             RuntimeEnvironment.getApplication().contentResolver,
             Settings.Global.ANIMATOR_DURATION_SCALE,
@@ -51,20 +50,15 @@ class StatsArchiveRenderTest {
                 monthCells = ArchiveMath.monthCells("2026-09-29", monthTotals),
                 monthLabel = "9月",
                 monthSummary = "本月有记录 3 天，达标 1 天",
-                rhythm =
-                    listOf(
-                        RhythmSlice(TimeSlot.MORNING, 500),
-                        RhythmSlice(TimeSlot.DAY, 250),
-                        RhythmSlice(TimeSlot.EVENING, 500),
-                    ),
-                rhythmSummary = "近七日时段分布：早 500ml，白天 250ml，晚 500ml",
+                todayKey = "2026-09-29",
             )
         rule.setContent {
             AwakeTheme(ThemeId.EMERALD) { StatsContent(state) }
         }
-        rule.onNodeWithText("时段节律 · 近七日").performScrollTo()
-        rule.onNodeWithText("早").performScrollTo()
-        // 热力格数字在合并树里不可见（容器整体一条摘要），分节标题出现即证明热力图组装成功。
+        // 周记录列表：今天翻在最上（仓储契约 bars 末列为今天），昨天次之。
+        rule.onNodeWithContentDescription("今天，1250ml").performScrollTo()
+        rule.onNodeWithContentDescription("昨天，1120ml").performScrollTo()
+        // 月历：分节标题出现即证明日历组装成功（格子数字在合并树里不可见，容器整体一条摘要）。
         rule.onNodeWithText("9月").performScrollTo()
     }
 }

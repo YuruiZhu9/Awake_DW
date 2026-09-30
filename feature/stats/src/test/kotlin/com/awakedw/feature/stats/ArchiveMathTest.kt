@@ -1,20 +1,14 @@
 package com.awakedw.feature.stats
 
-import com.awakedw.core.model.TimeSlot
-import com.awakedw.core.model.WaterRecord
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 /**
- * 统计档案纯换算（2.1.0）：月历网格几何、热力档位边界、节律分桶与摘要文案。
+ * 统计月历纯换算（2.1.0 引入，2.5.0 三档收敛）：网格几何、档位边界、摘要与标题。
  * 只陈述事实，不引入成就语义（D10）。
  */
 class ArchiveMathTest {
-    private val zone: ZoneId = ZoneId.of("Asia/Shanghai")
-
     /** 2026-08-27 是星期四（周首行偏移 3），8 月共 31 天。 */
     private val todayKey = "2026-08-27"
 
@@ -55,17 +49,13 @@ class ArchiveMathTest {
     }
 
     @Test
-    fun `热力档位按距目标三等分就近落档`() {
+    fun `热力三档只回答喝没喝够没够`() {
         val goal = 1600
         assertEquals(0, ArchiveMath.heatLevel(0, goal))
         assertEquals(1, ArchiveMath.heatLevel(1, goal))
-        assertEquals(1, ArchiveMath.heatLevel(533, goal))
-        assertEquals(2, ArchiveMath.heatLevel(534, goal))
-        assertEquals(2, ArchiveMath.heatLevel(1066, goal))
-        assertEquals(3, ArchiveMath.heatLevel(1067, goal))
-        assertEquals(3, ArchiveMath.heatLevel(1599, goal))
-        assertEquals(4, ArchiveMath.heatLevel(1600, goal))
-        assertEquals(4, ArchiveMath.heatLevel(2400, goal))
+        assertEquals(1, ArchiveMath.heatLevel(1599, goal))
+        assertEquals(2, ArchiveMath.heatLevel(1600, goal))
+        assertEquals(2, ArchiveMath.heatLevel(2400, goal))
     }
 
     @Test
@@ -86,137 +76,5 @@ class ArchiveMathTest {
     fun `月标题转中文月份异常键返回空串`() {
         assertEquals("8月", ArchiveMath.monthTitle(todayKey))
         assertEquals("", ArchiveMath.monthTitle("不是日期"))
-    }
-
-    @Test
-    fun `节律按早白天晚三段聚合夜间归晚`() {
-        fun record(
-            id: Long,
-            hour: Int,
-            minute: Int,
-            amountMl: Int,
-        ): WaterRecord {
-            val at = LocalDateTime.of(2026, 8, 27, hour, minute).atZone(zone).toInstant().toEpochMilli()
-            return WaterRecord(id = id, amountMl = amountMl, drankAtEpochMs = at, dayKeyLocal = "2026-08-27")
-        }
-
-        val slices =
-            ArchiveMath.rhythmOf(
-                records =
-                    listOf(
-                        record(1, hour = 8, minute = 0, amountMl = 250),
-                        record(2, hour = 14, minute = 30, amountMl = 300),
-                        record(3, hour = 23, minute = 0, amountMl = 200),
-                        record(4, hour = 3, minute = 0, amountMl = 100),
-                        record(5, hour = 10, minute = 0, amountMl = 150),
-                    ),
-                zone = zone,
-            )
-
-        // 早 6–10：8 点 + 10 点；白天 11–17：14 点半；晚（其余，含夜间）：23 点 + 3 点。
-        assertEquals(listOf(400, 300, 300), slices.map { it.totalMl })
-        assertEquals(TimeSlot.MORNING, slices[0].slot)
-        assertEquals(TimeSlot.DAY, slices[1].slot)
-        assertEquals(TimeSlot.EVENING, slices[2].slot)
-    }
-
-    @Test
-    fun `无记录时节律保留三段全零切片`() {
-        val slices = ArchiveMath.rhythmOf(emptyList(), zone)
-
-        assertEquals(listOf(0, 0, 0), slices.map { it.totalMl })
-    }
-
-    @Test
-    fun `节律标签与摘要使用现代白话`() {
-        val slices =
-            listOf(
-                RhythmSlice(TimeSlot.MORNING, 400),
-                RhythmSlice(TimeSlot.DAY, 300),
-                RhythmSlice(TimeSlot.EVENING, 0),
-            )
-
-        assertEquals("早", ArchiveMath.slotLabel(TimeSlot.MORNING))
-        assertEquals("白天", ArchiveMath.slotLabel(TimeSlot.DAY))
-        assertEquals("晚", ArchiveMath.slotLabel(TimeSlot.EVENING))
-        assertEquals("近七日时段分布：早 400ml，白天 300ml，晚 0ml", ArchiveMath.rhythmSummary(slices))
-    }
-
-    @Test
-    fun `年度信纸聚合总量杯数并拾取最常时段`() {
-        fun record(
-            id: Long,
-            hour: Int,
-            minute: Int,
-            amountMl: Int,
-        ): WaterRecord {
-            val at = LocalDateTime.of(2026, 8, 27, hour, minute).atZone(zone).toInstant().toEpochMilli()
-            return WaterRecord(id = id, amountMl = amountMl, drankAtEpochMs = at, dayKeyLocal = "2026-08-27")
-        }
-
-        val letter =
-            ArchiveMath.yearLetter(
-                records =
-                    listOf(
-                        record(1, hour = 8, minute = 0, amountMl = 250),
-                        record(2, hour = 14, minute = 30, amountMl = 300),
-                        record(3, hour = 23, minute = 0, amountMl = 200),
-                    ),
-                zone = zone,
-            )!!
-
-        assertEquals(750, letter.totalMl)
-        assertEquals(3, letter.cupCount)
-        // 白天 300ml 为最常时段。
-        assertEquals(TimeSlot.DAY, letter.topSlot)
-    }
-
-    @Test
-    fun `年度信纸并列时段取固定顺序的第一个`() {
-        fun record(
-            id: Long,
-            hour: Int,
-            amountMl: Int,
-        ): WaterRecord {
-            val at = LocalDateTime.of(2026, 8, 27, hour, 0).atZone(zone).toInstant().toEpochMilli()
-            return WaterRecord(id = id, amountMl = amountMl, drankAtEpochMs = at, dayKeyLocal = "2026-08-27")
-        }
-
-        val letter =
-            ArchiveMath.yearLetter(
-                records =
-                    listOf(
-                        record(1, hour = 8, amountMl = 250),
-                        record(2, hour = 14, amountMl = 250),
-                        record(3, hour = 23, amountMl = 250),
-                    ),
-                zone = zone,
-            )!!
-
-        // 早/白天/晚三段并列：取固定顺序的「早」。
-        assertEquals(TimeSlot.MORNING, letter.topSlot)
-    }
-
-    @Test
-    fun `零记录年不写信`() {
-        assertEquals(null, ArchiveMath.yearLetter(emptyList(), zone))
-    }
-
-    @Test
-    fun `信纸正文两行随总量切换升与毫升`() {
-        assertEquals(
-            listOf(
-                "2026 年，共记下 8.2 L、33 杯。",
-                "喝得最多的时段是早。",
-            ),
-            ArchiveMath.letterLines(YearLetterData(totalMl = 8240, cupCount = 33, topSlot = TimeSlot.MORNING), year = 2026),
-        )
-        assertEquals(
-            listOf(
-                "2026 年，共记下 820 ml、3 杯。",
-                "喝得最多的时段是白天。",
-            ),
-            ArchiveMath.letterLines(YearLetterData(totalMl = 820, cupCount = 3, topSlot = TimeSlot.DAY), year = 2026),
-        )
     }
 }

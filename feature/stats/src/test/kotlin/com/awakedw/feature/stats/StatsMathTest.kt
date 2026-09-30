@@ -4,86 +4,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * 统计页柱状图的纯几何换算（规格 §3.3 第 2 条）：
- * 柱高与目标线共用同一刻度，最大柱至多图表高 × 0.86，0 值柱交给绘制层画基线圆点。
+ * 统计页「记录」形态的纯换算（2.5.0 去图表化后）：周合计、达标天数、
+ * 日期读法、周记录行标签与细轨语义。图表换算已随柱状图撤除。
  */
 class StatsMathTest {
-    /** 测试用图表高 100px，0.86 刻度带即 86px，换算心算可验。 */
-    private val chartHeight = 100f
-
-    @Test
-    fun `全零周所有柱都归一到基线圆点`() {
-        val heights = StatsMath.barHeights(values = List(7) { 0 }, goalMl = 1600, chartHeight = chartHeight)
-
-        assertEquals(List(7) { 0f }, heights)
-    }
-
-    @Test
-    fun `单柱独大时最大柱顶到0点86倍图高其余为基线`() {
-        val values = listOf(0, 0, 0, 0, 0, 0, 2000)
-
-        val heights = StatsMath.barHeights(values = values, goalMl = 1600, chartHeight = chartHeight)
-
-        assertEquals(listOf(0f, 0f, 0f, 0f, 0f, 0f, 86f), heights.map { it })
-    }
-
-    @Test
-    fun `所有柱都低于目标时目标线落在刻度带顶端`() {
-        val values = listOf(200, 400, 800, 300, 600, 500, 750)
-
-        val y = StatsMath.goalLineY(goalMl = 1600, values = values, chartHeight = chartHeight)
-
-        assertEquals(100f - 86f, y, EPSILON)
-    }
-
-    @Test
-    fun `最大柱越过目标时目标线按同一刻度落在柱身之间`() {
-        // 刻度顶 = 2000，目标 1600 → 线距顶 1600/2000 × 86 = 68.8，y = 31.2。
-        val values = listOf(500, 1200, 2000, 900, 700, 1100, 1400)
-
-        val y = StatsMath.goalLineY(goalMl = 1600, values = values, chartHeight = chartHeight)
-
-        assertEquals(100f - 1600f / 2000f * 86f, y, EPSILON)
-        // 同时最大柱仍恰好顶到 0.86 倍图高。
-        val heights = StatsMath.barHeights(values = values, goalMl = 1600, chartHeight = chartHeight)
-        assertEquals(86f, heights[2], EPSILON)
-    }
-
-    @Test
-    fun `周内无任何柱时目标线仍以目标量为刻度顶落位`() {
-        val y = StatsMath.goalLineY(goalMl = 1600, values = List(7) { 0 }, chartHeight = chartHeight)
-
-        assertEquals(100f - 86f, y, EPSILON)
-    }
-
-    @Test
-    fun `达标柱按目标量逐日标记主色其余走轨道色`() {
-        val flags = StatsMath.metGoal(values = listOf(1600, 800, 2000, 0), goalMl = 1600)
-
-        assertEquals(listOf(true, false, true, false), flags)
-    }
-
-    @Test
-    fun `末列今天标注今字其余列标注当月几号`() {
-        val dayKeys = List(7) { "2026-08-${21 + it}" }
-
-        val labels = StatsMath.columnLabels(dayKeys = dayKeys, todayKey = "2026-08-27")
-
-        assertEquals(listOf("21", "22", "23", "24", "25", "26", "今"), labels)
-    }
-
-    private companion object {
-        const val EPSILON = 1e-3f
-    }
-
-    @Test
-    fun `错峰生长的每列最终都到达真实高度`() {
-        for (index in 0..6) {
-            assertEquals(1f, StatsMath.columnGrowth(1f, index), 0.00001f)
-            assertEquals(0f, StatsMath.columnGrowth(0f, index), 0.00001f)
-        }
-    }
-
     @Test
     fun `近七日合计满一升降单位不足一升保留毫升`() {
         assertEquals("1.9 L", StatsMath.weekTotalLabel(1900))
@@ -100,11 +24,20 @@ class StatsMathTest {
     }
 
     @Test
-    fun `选中列读数转中文月日异常键原样返回`() {
+    fun `日期读数转中文月日异常键原样返回`() {
         assertEquals("9月8日", StatsMath.dayReadout("2026-09-08"))
         assertEquals("12月31日", StatsMath.dayReadout("2026-12-31"))
         // 解析失败不造日期：原样返回原始键。
         assertEquals("不是日期", StatsMath.dayReadout("不是日期"))
+    }
+
+    @Test
+    fun `周记录行标签今天昨天其余转中文月日`() {
+        assertEquals("今天", StatsMath.weekRowLabel("2026-09-08", todayKey = "2026-09-08"))
+        assertEquals("昨天", StatsMath.weekRowLabel("2026-09-07", todayKey = "2026-09-08"))
+        assertEquals("9月3日", StatsMath.weekRowLabel("2026-09-03", todayKey = "2026-09-08"))
+        // 键解析失败不造称呼：原样返回。
+        assertEquals("不是日期", StatsMath.weekRowLabel("不是日期", todayKey = "2026-09-08"))
     }
 
     @Test

@@ -178,50 +178,16 @@ class StatsViewModelTest {
         }
 
     @Test
-    fun `时段节律把近七日聚合为早白天晚三段`() =
+    fun `周记录列表就位且今天键随状态给出`() =
         runTest {
             val h = harness(testScheduler)
-            // seedToday：首杯 10:00（早），其后 60/30 分钟 → 11:00、11:30（白天）。
-            h.water.seedToday(60, 30)
+            h.water.seedToday()
             runCurrent()
 
             val state = h.viewModel.uiState.value
-            assertEquals(listOf(250, 500, 0), state.rhythm.map { it.totalMl })
-            assertEquals("近七日时段分布：早 250ml，白天 500ml，晚 0ml", state.rhythmSummary)
-        }
-
-    @Test
-    fun `空库时节律为三段全零切片`() =
-        runTest {
-            val h = harness(testScheduler)
-            runCurrent()
-
-            assertEquals(listOf(0, 0, 0), h.viewModel.uiState.value.rhythm.map { it.totalMl })
-        }
-
-    @Test
-    fun `年度信纸随记录就位并陈述当年事实`() =
-        runTest {
-            val h = harness(testScheduler)
-            h.water.seedToday(60, 30)
-            runCurrent()
-
-            // 三杯共 750ml（<1L 保留毫升），首杯 10:00 落在早段、白天两杯合计 500ml 为最常时段。
-            assertEquals(
-                listOf(
-                    "2026 年，共记下 750 ml、3 杯。",
-                    "喝得最多的时段是白天。",
-                ),
-                h.viewModel.uiState.value.yearLetterLines,
-            )
-        }
-
-    @Test
-    fun `空库时年度信纸整节静默`() =
-        runTest {
-            val h = harness(testScheduler)
-            runCurrent()
-
-            assertTrue(h.viewModel.uiState.value.yearLetterLines.isEmpty())
+            assertEquals(BASE_DAY_KEY, state.todayKey)
+            // 仓储契约：bars 升序、末列为今天；周记录列表据此把今天翻到最上。
+            assertEquals(BASE_DAY_KEY, state.bars.last().dayKey)
+            assertEquals(250, state.bars.last().totalMl)
         }
 }

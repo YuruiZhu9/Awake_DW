@@ -33,15 +33,15 @@ import com.awakedw.feature.stats.MonthCell
 /** 热力格圆角：与快捷胶囊、周柱顶同族的小圆角。 */
 private val HEAT_CELL_SHAPE = RoundedCornerShape(7.dp)
 
-/** 热力五档透明度（视觉基线 §18）：0 档由轨道色承担，1–4 档压在主色上。 */
-private val HEAT_ALPHAS = listOf(0f, 0.20f, 0.42f, 0.66f, 1f)
+/** 热力三档透明度（视觉基线 §18 修订）：0 未饮由轨道色承担，1 有记录、2 达标压在主色上。 */
+private val HEAT_ALPHAS = listOf(0f, 0.35f, 0.90f)
 
-/** 数字改用主表面色的起始档位：≥0.66 的主色底上，纸面字更可读。 */
-private const val ON_PRIMARY_HEAT_LEVEL = 3
+/** 数字改用主表面色的起始档位：达标的主色底上，纸面字更可读。 */
+private const val ON_PRIMARY_HEAT_LEVEL = 2
 
 /** 图例小样的边长与「少/多」之间的梯度块数。 */
 private val LEGEND_SWATCH_SIZE = 10.dp
-private const val LEGEND_SWATCH_COUNT = 5
+private const val LEGEND_SWATCH_COUNT = 3
 
 /**
  * 本月热力（2.1.0 档案化，Zero 式月历）：周一首行的月历网格，
