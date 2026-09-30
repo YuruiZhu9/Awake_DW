@@ -2,6 +2,25 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.4.0] - 2026-09-29 · versionCode 48
+
+**引导页主题实时预览**（方向研究候选 E，onboarding 2026 的 outcome preview）：首次启动先挑主题，选完即见所得。
+
+### Added
+- 引导最前新增「挑主题」步：点选色卡即落库，app 壳主题流让整屏即时换装——预览即真实，不做假缩略。
+- 步内嵌「首页缩样」面板：以所选主题局部覆写画出问候 + 进度环 + 记一杯小胶囊，与真首页同一套组件语言。
+- 主题色卡复用设置页缩略图策略（渐变底 + 主题画 + 蕾丝覆层）；跳过主题选择不写偏好，白名单步与「以后再说」原样后移。
+
+### Changed
+- `themeLabelOf`/`themeIdOf` 纯映射自 settings 内部提升至 `core:designsystem` 共享，主题叫法全 app 一份。
+
+### Unchanged
+- 业务写入、持久化键、导航结构、权限零改动；不加账号、不加网络、不增引导出口。
+
+### Verification
+- `OnboardingViewModelTest` +3 例（即点即落库、推进步骤不写偏好、完成语义不变）、`OnboardingLayoutTest` 更新 + 新增主题步用例（测试视口加高至 h980dp 容纳缩样与八张色卡）；设置页主题测试随共享化改引用。
+- 全仓库 `ktlintCheck build --rerun-tasks` 强制重跑全绿（见版本 QA）。
+
 ## [v2.3.0] - 2026-09-29 · versionCode 47
 
 **年度信纸**（方向研究候选 D，Wrapped 模式的克制化）：把「信纸」母题从界面语言升格为年度总结的陈述——纯本地事实、单屏静态、无成就语义。
