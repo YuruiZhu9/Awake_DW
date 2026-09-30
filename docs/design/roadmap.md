@@ -4,6 +4,13 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.4.0 · 引导页主题实时预览（2026-09-29 实施）
+
+- 计划：`docs/superpowers/plans/2026-09-29-v240-onboarding-theme-preview-plan.md`。方向：研究稿候选 E（onboarding 2026 的 outcome preview），使用者 2026-09-29 指示沿方向队列继续优化、稍后统一验收。
+- 引导最前新增「挑主题」步：点选即落库（`prefs.setThemeChoice`），app 壳主题流本就响应式——整屏即时换装；步内嵌所选主题的「首页缩样」（问候 + 进度环 + 记一杯小胶囊，`AwakeTheme` 局部覆写）。白名单步原样后移，「以后再说」触控下限等回归保持；跳过主题选择不写偏好。
+- `themeLabel`/`themeIdOf` 纯映射自 settings 提升至 `core:designsystem` 共享（设置页改引用，删内部副本）。
+- 发布：`versionCode 48 / versionName 2.4.0`；APK 随发布提交入 `dist/`。
+
 ## 2.3.0 · 年度信纸（2026-09-29 实施）
 
 - 计划：`docs/superpowers/plans/2026-09-29-v230-year-letter-plan.md`。方向：研究稿候选 D（Wrapped 模式的克制化），使用者 2026-09-29 指示沿方向队列继续优化、稍后统一验收。
