@@ -25,7 +25,9 @@ import java.time.Duration
  * 开屏时序（~1.2s + 交棒）后放行主线程挂起的协程再断言。
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = AwakeApplication::class, qualifiers = "w411dp-h891dp")
+// 引导第一屏是主题步（2.4.0，缩样 + 八张色卡，内容 ~950px）：测试视口加高到 h1100dp，
+// 主路径按钮无须滚动即可见——引导页粒子是无限动画，performScrollTo 的滚动静默等待会挂死（见 OnboardingLayoutTest KDoc）。
+@Config(application = AwakeApplication::class, qualifiers = "w411dp-h1100dp")
 class MainActivityColdBootTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
@@ -40,6 +42,9 @@ class MainActivityColdBootTest {
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
 
+        // 引导第一屏是主题步（2.4.0）：缩样 + 色卡；继续后才见白名单步。
+        composeRule.onNodeWithText("先挑一个顺眼的主题").assertIsDisplayed()
+        continueToWhitelistStep()
         composeRule.onNodeWithText("让提醒按时到达").assertIsDisplayed()
         composeRule.onNodeWithText("打开设置").assertIsDisplayed()
     }
@@ -52,7 +57,8 @@ class MainActivityColdBootTest {
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
 
-        // 跳过引导：complete() 落 DataStore → onComplete 接缝导航首页 → 真首页挂载。
+        // 先过主题步；跳过引导：complete() 落 DataStore → onComplete 接缝导航首页 → 真首页挂载。
+        continueToWhitelistStep()
         composeRule.onNodeWithText("以后再说").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
@@ -67,6 +73,7 @@ class MainActivityColdBootTest {
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SPLASH_TOTAL_MS))
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
+        continueToWhitelistStep()
         composeRule.onNodeWithText("以后再说").performClick()
         composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
@@ -95,6 +102,13 @@ class MainActivityColdBootTest {
         }
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
         assertTrue("首页返回键应直接退出应用", finishingAfterBack)
+    }
+
+    /** 主题步是引导第一屏（2.4.0）：滚到折叠线下的「就这个，继续」点按，进入白名单步。 */
+    private fun continueToWhitelistStep() {
+        composeRule.onNodeWithText("就这个，继续").performClick()
+        composeRule.mainClock.advanceTimeBy(HOME_FIRST_FRAME_MS)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(SETTLE_MS))
     }
 
     private companion object {

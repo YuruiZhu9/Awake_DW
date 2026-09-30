@@ -21,10 +21,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.designsystem.themeLabelOf
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.settings.components.ThemeChoiceChips
-import com.awakedw.feature.settings.components.themeLabel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,9 +52,9 @@ class ThemeChoiceInteractionTest {
         }
         var previous = ThemeChoice.FOLLOW_TIME
         ThemeChoice.entries.forEach { choice ->
-            composeRule.onNodeWithText(themeLabel(choice)).performScrollTo().assertIsDisplayed().performClick()
+            composeRule.onNodeWithText(themeLabelOf(choice)).performScrollTo().assertIsDisplayed().performClick()
                 .assertIsSelected().assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
-            if (previous != choice) composeRule.onNodeWithText(themeLabel(previous)).assertIsNotSelected()
+            if (previous != choice) composeRule.onNodeWithText(themeLabelOf(previous)).assertIsNotSelected()
             previous = choice
         }
     }

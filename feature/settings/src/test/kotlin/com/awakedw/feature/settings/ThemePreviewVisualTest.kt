@@ -26,11 +26,11 @@ import com.awakedw.core.designsystem.art.loadAssetBitmap
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.themeArtworkOf
+import com.awakedw.core.designsystem.themeIdOf
+import com.awakedw.core.designsystem.themeLabelOf
 import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.settings.components.ThemeChoiceChips
-import com.awakedw.feature.settings.components.themeIdOf
-import com.awakedw.feature.settings.components.themeLabel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
@@ -111,7 +111,7 @@ class ThemePreviewVisualTest {
             ThemeId.CLERIC to ThemeChoice.FIXED_CLERIC,
         ).forEach { (id, choice) ->
             composeRule.runOnIdle { theme.value = id }
-            composeRule.onNodeWithText(themeLabel(choice)).performScrollTo().performClick().assertIsSelected()
+            composeRule.onNodeWithText(themeLabelOf(choice)).performScrollTo().performClick().assertIsSelected()
             composeRule.waitUntil(timeoutMillis = 5_000) {
                 shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(50))
                 composeRule.mainClock.advanceTimeBy(32L)

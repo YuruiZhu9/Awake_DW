@@ -40,6 +40,8 @@ import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
 import com.awakedw.core.designsystem.lolita.themeArtworkOf
+import com.awakedw.core.designsystem.themeIdOf
+import com.awakedw.core.designsystem.themeLabelOf
 import com.awakedw.core.model.ThemeChoice
 
 /** Keep the main settings page short, while every theme remains one tap away. */
@@ -89,7 +91,7 @@ internal fun ThemePickerEntry(
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text("主题", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
-                Text(themeLabel(selected), color = spec.greetingSubColor, style = MaterialTheme.typography.bodySmall)
+                Text(themeLabelOf(selected), color = spec.greetingSubColor, style = MaterialTheme.typography.bodySmall)
             }
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = spec.greetingSubColor)
         }

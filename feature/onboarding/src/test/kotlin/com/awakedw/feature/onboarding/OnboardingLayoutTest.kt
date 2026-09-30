@@ -1,11 +1,13 @@
 package com.awakedw.feature.onboarding
 
+import android.os.Looper
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.designsystem.ControlMinHeight
+import com.awakedw.core.model.ThemeChoice
 import com.awakedw.core.model.ThemeId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -35,7 +38,9 @@ import org.robolectric.annotation.Config
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w360dp-h740dp-mdpi")
+// 主题步（2.4.0）含首页缩样与八张色卡，内容高于常规竖屏（引导内滚动，属预期）——
+// 测试视口取 h980dp 保证主路径元素全部可见，触控与点击断言无须依赖滚动。
+@Config(qualifiers = "w360dp-h980dp-mdpi")
 class OnboardingLayoutTest {
     @get:Rule
     val rule = createComposeRule()
@@ -51,9 +56,31 @@ class OnboardingLayoutTest {
     }
 
     @Test
+    fun `主题步展示色卡与缩样且选择即时落库`() {
+        val prefs = FakePrefsRepository()
+        showOnboarding(prefs = prefs)
+
+        rule.onNodeWithText("先挑一个顺眼的主题").assertIsDisplayed()
+        rule.onNodeWithText("晨雾蓝瓷").assertIsDisplayed()
+        rule.onNodeWithText("记一杯").assertIsDisplayed()
+
+        rule.onNodeWithText("黑色哥特").performClick()
+        advanceClock()
+        assertEquals(listOf(ThemeChoice.FIXED_GOTHIC), prefs.themeChoiceWrites)
+
+        rule.onNodeWithText("就这个，继续").performClick()
+        advanceClock()
+        rule.onNodeWithText("打开设置").assertIsDisplayed()
+    }
+
+    @Test
     fun `两个按钮的触控高度都不低于下限`() {
         showOnboarding()
 
+        // 主题步主按钮（「就这个，继续」）与白名单步两枚按钮都不得低于触控下限。
+        assertMinTouchHeight("就这个，继续")
+        rule.onNodeWithText("就这个，继续").performClick()
+        advanceClock()
         assertMinTouchHeight("打开设置")
         assertMinTouchHeight("以后再说")
     }
@@ -64,8 +91,10 @@ class OnboardingLayoutTest {
         var completedCount = 0
         showOnboarding(prefs = prefs, onComplete = { completedCount++ })
 
+        rule.onNodeWithText("就这个，继续").performClick()
+        advanceClock()
         rule.onNodeWithText("以后再说").performClick()
-        rule.mainClock.advanceTimeBy(FRAME_MS)
+        advanceClock()
 
         assertEquals("完成接缝应恰好触发一次", 1, completedCount)
         assertEquals("onboarding_done 应落库一次", 1, prefs.markOnboardingCount)
@@ -82,7 +111,7 @@ class OnboardingLayoutTest {
                 OnboardingScreen(viewModel = viewModel)
             }
         }
-        rule.mainClock.advanceTimeBy(FRAME_MS)
+        advanceClock()
     }
 
     /** 触控高度按当前密度折算成像素比较，避免依赖 mdpi 下 1dp==1px 的巧合。 */
@@ -93,6 +122,12 @@ class OnboardingLayoutTest {
             "「$label」的可点高度 ${bounds.height}px 低于下限 ${minPx}px（$ControlMinHeight）",
             bounds.height >= minPx,
         )
+    }
+
+    /** 双泵走时（对齐 HomeScreenOverflowTest）：先排空主线程 Handler（资源图解码回调），再推帧钟。 */
+    private fun advanceClock(ms: Long = FRAME_MS) {
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(ms))
+        rule.mainClock.advanceTimeBy(ms)
     }
 
     private companion object {

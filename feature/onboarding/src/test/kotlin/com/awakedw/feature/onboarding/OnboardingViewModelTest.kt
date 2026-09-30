@@ -1,5 +1,6 @@
 package com.awakedw.feature.onboarding
 
+import com.awakedw.core.model.ThemeChoice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -97,5 +98,38 @@ class OnboardingViewModelTest {
 
         assertEquals(1, h.prefs.markOnboardingCount)
         assertEquals(listOf(1), h.completions)
+    }
+
+    @Test
+    fun `选主题即落库且状态跟随偏好流`() {
+        val h = harness()
+
+        h.viewModel.selectTheme(ThemeChoice.FIXED_NIGHT)
+
+        assertEquals(listOf(ThemeChoice.FIXED_NIGHT), h.prefs.themeChoiceWrites)
+        assertEquals(ThemeChoice.FIXED_NIGHT, h.viewModel.uiState.value.themeChoice)
+    }
+
+    @Test
+    fun `主题步继续只推进步骤不写偏好`() {
+        val h = harness()
+
+        h.viewModel.continueToWhitelist()
+
+        assertEquals(OnboardingStep.WHITELIST, h.viewModel.uiState.value.step)
+        assertTrue(h.prefs.themeChoiceWrites.isEmpty())
+        assertEquals(0, h.prefs.markOnboardingCount)
+    }
+
+    @Test
+    fun `白名单步完成语义不变`() {
+        val h = harness()
+
+        h.viewModel.continueToWhitelist()
+        h.viewModel.complete()
+
+        assertEquals(1, h.prefs.markOnboardingCount)
+        assertEquals(listOf(1), h.completions)
+        assertTrue(h.viewModel.uiState.value.completed)
     }
 }

@@ -19,6 +19,9 @@ class FakePrefsRepository(
     var markOnboardingCount: Int = 0
         private set
 
+    /** setThemeChoice 的调用轨迹：主题步「即点即落库」断言用。 */
+    val themeChoiceWrites = mutableListOf<ThemeChoice>()
+
     override suspend fun setGoalMl(v: Int) = Unit
 
     override suspend fun setCupMl(v: Int) = Unit
@@ -32,7 +35,10 @@ class FakePrefsRepository(
 
     override suspend fun setRemindersEnabled(v: Boolean) = Unit
 
-    override suspend fun setThemeChoice(v: ThemeChoice) = Unit
+    override suspend fun setThemeChoice(v: ThemeChoice) {
+        themeChoiceWrites += v
+        _settings.value = _settings.value.copy(themeChoice = v)
+    }
 
     override suspend fun markCelebrated(dayKey: String) = Unit
 
