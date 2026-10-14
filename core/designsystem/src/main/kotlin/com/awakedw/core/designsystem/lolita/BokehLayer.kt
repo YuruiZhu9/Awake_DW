@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
 import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -70,6 +71,17 @@ fun BokehLayer(
                     List(BOKEH_COUNT) { index ->
                         bokehAnchor(seed, index, size.width, size.height, palette)
                     }
+                // 每颗光斑的渐变在缓存段构建一次（2.6.0 绘制审计）：帧间只动 alpha 与漂移。
+                // 漂移经 translate 承载——shader 坐标随画布变换同步移动，与逐帧重建渐变渲染一致；
+                // alpha 经 drawCircle 的 alpha 参数承载——各 stop ×α 与逐帧重配 alpha 一致（透明端点不变）。
+                val brushes =
+                    anchors.map { anchor ->
+                        Brush.radialGradient(
+                            colors = listOf(anchor.color, anchor.color.copy(alpha = 0.35f), Color.Transparent),
+                            center = Offset(anchor.x, anchor.y),
+                            radius = anchor.radiusPx,
+                        )
+                    }
                 onDrawBehind {
                     val p = progress.floatValue
                     val twoPi = (2.0 * PI).toFloat()
@@ -80,21 +92,14 @@ fun BokehLayer(
                         val driftY = anchor.radiusPx * 0.25f * cos(twoPi * p + phase * 1.3f)
                         val alpha = anchor.alpha * scene.midgroundAlpha * boost
                         if (alpha > 0.005f) {
-                            drawCircle(
-                                brush =
-                                    Brush.radialGradient(
-                                        colors =
-                                            listOf(
-                                                anchor.color.copy(alpha = alpha),
-                                                anchor.color.copy(alpha = alpha * 0.35f),
-                                                Color.Transparent,
-                                            ),
-                                        center = Offset(anchor.x + driftX, anchor.y + driftY),
-                                        radius = anchor.radiusPx,
-                                    ),
-                                radius = anchor.radiusPx,
-                                center = Offset(anchor.x + driftX, anchor.y + driftY),
-                            )
+                            translate(driftX, driftY) {
+                                drawCircle(
+                                    brush = brushes[index],
+                                    radius = anchor.radiusPx,
+                                    center = Offset(anchor.x, anchor.y),
+                                    alpha = alpha,
+                                )
+                            }
                         }
                     }
                 }

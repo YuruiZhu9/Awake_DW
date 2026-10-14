@@ -8,7 +8,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -78,9 +77,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
+import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -108,11 +109,8 @@ val HOME_RING_DIAMETER = 132.dp
 /** Shared with the splash handover, so the final ring does not jump vertically. */
 val HOME_CONTENT_TOP_PADDING = EDITORIAL_HOME_TOP_PADDING
 
-/** 环心数字滚动时长（规格 §4.2 第 3 步：~500ms）。 */
-private const val NUMBER_ROLL_MS = 500
-
-/** 环心确认行与默认小字之间的横切时长。 */
-private const val RING_NOTE_FADE_MS = 240
+/** 环心确认行与默认小字之间的横切时长：与达标缎带、猫语气泡同进同出（2.6.0 节奏对齐）。 */
+private val RING_NOTE_FADE_MS = MotionTokens.DURATION_FEEDBACK_MS
 
 /**
  * 环心文案区的最小高度：容下「两行正文 + 一行落款」。
@@ -167,10 +165,6 @@ private const val HALO_RING_RADIUS_SCALE = 0.82f
  * 而是一句安睡的邀请——入口仍常驻可点（基线 §3 不隐藏），只是语气与状态一致。
  */
 internal fun catHintOf(mood: CatMood): String = if (mood == CatMood.SLEEPY) "嘘，我在睡~" else "点击我试试~"
-
-/** 达标横幅展开／收回时长：展开略慢于收回，像缎带被人轻轻拉开。 */
-private const val BANNER_ENTER_MS = 260
-private const val BANNER_EXIT_MS = 190
 
 /**
  * Water logging home screen: greeting, progress ring, supportive copy, quick amounts,
@@ -308,15 +302,21 @@ private fun CelebrationBanner(
             if (reduceMotion) {
                 EnterTransition.None
             } else {
-                fadeIn(tween(BANNER_ENTER_MS)) +
-                    expandVertically(expandFrom = Alignment.Top, animationSpec = tween(BANNER_ENTER_MS, easing = FastOutSlowInEasing))
+                fadeIn(tween(MotionTokens.DURATION_FEEDBACK_MS)) +
+                    expandVertically(
+                        expandFrom = Alignment.Top,
+                        animationSpec = tween(MotionTokens.DURATION_FEEDBACK_MS, easing = MotionTokens.EasingStandard),
+                    )
             },
         exit =
             if (reduceMotion) {
                 ExitTransition.None
             } else {
-                fadeOut(tween(BANNER_EXIT_MS)) +
-                    shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(BANNER_EXIT_MS, easing = FastOutSlowInEasing))
+                fadeOut(tween(MotionTokens.DURATION_FEEDBACK_MS)) +
+                    shrinkVertically(
+                        shrinkTowards = Alignment.Top,
+                        animationSpec = tween(MotionTokens.DURATION_FEEDBACK_MS, easing = MotionTokens.EasingStandard),
+                    )
             },
         modifier = modifier,
     ) {
@@ -611,16 +611,7 @@ fun RingCenterContent(
     centerNote: RingNote? = null,
 ) {
     val spec = currentThemeSpec()
-    val rolledTotal =
-        if (reduceMotion) {
-            totalMl
-        } else {
-            animateIntAsState(
-                targetValue = totalMl,
-                animationSpec = tween(durationMillis = NUMBER_ROLL_MS, easing = FastOutSlowInEasing),
-                label = "ringTotalMl",
-            ).value
-        }
+    val rolledTotal = rememberRollingInt(targetValue = totalMl, label = "ringTotalMl", reduceMotion = reduceMotion)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = RING_NOTE_HORIZONTAL_PADDING),

@@ -19,7 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -205,69 +205,77 @@ fun ProgressRing(
                     scaleX = pressScale
                     scaleY = pressScale
                 }
-                .drawBehind {
+                .drawWithCache {
+                    // 几何与渐变在缓存段一次构建（2.6.0 绘制审计）：弹簧逐帧只重铺弧，不重建笔刷。
+                    // 缓存段 receiver 是 CacheDrawScope：center 需按 size 自算（DrawScope 成员不可见）。
+                    val ringCenter = Offset(size.width / 2f, size.height / 2f)
                     val minSide = minOf(size.width, size.height)
                     val stroke = RING_STROKE_FRACTION * minSide
                     val arcBounds = Size(minSide - stroke, minSide - stroke)
+                    val arcStroke = Stroke(width = stroke, cap = StrokeCap.Round)
+                    val pearlHaloStroke = Stroke(width = 1.dp.toPx())
                     val topLeft =
                         Offset(
-                            x = center.x - arcBounds.width / 2f,
-                            y = center.y - arcBounds.height / 2f,
+                            x = ringCenter.x - arcBounds.width / 2f,
+                            y = ringCenter.y - arcBounds.height / 2f,
                         )
-                    drawCircle(
-                        color = spec.ringTrack,
-                        radius = arcBounds.width / 2f,
-                        center = center,
-                        style = Stroke(width = stroke, cap = StrokeCap.Round),
-                    )
-                    drawArc(
-                        brush =
-                            Brush.sweepGradient(
-                                listOf(
-                                    spec.primary.copy(alpha = 0.78f),
-                                    spec.primary,
-                                    spec.primary.copy(alpha = 0.90f),
-                                ),
+                    val valueArcBrush =
+                        Brush.sweepGradient(
+                            listOf(
+                                spec.primary.copy(alpha = 0.78f),
+                                spec.primary,
+                                spec.primary.copy(alpha = 0.90f),
                             ),
-                        startAngle = START_ANGLE_DEGREES,
-                        sweepAngle = animatedProgress * 360f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcBounds,
-                        style = Stroke(width = stroke, cap = StrokeCap.Round),
-                    )
-                    if (previewSweep.floatValue > 0.5f) {
-                        // 拖环预览（2.2.0）：自当前弧端顺时针按扫过角铺一段主色 35% 弧——
-                        // 只进 draw 相（内部 Animatable 驱动），拖动全程不触发重组。
+                        )
+                    onDrawBehind {
+                        drawCircle(
+                            color = spec.ringTrack,
+                            radius = arcBounds.width / 2f,
+                            center = center,
+                            style = arcStroke,
+                        )
                         drawArc(
-                            color = spec.primary.copy(alpha = PREVIEW_ARC_ALPHA),
-                            startAngle = START_ANGLE_DEGREES + animatedProgress * 360f,
-                            sweepAngle = previewSweep.value,
+                            brush = valueArcBrush,
+                            startAngle = START_ANGLE_DEGREES,
+                            sweepAngle = animatedProgress * 360f,
                             useCenter = false,
                             topLeft = topLeft,
                             size = arcBounds,
-                            style = Stroke(width = stroke, cap = StrokeCap.Round),
+                            style = arcStroke,
                         )
-                    }
-                    if (animatedProgress > 0.01f) {
-                        val endAngle = Math.toRadians((START_ANGLE_DEGREES + animatedProgress * 360f).toDouble())
-                        val end =
-                            Offset(
-                                x = center.x + arcBounds.width / 2f * cos(endAngle).toFloat(),
-                                y = center.y + arcBounds.height / 2f * sin(endAngle).toFloat(),
+                        if (previewSweep.floatValue > 0.5f) {
+                            // 拖环预览（2.2.0）：自当前弧端顺时针按扫过角铺一段主色 35% 弧——
+                            // 只进 draw 相（内部 Animatable 驱动），拖动全程不触发重组。
+                            drawArc(
+                                color = spec.primary.copy(alpha = PREVIEW_ARC_ALPHA),
+                                startAngle = START_ANGLE_DEGREES + animatedProgress * 360f,
+                                sweepAngle = previewSweep.value,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = arcBounds,
+                                style = arcStroke,
                             )
-                        // 弧端珠扣（1.7.0）：与统计页细轨珍珠同一件饰语言——浅珠居弧端，外绕一圈发丝晕。
-                        drawCircle(
-                            color = spec.laceColor.copy(alpha = 0.40f),
-                            radius = stroke * 0.52f,
-                            center = end,
-                            style = Stroke(width = 1.dp.toPx()),
-                        )
-                        drawCircle(
-                            color = spec.laceColor.copy(alpha = 0.90f),
-                            radius = stroke * 0.30f,
-                            center = end,
-                        )
+                        }
+                        if (animatedProgress > 0.01f) {
+                            val endAngle = Math.toRadians((START_ANGLE_DEGREES + animatedProgress * 360f).toDouble())
+                            val end =
+                                Offset(
+                                    x = center.x + arcBounds.width / 2f * cos(endAngle).toFloat(),
+                                    y = center.y + arcBounds.height / 2f * sin(endAngle).toFloat(),
+                                )
+                            // 弧端珠扣（1.7.0）：与统计页细轨珍珠同一件饰语言——浅珠居弧端，外绕一圈发丝晕。
+                            drawCircle(
+                                color = spec.laceColor.copy(alpha = 0.40f),
+                                radius = stroke * 0.52f,
+                                center = end,
+                                style = pearlHaloStroke,
+                            )
+                            drawCircle(
+                                color = spec.laceColor.copy(alpha = 0.90f),
+                                radius = stroke * 0.30f,
+                                center = end,
+                            )
+                        }
                     }
                 },
         contentAlignment = Alignment.Center,

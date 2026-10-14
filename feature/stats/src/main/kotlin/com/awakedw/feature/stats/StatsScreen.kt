@@ -1,6 +1,5 @@
 package com.awakedw.feature.stats
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -39,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.ReadingField
+import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.components.EditorialHeader
 import com.awakedw.core.designsystem.currentThemeSpec
@@ -104,7 +105,12 @@ internal fun StatsContent(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(state.badges.totalMl.toString(), color = spec.greetingColor, style = MaterialTheme.typography.displaySmall)
+                // 数字滚动全页统一（2.6.0 动效二阶）：与首页英雄数字同一拍——打卡/删除后从旧值滚到新值。
+                Text(
+                    rememberRollingInt(targetValue = state.badges.totalMl, label = "statsTotalMl").toString(),
+                    color = spec.greetingColor,
+                    style = MaterialTheme.typography.displaySmall,
+                )
                 Text(
                     "ml",
                     color = spec.greetingSubColor,
@@ -211,9 +217,6 @@ private fun StatsSectionLabel(text: String) {
     }
 }
 
-/** 细轨填充时长：与首页进度环 600ms 同拍，数值变化时柔和跟进。 */
-private const val PROGRESS_FILL_MS = 600
-
 /** 细轨粗细与进度头珠点半径（0.9.2）：线上一颗小珍珠，替代 M3 进度条自带的终点圆点。 */
 private val TRACK_HEIGHT = 3.dp
 private val PEARL_RADIUS = 3.5.dp
@@ -244,7 +247,8 @@ private fun TodayProgressLine(
         } else {
             animateFloatAsState(
                 targetValue = target,
-                animationSpec = tween(durationMillis = PROGRESS_FILL_MS, easing = FastOutSlowInEasing),
+                // 与数字滚动同族同拍（2.6.0 动效二阶）：同一份「今日总量」的两种呈现，一种节奏。
+                animationSpec = tween(durationMillis = MotionTokens.DURATION_NUMBER_ROLL_MS, easing = MotionTokens.EasingStandard),
                 label = "todayProgressFill",
             ).value
         }

@@ -21,6 +21,12 @@ fun particleStyleOf(id: ThemeId): ParticleStyle =
 /** Leave the central reading column quiet; preserve continuous motion without snapping to side rails. */
 internal fun readingColumnAlpha(xFraction: Float): Float = (0.20f + ((abs(xFraction - 0.5f) - 0.18f) / 0.25f).coerceIn(0f, 1f) * 0.80f)
 
+/**
+ * SILVER 菱形的复用 Path（2.6.0 绘制审计）：draw 只发生在 UI 线程且同步消费，
+ * 每次绘制前 reset 重建即可，哥特/深夜两主题各 80 颗不再逐帧分配。
+ */
+private val SILVER_MOTE_PATH: Path = Path()
+
 /** Small, code-native accents, not pictorial assets or product state. */
 fun DrawScope.drawThemeMote(
     center: Offset,
@@ -41,15 +47,14 @@ fun DrawScope.drawThemeMote(
             )
         }
         ParticleStyle.SILVER -> {
-            val diamond =
-                Path().apply {
-                    moveTo(center.x, center.y - radius)
-                    quadraticBezierTo(center.x + radius * 0.18f, center.y - radius * 0.18f, center.x + radius * 0.65f, center.y)
-                    quadraticBezierTo(center.x + radius * 0.18f, center.y + radius * 0.18f, center.x, center.y + radius)
-                    quadraticBezierTo(center.x - radius * 0.18f, center.y + radius * 0.18f, center.x - radius * 0.65f, center.y)
-                    quadraticBezierTo(center.x - radius * 0.18f, center.y - radius * 0.18f, center.x, center.y - radius)
-                    close()
-                }
+            val diamond = SILVER_MOTE_PATH
+            diamond.reset()
+            diamond.moveTo(center.x, center.y - radius)
+            diamond.quadraticBezierTo(center.x + radius * 0.18f, center.y - radius * 0.18f, center.x + radius * 0.65f, center.y)
+            diamond.quadraticBezierTo(center.x + radius * 0.18f, center.y + radius * 0.18f, center.x, center.y + radius)
+            diamond.quadraticBezierTo(center.x - radius * 0.18f, center.y + radius * 0.18f, center.x - radius * 0.65f, center.y)
+            diamond.quadraticBezierTo(center.x - radius * 0.18f, center.y - radius * 0.18f, center.x, center.y - radius)
+            diamond.close()
             drawPath(diamond, ink)
         }
         ParticleStyle.PETAL ->

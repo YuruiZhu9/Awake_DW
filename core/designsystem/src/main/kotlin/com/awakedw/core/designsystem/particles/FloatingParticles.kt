@@ -66,8 +66,9 @@ private val FALLBACK_COLOR = Color(0xFF10A87C)
  * 颗三层圆点 + 3 枚固定相位「✦」星芒，整体极缓上浮、顶部渐隐、底部无缝回卷。
  *
  * 帧驱动契约：
- * - 运动学全部来自 [ParticleMath.floating] 纯函数，`(index, seed)` 确定性推导，
- *   组合内不持有任何随机对象——重组永不重采样；
+ * - 运动学全部来自 [ParticleMath] 纯函数，`(index, seed)` 确定性推导，组合内不持有任何
+ *   随机对象——重组永不重采样；帧不变属性经 [ParticleMath.specOf] 在缓存段一次算好，
+ *   帧间只走 [ParticleMath.evaluate]（2.6.0 绘制审计，与 [ParticleMath.floating] 全等）；
  * - 进度存于 draw 阶段读取的 `mutableFloatStateOf`，逐帧 `withFrameNanos` 推进，
  *   仅触发重绘、不触发本组合体重组；
  * - 辉光 = 实心圆 + 放大低透明度同心圆双层绘制，规避 BlurFilter 的逐帧全屏模糊开销。
@@ -110,6 +111,9 @@ fun FloatingParticles(
         modifier =
             modifier.drawWithCache {
                 val area = size
+                // 帧不变量只在尺寸/样式变化时重算一次（2.6.0 绘制审计）：
+                // 粒子规格与文字排版结果在缓存段构建，帧间只做 evaluate 与绘制。
+                val specs = List(density.dotCount) { index -> ParticleMath.specOf(index, seed, anchorPx, area) }
                 // 文字排版结果仅在尺寸/样式变化时重排一次，帧间只变 alpha。
                 val starLayouts =
                     if (showStars && style == ParticleStyle.CLASSIC) {
@@ -123,7 +127,7 @@ fun FloatingParticles(
                 onDrawBehind {
                     val p = progress.floatValue
                     for (index in 0 until density.dotCount) {
-                        val frame = ParticleMath.floating(index, seed, anchorPx, p, area)
+                        val frame = ParticleMath.evaluate(specs[index], p, area)
                         val radius = frame.radiusPx * density.radiusScale
                         val color = colorAt(colors, index)
                         val focusAlpha = readingColumnAlpha(frame.center.x / area.width.coerceAtLeast(1f))

@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.awakedw.core.designsystem.MotionTokens
@@ -38,7 +39,8 @@ internal fun pocketAlpha(phase: Float): Float {
 /**
  * 光袋（moodboard §2 光·遇手法）：可交互元素旁的呼吸光晕。
  *
- * - radial gradient 光晕自中心铺开、边缘透明（绘制走 [drawBehind]，永远在后续内容之下，
+ * - radial gradient 光晕自中心铺开、边缘透明（绘制走 [androidx.compose.ui.draw.drawWithCache] 的
+ *   onDrawBehind，永远在后续内容之下，
  *   光晕不压内容；尺寸语义：光晕铺满 [modifier] 尺寸，由调用方控制大小（96–160dp））；
  * - 呼吸走 [rememberInfiniteTransition]：phase 0→1 线性走完 1.5s 升 + 1.5s 降 = 3s 完整周期
  *   （与 Task 9 CatFigure 的「循环=完整周期」读法一致），alpha 经 [pocketAlpha] 0.06→0.14 往返；
@@ -77,15 +79,20 @@ fun LightPocket(
     Box(
         modifier =
             modifier
-                .drawBehind {
-                    drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                colors = listOf(color.copy(alpha = pocketAlpha(phase)), Color.Transparent),
-                                center = center,
-                                radius = size.minDimension / 2f,
-                            ),
-                    )
+                // 渐变在缓存段构建一次（2.6.0 绘制审计）；呼吸只动 alpha——
+                // 经 drawCircle 的 alpha 参数承载，透明端点 ×α 仍透明，渲染与逐帧重配一致。
+                .drawWithCache {
+                    // 缓存段 receiver 是 CacheDrawScope：center 需按 size 自算（DrawScope 成员不可见）。
+                    val pocketCenter = Offset(size.width / 2f, size.height / 2f)
+                    val brush =
+                        Brush.radialGradient(
+                            colors = listOf(color, Color.Transparent),
+                            center = pocketCenter,
+                            radius = size.minDimension / 2f,
+                        )
+                    onDrawBehind {
+                        drawCircle(brush = brush, alpha = pocketAlpha(phase))
+                    }
                 },
     )
 }

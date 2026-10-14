@@ -6,12 +6,25 @@ import androidx.compose.animation.core.Easing
 /**
  * 场景与氛围动效 token（alpha13 基线 §13）：把场景系动效的时长与缓动收敛为具名常量。
  * 命名分两族：`DURATION_*_MS`（Int，tween 单段时长）与 `*_PERIOD_MS`（Long，无缝循环周期，
- * 换算纳米走 `* 1_000_000L`）。交互反馈类短时长（环心横切、横幅进出、打卡光环等）是各自
- * 规格里逐字裁定的一次性节奏，留在所属组件并随注释维护，不进本表。
+ * 换算纳米走 `* 1_000_000L`）。2.6.0 动效二阶起，交互反馈的**共享节奏**也入本表
+ * （[DURATION_NUMBER_ROLL_MS]、[DURATION_FEEDBACK_MS]）；纯一次性、组件私有的节奏
+ * （打卡光环 1.2s、拖环预览收场 150ms、时间线错峰 40ms）仍留所属组件并随注释维护。
  */
 object MotionTokens {
     /** 时段切换等全局氛围插值的时长：与换肤逐锚点插值（500ms）同拍。 */
     const val DURATION_SCENE_INTERP_MS = 500
+
+    /**
+     * 数字滚动统一时长（2.6.0 动效二阶）：首页/统计 hero、环心总量与统计细轨的值变化同拍。
+     * 被动显示值走同拍 tween；进度环弧线作为交互操纵件走弹簧（§19）——分工有意不同。
+     */
+    const val DURATION_NUMBER_ROLL_MS = 500
+
+    /**
+     * 打卡三通道进出统一时长（2.6.0 动效二阶）：环心引文横切、达标缎带展开/收起、
+     * 猫语气泡淡变同进同出同速——§12.2「同屏同拍」从停留同拍完备为进出同拍。
+     */
+    const val DURATION_FEEDBACK_MS = 240
 
     /** 主题主图与中景层的淡入 reveal（700ms）：新图浮现的一次性节奏。 */
     const val DURATION_SCENE_REVEAL_MS = 700

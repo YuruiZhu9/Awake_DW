@@ -84,6 +84,30 @@ class ParticleMathTest {
     }
 
     // ------------------------------------------------------------------
+    // specOf + evaluate：缓存路径与 floating 全等（2.6.0 绘制审计的等价性保证）
+    // ------------------------------------------------------------------
+
+    @Test
+    fun `specOf对同参完全确定`() {
+        val a = ParticleMath.specOf(index = 17, seed = 99L, sizePx = anchorPx, area = area)
+        val b = ParticleMath.specOf(index = 17, seed = 99L, sizePx = anchorPx, area = area)
+        assertEquals(a, b)
+    }
+
+    @Test
+    fun `specOf与evaluate的缓存路径与floating逐位全等`() {
+        // 全部 80 颗 × 多进度采样：绘制层改走缓存路径后，轨迹必须与参考实现完全一致。
+        val samples = listOf(0f, 0.13f, 0.37f, 0.5f, 0.79f, 1f, 1.42f)
+        for (index in 0 until ParticleMath.DOT_COUNT) {
+            val spec = ParticleMath.specOf(index = index, seed = 7L, sizePx = anchorPx, area = area)
+            for (p in samples) {
+                val expected = ParticleMath.floating(index = index, seed = 7L, sizePx = anchorPx, progress01 = p, area = area)
+                assertEquals("index=$index p=$p", expected, ParticleMath.evaluate(spec, p, area))
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
     // floating：三层半径 / 不透明度带 / 辉光标志
     // ------------------------------------------------------------------
 

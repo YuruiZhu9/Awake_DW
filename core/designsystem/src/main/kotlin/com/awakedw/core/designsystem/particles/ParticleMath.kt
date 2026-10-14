@@ -8,6 +8,22 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
+ * 单颗粒子的帧不变属性：全部由 `(index, seed, sizePx, area)` 确定性推导，与时间无关。
+ * 由 [ParticleMath.specOf] 产出，供绘制层在 `drawWithCache` 缓存段一次算好——
+ * 帧间只做 [ParticleMath.evaluate]，不再逐帧重掷随机与重算锚点（2.6.0 绘制审计）。
+ */
+data class ParticleSpec(
+    val baseAlpha: Float,
+    val radiusPx: Float,
+    val startX: Float,
+    val startY: Float,
+    val travel: Float,
+    val swayAmplitude: Float,
+    val swayPhase: Float,
+    val glow: Boolean,
+)
+
+/**
  * 单颗粒子在某帧的绘制结论：位置、半径、不透明度与是否带辉光。
  *
  * 纯数据类，由 [ParticleMath] 纯函数产出，供 Canvas 绘制层直接消费。
@@ -72,21 +88,18 @@ object ParticleMath {
     private const val BURST_END_SHRINK = 0.35f
 
     /**
-     * 漂浮粒子第 [index] 颗在总时长进度 [progress01] 处的绘制结论。
+     * 漂浮粒子第 [index] 颗的帧不变属性（2.6.0 绘制审计拆分）：把 [floating] 里
+     * 与时间无关的全部随机推导一次算好，绘制层在缓存段调用；帧间只走 [evaluate]。
      *
-     * @param seed     随机种子；同一种子下每颗粒子的初始相位/半径/速度完全确定
-     * @param sizePx   半径锚点像素（调用方按屏幕密度换算，如 `40.dp.toPx()`），
-     *                 使同一套因子带可服务不同密度设备
-     * @param progress01 总循环进度，任意实数均可：轨迹对 `p ↦ p+1` 周期闭合
-     *                   （单粒行程恰为一圈周长，故每个整周期恰好无缝回卷一次）
+     * @param seed   随机种子；同一种子下每颗粒子的初始相位/半径/速度完全确定
+     * @param sizePx 半径锚点像素（调用方按屏幕密度换算，如 `40.dp.toPx()`）
      */
-    fun floating(
+    fun specOf(
         index: Int,
         seed: Long,
         sizePx: Float,
-        progress01: Float,
         area: Size,
-    ): ParticleFrame {
+    ): ParticleSpec {
         val (alphaBand, radiusFactor) = layerSpecFor(index)
         val rng = kotlin.random.Random(seed = seed * 1_000_003L + index + 101L)
 
@@ -101,28 +114,66 @@ object ParticleMath {
         val swayAmplitude = sizePx * lerp(0.4f, 0.9f, rng.nextFloat())
         val swayPhase = rng.nextFloat() * 2f * PI.toFloat()
 
-        // 纵向旅程：起点随机分布于屏内，沿负方向匀速上浮；
-        // 以「行程长度」为周期做模运算 —— 越过顶部渐隐区后自然从底部重现。
+        // 纵向旅程：起点随机分布于屏内，沿负方向匀速上浮。
         val startY = radius + startRatio * (height - 2f * radius)
-        val exitY = -(radius + topFadeBand(radius))
-        val rawY = startY - travel * progress01
-        val cycle = travel
-        val shift = ceil((exitY - rawY) / cycle)
-        val y = rawY + cycle * shift
+
+        return ParticleSpec(
+            baseAlpha = baseAlpha,
+            radiusPx = radius,
+            startX = startXAnchor * width,
+            startY = startY,
+            travel = travel,
+            swayAmplitude = swayAmplitude,
+            swayPhase = swayPhase,
+            glow = index <= MEDIUM_INDEX_RANGE.last,
+        )
+    }
+
+    /**
+     * 漂浮粒子第 [index] 颗在总时长进度 [progress01] 处的绘制结论。
+     *
+     * @param seed     随机种子；同一种子下每颗粒子的初始相位/半径/速度完全确定
+     * @param sizePx   半径锚点像素（调用方按屏幕密度换算，如 `40.dp.toPx()`），
+     *                 使同一套因子带可服务不同密度设备
+     * @param progress01 总循环进度，任意实数均可：轨迹对 `p ↦ p+1` 周期闭合
+     *                   （单粒行程恰为一圈周长，故每个整周期恰好无缝回卷一次）
+     */
+    fun floating(
+        index: Int,
+        seed: Long,
+        sizePx: Float,
+        progress01: Float,
+        area: Size,
+    ): ParticleFrame = evaluate(specOf(index, seed, sizePx, area), progress01, area)
+
+    /**
+     * 由帧不变 [ParticleSpec] 求某进度下的绘制结论：只做纯浮点运算，无随机对象。
+     * 与 [floating] 按同序运算逐位一致（等价性由 `ParticleMathTest` 扫描钉住）。
+     */
+    fun evaluate(
+        spec: ParticleSpec,
+        progress01: Float,
+        area: Size,
+    ): ParticleFrame {
+        // 纵向旅程：以「行程长度」为周期做模运算——越过顶部渐隐区后自然从底部重现。
+        val exitY = -(spec.radiusPx + topFadeBand(spec.radiusPx))
+        val rawY = spec.startY - spec.travel * progress01
+        val shift = ceil((exitY - rawY) / spec.travel)
+        val y = rawY + spec.travel * shift
 
         // 横向轻微正弦摆动（整数周期保证整环闭合），并约束在屏内。
-        val sway = swayAmplitude * sin(2f * PI.toFloat() * progress01 + swayPhase)
-        val maxX = (width - radius).coerceAtLeast(radius)
-        val x = (startXAnchor * width + sway).coerceIn(radius, maxX)
+        val sway = spec.swayAmplitude * sin(2f * PI.toFloat() * progress01 + spec.swayPhase)
+        val maxX = (area.width - spec.radiusPx).coerceAtLeast(spec.radiusPx)
+        val x = (spec.startX + sway).coerceIn(spec.radiusPx, maxX)
 
         // 顶部渐隐包络：接近顶缘时平滑衰减为零，越过顶缘即完全不可见。
-        val envelope = smoothstep((y / topFadeBand(radius)).coerceIn(0f, 1f))
+        val envelope = smoothstep((y / topFadeBand(spec.radiusPx)).coerceIn(0f, 1f))
 
         return ParticleFrame(
             center = Offset(x, y),
-            radiusPx = radius,
-            alpha = baseAlpha * envelope,
-            glow = index <= MEDIUM_INDEX_RANGE.last,
+            radiusPx = spec.radiusPx,
+            alpha = spec.baseAlpha * envelope,
+            glow = spec.glow,
         )
     }
 

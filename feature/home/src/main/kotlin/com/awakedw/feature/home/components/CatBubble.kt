@@ -18,11 +18,9 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
-
-/** 猫语气泡淡入淡出时长。 */
-private const val CAT_BUBBLE_FADE_MS = 400
 
 /** 猫语气泡宽度上限：短句自然内缩成小胶囊，超出即换行、行数不限。 */
 internal val CAT_LINE_BUBBLE_MAX_WIDTH = 200.dp
@@ -56,7 +54,8 @@ internal fun CatBubble(
     val reduceMotion = rememberReduceMotion()
     Crossfade(
         targetState = text,
-        animationSpec = tween(durationMillis = if (reduceMotion) 0 else CAT_BUBBLE_FADE_MS),
+        // 猫语与环心引文同屏同拍（§12.2）：淡变也走同一档共享反馈时长（2.6.0 节奏对齐）。
+        animationSpec = tween(durationMillis = if (reduceMotion) 0 else MotionTokens.DURATION_FEEDBACK_MS),
         label = "catBubble",
         modifier = modifier,
     ) { current ->
