@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.feature.home.RingNote
 import java.time.DayOfWeek
 import java.time.LocalDateTime
@@ -70,7 +71,8 @@ internal fun EditorialHomeMasthead(
     customGreeting: String?,
     modifier: Modifier = Modifier,
 ) {
-    val now = LocalDateTime.now()
+    // 界面时间走 designsystem 的统一读数口（2.7.0）：默认真实时钟，视觉基线测试可注入固定值。
+    val now = rememberUiNow()
     val spec = currentThemeSpec()
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(

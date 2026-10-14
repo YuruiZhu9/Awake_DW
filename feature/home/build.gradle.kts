@@ -73,5 +73,6 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.robolectric)
+    testImplementation(project(":core:testsupport"))
     // Robolectric compose 测试的宿主 Activity 登记在 src/test/AndroidManifest.xml（两变体共用）。
 }

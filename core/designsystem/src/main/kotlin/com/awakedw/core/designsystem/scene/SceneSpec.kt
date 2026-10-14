@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.awakedw.core.common.TimeSlots
 import com.awakedw.core.designsystem.MotionTokens
+import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.core.model.TimeSlot
-import java.time.LocalTime
 
 /**
  * 场景氛围规格（alpha13 基线 §13）：在 [com.awakedw.core.designsystem.ThemeSpec]
@@ -49,10 +49,12 @@ fun sceneSpecOf(slot: TimeSlot): SceneSpec =
 /**
  * 读取当前时段的场景规格并做逐锚点插值：时段切换（极低频）时氛围平滑过渡，
  * 与换肤的 500ms 同拍。装饰组件内部直接调用即可，无需经过 CompositionLocal。
+ * 时段锚点走 [com.awakedw.core.designsystem.rememberUiNow]（2.7.0 时间缝）：默认真实时钟，
+ * 视觉基线测试可注入固定值让截图跨时段稳定。
  */
 @Composable
 fun rememberSceneSpec(): SceneSpec {
-    val target = sceneSpecOf(TimeSlots.slotOfHour(LocalTime.now().hour))
+    val target = sceneSpecOf(TimeSlots.slotOfHour(rememberUiNow().hour))
     val midground =
         animateFloatAsState(
             targetValue = target.midgroundAlpha,

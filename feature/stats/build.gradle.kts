@@ -64,5 +64,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.robolectric)
+    testImplementation(project(":core:testsupport"))
     testImplementation(libs.coroutines.test)
 }

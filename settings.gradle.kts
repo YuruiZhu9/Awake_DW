@@ -23,5 +23,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Awake_DW"
 include(":app")
-include(":core:model", ":core:common", ":core:domain", ":core:data", ":core:notification", ":core:designsystem", ":core:sound")
+include(":core:model", ":core:common", ":core:domain", ":core:data", ":core:notification", ":core:designsystem", ":core:sound", ":core:testsupport")
 include(":feature:home", ":feature:stats", ":feature:settings", ":feature:onboarding")

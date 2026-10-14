@@ -16,11 +16,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.designsystem.LocalUiTimeMillis
+import com.awakedw.core.designsystem.art.loadAssetBitmap
+import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.domain.DeleteWaterRecordUseCase
 import com.awakedw.core.domain.LogWaterUseCase
 import com.awakedw.core.domain.ObserveHomeUseCase
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.UserSettings
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -47,6 +51,12 @@ class HomeVisualReviewTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    /**
+     * 视觉基线的钉定时刻（2.7.0）：与 [FakeClock] 默认纪元同值——刊头日期、问候时段、
+     * 猫的状态、时段氛围全部落在同一确定点，截图跨日跨时段稳定。
+     */
+    private val pinnedUiTimeMillis = 1_760_000_000_000L
+
     /** 当前内容视图：截图走真实绘制，需要拿到承载 Compose 的根 View。 */
     private lateinit var rootView: View
 
@@ -62,6 +72,7 @@ class HomeVisualReviewTest {
     @Test
     fun `all themes keep persistent hint cat and recording actions in the first viewport`() {
         disableSystemAnimations()
+        preloadThemeArtwork()
         val theme = mutableStateOf(ThemeId.THIN_MINT)
         val clock = FakeClock(1_760_000_000_000L)
         val water = FakeWaterRepository(clock)
@@ -78,10 +89,12 @@ class HomeVisualReviewTest {
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             rootView = LocalView.current
-            AwakeTheme(theme.value) {
-                val density = LocalDensity.current
-                CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
-                    HomeScreen(viewModel = vm)
+            CompositionLocalProvider(LocalUiTimeMillis provides pinnedUiTimeMillis) {
+                AwakeTheme(theme.value) {
+                    val density = LocalDensity.current
+                    CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
+                        HomeScreen(viewModel = vm)
+                    }
                 }
             }
         }
@@ -107,6 +120,7 @@ class HomeVisualReviewTest {
     @Config(qualifiers = "w411dp-h891dp-mdpi")
     fun `populated home keeps the resident cat hint readable across themes`() {
         disableSystemAnimations()
+        preloadThemeArtwork()
         val theme = mutableStateOf(ThemeId.THIN_MINT)
         val clock = FakeClock(1_760_000_000_000L)
         val water = FakeWaterRepository(clock)
@@ -124,10 +138,12 @@ class HomeVisualReviewTest {
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             rootView = LocalView.current
-            AwakeTheme(theme.value) {
-                val density = LocalDensity.current
-                CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
-                    HomeScreen(viewModel = vm)
+            CompositionLocalProvider(LocalUiTimeMillis provides pinnedUiTimeMillis) {
+                AwakeTheme(theme.value) {
+                    val density = LocalDensity.current
+                    CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
+                        HomeScreen(viewModel = vm)
+                    }
                 }
             }
         }
@@ -162,6 +178,7 @@ class HomeVisualReviewTest {
 
     private fun renderPostLogFeedback(themeId: ThemeId) {
         disableSystemAnimations()
+        preloadThemeArtwork()
         val clock = FakeClock(1_760_000_000_000L)
         val water = FakeWaterRepository(clock)
         val prefs = FakePrefsRepository(UserSettings(goalMl = 100))
@@ -178,8 +195,10 @@ class HomeVisualReviewTest {
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             rootView = LocalView.current
-            AwakeTheme(themeId) {
-                HomeScreen(viewModel = vm)
+            CompositionLocalProvider(LocalUiTimeMillis provides pinnedUiTimeMillis) {
+                AwakeTheme(themeId) {
+                    HomeScreen(viewModel = vm)
+                }
             }
         }
         settle()
@@ -195,10 +214,13 @@ class HomeVisualReviewTest {
         capture("home-feedback-${themeId.name.lowercase()}")
     }
 
+    /**
+     * 诊断截图（不入库、不比对）。2.7.0 环境注记：首页在本机 Robolectric 下产不出真实像素——
+     * 默认管线下矢量图标经 DrawCache 建 Bitmap 得 null（NPE，此前被 runCatching 吞掉、诊断图
+     * 实际从未产出），NATIVE 管线下 captureToImage 亦失败（探针复验于 2026-10-14）。
+     * 首页的像素基线因此环境受阻，语义断言照常执行；统计/设置走 NATIVE 管线已入库基线。
+     */
     private fun capture(label: String) {
-        // 2.0.3 环境注记：本机图形管线无法产出 Compose 像素（NATIVE 布局失效、LEGACY 建 Bitmap
-        // 返回 null，即 2.0.0 起 QA 披露的 native runtime 环境问题）——截图退化为尽力而为的
-        // 诊断产物；语义断言照常执行，真机仍是最终视觉闸门。
         composeRule.runOnIdle {
             runCatching {
                 val image = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
@@ -212,10 +234,18 @@ class HomeVisualReviewTest {
         image: Bitmap,
         label: String,
     ) {
-        val variant = System.getProperty("awake.visualVariant", "local")
-        val output = File("build/reports/visual-review/$variant/$label.png")
+        val output = File("build/reports/visual-review/home/$label.png")
         output.parentFile?.mkdirs()
         output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** 预载八主题素材（2.7.0）：消除截图与异步解码的竞态，主题切换即取缓存。 */
+    private fun preloadThemeArtwork() {
+        runBlocking {
+            ThemeId.entries.forEach { id ->
+                loadAssetBitmap(RuntimeEnvironment.getApplication(), themeArtworkOf(id).asset)
+            }
+        }
     }
 
     private fun settle() {
