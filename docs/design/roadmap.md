@@ -4,6 +4,14 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.6.0 · 统一优化版：动效二阶收尾 + 绘制审计（2026-10-13 实施）
+
+- 计划：`docs/superpowers/plans/2026-10-13-v260-unified-polish-plan.md`。触发：使用者指示「做一个统一优化」，范围取恢复开发后无需新方向决策的既定收尾项。
+- **动效二阶**（1.9.0 预排「后续阶」收尾）：数字滚动全页统一（`DURATION_NUMBER_ROLL_MS = 500` + designsystem 共享 `rememberRollingInt`，接入首页 hero / 环心总量 / 统计 hero / 统计细轨；统计 hero 补滚动是本版唯一行为变化，首组合直显、值变化才滚）；打卡三通道进出对齐一拍（`DURATION_FEEDBACK_MS = 240`，引文 / 缎带 / 猫气泡同进同出，§12.2 完备为「进出同拍」）。
+- **绘制审计**（roadmap P1）：粒子场 / 银芒 / 光斑 / 光袋 / 进度环的逐帧堆分配清零——`ParticleMath` 拆 specOf（缓存段）+ evaluate（帧间）、SILVER Path 复用、渐变缓存 + translate/alpha 承载；渲染逐位一致，粒子运动学等价由测试全等扫描钉住。
+- **dist 治理**（rules §八.4）：保留 1.0.0 / 2.0.0 / 2.5.0，移除其余 15 组 APK+SHA256SUMS（102MB→17MB）；归档本版后 dist 共 4 组 23MB。
+- 发布：`versionCode 50 / versionName 2.6.0`；APK 随发布提交入 `dist/`。
+
 ## 2.5.0 · 统计页去图表化，回到记录（2026-09-29 实施）
 
 - 计划：`docs/superpowers/plans/2026-09-29-v250-stats-dechart-plan.md`。**使用者方向修正**（验收 2.2.0–2.4.0 后）：「统计的意义应该在于记录，而不是做成像柱状图的样子，柱状图会增加人的焦虑。周统计和月统计足够，年统计完全没有必要。」
