@@ -2,6 +2,34 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.6.0] - 2026-10-13 · versionCode 50
+
+**统一优化版**：动效系统二阶收尾（1.9.0 预排的「数字滚动全页统一、横幅与引文进出节奏对齐」）+ 装饰绘制审计（roadmap P1）+ dist 仓库治理（rules §八.4）。不开新方向的一轮收口；除节奏感外观感不变。
+
+### Added
+- **数字滚动全页统一**（动效二阶，`MotionTokens.DURATION_NUMBER_ROLL_MS = 500`）：designsystem 新增共享实现 `rememberRollingInt`，接入首页英雄数字、首页环心总量、统计页 hero 数字与统计细轨四处。统计页 hero 数字补上滚动（此前完全静止）——本版唯一的行为变化。语义保持克制：首组合直接显示目标值，只在值真实变化（打卡/删除）时从旧值滚到新值；减少动效直显。
+- **打卡三通道进出节奏对齐**（动效二阶，`MotionTokens.DURATION_FEEDBACK_MS = 240`）：环心引文横切、达标缎带展开/收起、猫语气泡淡变共用一档——§12.2「同屏同拍」从停留同拍完备为进出同拍。观感变化如实披露：缎带 260/190→240/240，猫气泡 400→240。
+
+### Changed
+- **绘制审计：常驻动画层逐帧堆分配清零**（渲染逐位一致，粒子运动学等价性由测试钉住）：
+  - `ParticleMath` 拆为 `specOf`（帧不变量，`drawWithCache` 缓存段一次算好）+ `evaluate`（帧间）——此前每帧为 80 颗粒子各重建 Random、Pair 与结论对象；`floating()` 保留为等价门面，既有断言原样通过；
+  - `drawThemeMote` SILVER 菱形改复用 Path（此前哥特/深夜主题每帧 80 个 Path）；
+  - `BokehLayer` per-anchor 渐变入缓存段，漂移经 `translate` 承载、alpha 经 `drawCircle` 参数承载（shader 坐标随画布变换同步移动，渲染一致）；
+  - `LightPocket` 渐变入缓存段，呼吸只动 alpha；
+  - `ProgressRing` 值弧 sweepGradient 与 Stroke 提升进缓存段，弹簧逐帧只重铺弧。
+  - 不动：达标光环（1.2s 单次）、猫立绘（呼吸走 graphicsLayer，本就健康）、AGSL 雾光（shader 层）。
+- `MotionTokens` 表头注释修订：交互反馈的共享节奏入表；纯一次性组件私有节奏（光环 1.2s、拖环预览收场 150ms、时间线错峰 40ms）仍留所属组件。
+
+### Removed
+- `dist/` 定期治理（rules §八.4）：保留 1.0.0（收口里程碑）、2.0.0（结构突破）、2.5.0（最新），移除其余 15 组 APK+SHA256SUMS（102MB→17MB；git 历史可恢复）；归档本版后 dist 共 4 组 23MB。
+
+### Unchanged
+- 业务写入、持久化键、导航、权限、主题素材、三条文字反馈通道分工、文案语料、弹簧物理参数零改动；不新增装饰、不改观感（审计项逐位等效）。
+
+### Verification
+- 新增 `RollingNumberTest`（值变化滚动收敛 / 首组合直显 / 减少动效直显）、`MotionTokensTest`（共享节奏取值钉住）、`ParticleMathTest` +2 例（specOf 确定性、缓存路径与 floating 全等扫描）。
+- 全仓库 `ktlintCheck build` 全绿（见版本 QA）。
+
 ## [v2.5.0] - 2026-09-29 · versionCode 49
 
 **统计页去图表化，回到记录**（使用者方向修正）：「统计的意义应该在于记录，柱状图的样子会增加人的焦虑；周统计和月统计足够，年统计完全没有必要。」统计页从仪表盘退回记录本，全页不再出现任何图表形态。
