@@ -1,6 +1,12 @@
 package com.awakedw.feature.stats.components
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -20,7 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,10 +42,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ControlMinHeight
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.model.WaterRecord
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -69,6 +80,18 @@ private const val ROW_ENTRANCE_MAX_STAGGERED = 6
 /** HH:mm 展示格式（显示层专用，随系统时区）。 */
 private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
+/** 折叠口径（§9）：超过 [COLLAPSED_RECORD_LIMIT] 且未展开时只保留最近若干条。 */
+private fun visibleOf(
+    records: List<WaterRecord>,
+    expanded: Boolean,
+): List<WaterRecord> {
+    return if (records.size > COLLAPSED_RECORD_LIMIT && !expanded) {
+        records.takeLast(COLLAPSED_RECORD_LIMIT)
+    } else {
+        records
+    }
+}
+
 /**
  * 今日时间线（规格 §3.3 第 3 条；1.5.0 去卡片化改发丝行）：每杯一行——小水滴圆点 +
  * HH:mm，右侧「{ml}ml」，行与行之间只压一道发丝线，时间升序。今日一杯未喝时整块
@@ -76,6 +99,9 @@ private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm"
  *
  * [onRequestDelete] 非空时每条可长按发起删除（由调用方弹确认框）：
  * 记错的一杯要能收回，纠错入口就放在对应那一行上。
+ *
+ * 离场宽限（§24）：删除与收起不再让行瞬间跳走——VM 已删/已收的行在组合里再留一拍
+ * （[MotionTokens.DURATION_FEEDBACK_MS]，与三通道同拍），以收束动画退场；减少动态直删。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -84,7 +110,35 @@ internal fun TodayTimeline(
     modifier: Modifier = Modifier,
     onRequestDelete: ((WaterRecord) -> Unit)? = null,
 ) {
-    if (records.isEmpty()) {
+    val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
+    var expanded by remember { mutableStateOf(false) }
+
+    // 展示层镜像：删除/收起后的一个宽限拍里仍持有离场行与旧折叠口径，行不跳变。
+    var shownRecords by remember { mutableStateOf(records) }
+    var shownExpanded by remember { mutableStateOf(false) }
+    var exitingIds by remember { mutableStateOf(emptySet<Long>()) }
+
+    LaunchedEffect(records, expanded) {
+        // 离场集合 = 「旧镜像的可见行」−「新口径的可见行」：比较双方都必须是变更前的口径。
+        val departed =
+            visibleOf(shownRecords, shownExpanded).filter { row ->
+                visibleOf(records, expanded).none { it.id == row.id }
+            }
+        if (departed.isEmpty() || reduceMotion) {
+            exitingIds = emptySet()
+        } else {
+            exitingIds = departed.map { it.id }.toSet()
+            delay(MotionTokens.DURATION_FEEDBACK_MS.toLong())
+        }
+        exitingIds = exitingIds - departed.map { it.id }.toSet()
+        shownRecords = records
+        shownExpanded = expanded
+    }
+
+    val visibleRecords = visibleOf(shownRecords, shownExpanded)
+
+    if (visibleRecords.isEmpty()) {
         FadeUpOnce(delayMillis = 120, modifier = modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier.fillMaxWidth().heightIn(min = EMPTY_TIMELINE_HEIGHT),
@@ -92,34 +146,35 @@ internal fun TodayTimeline(
             ) {
                 Text(
                     text = EMPTY_TIMELINE_TEXT,
-                    color = currentThemeSpec().greetingSubColor,
+                    color = spec.greetingSubColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                 )
             }
         }
     } else {
-        val spec = currentThemeSpec()
-        var expanded by remember { mutableStateOf(false) }
-        val isCollapsible = records.size > COLLAPSED_RECORD_LIMIT
-        val visibleRecords =
-            if (isCollapsible && !expanded) {
-                records.takeLast(COLLAPSED_RECORD_LIMIT)
-            } else {
-                records
-            }
+        // 收起时离场行已不在可见窗口，追加到行尾让收束动画播完（它们本来就在更下方）。
+        val graceExtras = shownRecords.filter { row -> row.id in exitingIds && visibleRecords.none { it.id == row.id } }
+        val renderRecords = visibleRecords + graceExtras
 
         Column(modifier = modifier.fillMaxWidth()) {
-            visibleRecords.forEachIndexed { index, record ->
+            renderRecords.forEachIndexed { index, record ->
                 if (index > 0) {
                     // 行间发丝线（1.5.0）：唯一的分隔语言，替代旧胶囊底。
                     Box(Modifier.fillMaxWidth().height(1.dp).background(spec.laceColor.copy(alpha = 0.22f)))
                 }
                 FadeUpOnce(delayMillis = minOf(index, ROW_ENTRANCE_MAX_STAGGERED) * ROW_ENTRANCE_STAGGER_MS) {
-                    TimelineRow(record = record, spec = spec, onRequestDelete = onRequestDelete)
+                    key(record.id) {
+                        TimelineRow(
+                            record = record,
+                            spec = spec,
+                            exiting = record.id in exitingIds,
+                            onRequestDelete = onRequestDelete,
+                        )
+                    }
                 }
             }
-            if (isCollapsible) {
+            if (records.size > COLLAPSED_RECORD_LIMIT) {
                 TextButton(
                     onClick = { expanded = !expanded },
                     modifier =
@@ -166,13 +221,16 @@ internal fun TodayTimeline(
 private fun TimelineRow(
     record: WaterRecord,
     spec: ThemeSpec,
+    exiting: Boolean,
     onRequestDelete: ((WaterRecord) -> Unit)?,
 ) {
     val view = LocalView.current
     val interactionSource = remember { MutableInteractionSource() }
     val time = TIME_FORMAT.format(Instant.ofEpochMilli(record.drankAtEpochMs).atZone(ZoneId.systemDefault()))
+    // 离场中的行不再响应长按——纠错只对稳定在册的行开放。
+    val activeRequest = if (exiting) null else onRequestDelete
     val longPressModifier =
-        if (onRequestDelete == null) {
+        if (activeRequest == null) {
             Modifier
         } else {
             Modifier.combinedClickable(
@@ -182,54 +240,64 @@ private fun TimelineRow(
                 onLongClickLabel = DELETE_ACTION_LABEL,
                 onLongClick = {
                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                    onRequestDelete(record)
+                    activeRequest(record)
                 },
             )
         }
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = ControlMinHeight)
-                .then(longPressModifier)
-                .semantics {
-                    contentDescription =
-                        if (onRequestDelete == null) {
-                            "$time，${record.amountMl}ml"
-                        } else {
-                            "$time，${record.amountMl}ml，长按可$DELETE_ACTION_LABEL"
-                        }
-                    if (onRequestDelete != null) {
-                        customActions =
-                            listOf(
-                                CustomAccessibilityAction(DELETE_ACTION_LABEL) {
-                                    onRequestDelete(record)
-                                    true
-                                },
-                            )
-                    }
-                }
-                // 发丝行（1.5.0）：无胶囊底，靠上下内边距撑出行高与触控目标。
-                .padding(horizontal = 2.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val visibilityState = remember { MutableTransitionState(true) }
+    visibilityState.targetState = !exiting
+    AnimatedVisibility(
+        visibleState = visibilityState,
+        enter = EnterTransition.None,
+        exit =
+            shrinkVertically(animationSpec = tween(MotionTokens.DURATION_FEEDBACK_MS, easing = MotionTokens.EasingStandard)) +
+                fadeOut(animationSpec = tween(MotionTokens.DURATION_FEEDBACK_MS, easing = MotionTokens.EasingStandard)),
     ) {
-        Box(
+        Row(
             modifier =
                 Modifier
-                    .size(DROP_DOT_SIZE)
-                    .background(color = spec.primary, shape = CircleShape),
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = time,
-            color = spec.greetingSubColor,
-            style = MaterialTheme.typography.labelMedium,
-        )
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = "${record.amountMl}ml",
-            color = spec.greetingColor,
-            style = MaterialTheme.typography.labelLarge,
-        )
+                    .fillMaxWidth()
+                    .heightIn(min = ControlMinHeight)
+                    .then(longPressModifier)
+                    .semantics {
+                        contentDescription =
+                            if (activeRequest == null) {
+                                "$time，${record.amountMl}ml"
+                            } else {
+                                "$time，${record.amountMl}ml，长按可$DELETE_ACTION_LABEL"
+                            }
+                        if (activeRequest != null) {
+                            customActions =
+                                listOf(
+                                    CustomAccessibilityAction(DELETE_ACTION_LABEL) {
+                                        activeRequest(record)
+                                        true
+                                    },
+                                )
+                        }
+                    }
+                    // 发丝行（1.5.0）：无胶囊底，靠上下内边距撑出行高与触控目标。
+                    .padding(horizontal = 2.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(DROP_DOT_SIZE)
+                        .background(color = spec.primary, shape = CircleShape),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = time,
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "${record.amountMl}ml",
+                color = spec.greetingColor,
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
     }
 }

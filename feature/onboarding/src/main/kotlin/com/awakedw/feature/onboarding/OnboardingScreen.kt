@@ -6,21 +6,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +35,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,8 +55,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
@@ -75,6 +67,7 @@ import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.GOLD_TRIM
@@ -175,7 +168,6 @@ fun OnboardingScreen(
                     Spacer(Modifier.weight(1f))
                     PrimaryButton(
                         text = "打开设置",
-                        reduceMotion = reduceMotion,
                         onTap = {
                             if (needsNotificationPermission(context)) {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -204,7 +196,6 @@ private fun ThemeStep(
     onContinue: () -> Unit,
 ) {
     val spec = currentThemeSpec()
-    val reduceMotion = rememberReduceMotion()
     Column(
         modifier =
             Modifier
@@ -232,7 +223,7 @@ private fun ThemeStep(
         Spacer(Modifier.height(18.dp))
         ThemeSwatchGrid(selected = selected, onSelect = onSelect)
         Spacer(Modifier.height(22.dp))
-        PrimaryButton(text = "就这个，继续", reduceMotion = reduceMotion, onTap = onContinue)
+        PrimaryButton(text = "就这个，继续", onTap = onContinue)
         Spacer(Modifier.height(8.dp))
         Text(
             text = "先用默认主题",
@@ -343,12 +334,15 @@ private fun SwatchCard(
     val current = currentThemeSpec()
     val theme = ThemeById.getValue(themeIdOf(choice))
     val shape = RoundedCornerShape(16.dp)
-    Surface(
-        onClick = onClick,
-        shape = shape,
-        color = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f),
-        border = BorderStroke(1.dp, if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)),
-        modifier = modifier.semantics { role = Role.RadioButton },
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            modifier
+                .pressScale(interactionSource)
+                .clip(shape)
+                .background(if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f))
+                .border(1.dp, if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f), shape)
+                .clickable(interactionSource = interactionSource, indication = null, role = Role.RadioButton, onClick = onClick),
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
@@ -499,35 +493,20 @@ private fun dropletPath(size: Size): Path {
     }
 }
 
-/** 主按钮：主题渐变胶囊，与首页「记一杯」同一观感语言（含按压缩放回弹）。 */
+/** 主按钮：主题渐变胶囊，与首页「记一杯」同一观感语言（含按压缩放回弹，§24 共享实现）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun PrimaryButton(
     text: String,
-    reduceMotion: Boolean,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale =
-        if (reduceMotion) {
-            1f
-        } else {
-            animateFloatAsState(
-                targetValue = if (pressed) 0.97f else 1f,
-                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-                label = "onboardingPressScale",
-            ).value
-        }
     Box(
         modifier =
             modifier
-                .graphicsLayer {
-                    scaleX = pressScale
-                    scaleY = pressScale
-                }
+                .pressScale(interactionSource)
                 .clip(RoundedCornerShape(percent = 50))
                 .background(Brush.verticalGradient(listOf(spec.buttonTop, spec.buttonBottom)))
                 .clickable(interactionSource = interactionSource, indication = null, onClick = onTap)

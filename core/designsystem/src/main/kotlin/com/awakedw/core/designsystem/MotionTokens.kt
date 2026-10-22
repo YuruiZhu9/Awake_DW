@@ -23,8 +23,16 @@ object MotionTokens {
     /**
      * 打卡三通道进出统一时长（2.6.0 动效二阶）：环心引文横切、达标缎带展开/收起、
      * 猫语气泡淡变同进同出同速——§12.2「同屏同拍」从停留同拍完备为进出同拍。
+     * 2.8.0 起时间线容器的尺寸过渡（删除/展开）也走这一拍。
      */
     const val DURATION_FEEDBACK_MS = 240
+
+    /**
+     * 按压缩放下限（2.8.0 按压语言统一，§24）：可点击组件统一按到 0.97 并以弹簧回弹，
+     * 回答「界面听到了」。主按钮/环自 2.2.0 起的既有手感原样收敛（spring damping 0.5 +
+     * StiffnessMedium），弹簧参数由 [com.awakedw.core.designsystem.animation.pressScale] 固定。
+     */
+    const val PRESS_SCALE = 0.97f
 
     /** 主题主图与中景层的淡入 reveal（700ms）：新图浮现的一次性节奏。 */
     const val DURATION_SCENE_REVEAL_MS = 700

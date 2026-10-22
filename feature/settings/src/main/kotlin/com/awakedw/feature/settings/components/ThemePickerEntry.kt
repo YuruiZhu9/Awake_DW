@@ -3,6 +3,9 @@ package com.awakedw.feature.settings.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +23,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -34,8 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ThemeById
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
@@ -57,11 +62,16 @@ internal fun ThemePickerEntry(
     val selectedArtwork = if (selected == ThemeChoice.FOLLOW_TIME) null else themeArtworkOf(selectedSpec.id)
     val selectedImage = selectedArtwork?.let { rememberAssetImageOrN(it.asset, retainPreviousImage = false) }
     var open by rememberSaveable { mutableStateOf(false) }
-    Surface(
-        onClick = { open = true },
-        shape = RoundedCornerShape(16.dp),
-        color = spec.ringTrack.copy(alpha = 0.18f),
-        border = BorderStroke(1.dp, spec.laceColor.copy(alpha = 0.45f)),
+    val entryShape = RoundedCornerShape(16.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            Modifier
+                .pressScale(interactionSource)
+                .clip(entryShape)
+                .background(spec.ringTrack.copy(alpha = 0.18f))
+                .border(BorderStroke(1.dp, spec.laceColor.copy(alpha = 0.45f)), entryShape)
+                .clickable(interactionSource = interactionSource, indication = null, role = Role.Button) { open = true },
     ) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(12.dp),

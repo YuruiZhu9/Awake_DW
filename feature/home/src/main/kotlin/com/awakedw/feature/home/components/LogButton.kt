@@ -1,14 +1,10 @@
 package com.awakedw.feature.home.components
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -35,22 +31,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.burst.BurstParticles
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.onPrimarySurface
-import com.awakedw.core.designsystem.rememberReduceMotion
 
 /** Button label is deliberately stable: the primary action always means one thing. */
 internal const val LOG_BUTTON_LABEL = "记一杯"
-
-/** Press scale for the primary action. */
-private const val PRESS_SCALE = 0.97f
 
 /**
  * Primary water logging action: a calm gradient capsule with a small drop mark,
@@ -64,19 +56,7 @@ internal fun LogButton(
     cupMl: Int? = null,
 ) {
     val spec = currentThemeSpec()
-    val reduceMotion = rememberReduceMotion()
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale =
-        if (reduceMotion) {
-            1f
-        } else {
-            animateFloatAsState(
-                targetValue = if (pressed) PRESS_SCALE else 1f,
-                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-                label = "logButtonPressScale",
-            ).value
-        }
 
     var size by remember { mutableStateOf(IntSize.Zero) }
     var burstTrigger by remember { mutableIntStateOf(0) }
@@ -86,10 +66,7 @@ internal fun LogButton(
         modifier =
             modifier
                 .onSizeChanged { size = it }
-                .graphicsLayer {
-                    scaleX = pressScale
-                    scaleY = pressScale
-                },
+                .pressScale(interactionSource),
         contentAlignment = Alignment.Center,
     ) {
         Box(

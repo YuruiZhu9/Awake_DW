@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -50,11 +51,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
@@ -116,17 +119,26 @@ private fun StepButton(
     onClick: () -> Unit,
     spec: ThemeSpec,
 ) {
-    Surface(
-        shape = STEP_BUTTON_SHAPE,
-        color = spec.ringTrack.copy(alpha = if (enabled) 0.45f else 0.16f),
-        modifier = Modifier.semantics { contentDescription = description },
-        onClick = onClick,
-        enabled = enabled,
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .pressScale(interactionSource)
+                .size(STEPPER_BUTTON_SIZE)
+                .clip(STEP_BUTTON_SHAPE)
+                .background(spec.ringTrack.copy(alpha = if (enabled) 0.45f else 0.16f))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                )
+                .semantics { contentDescription = description },
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(STEPPER_BUTTON_SIZE)) {
-            // P2-4：浅色主题主色底上白字对比不足，字色走 onPrimarySurface（深夜维持白字）。
-            Text(text = text, color = spec.chipText.copy(alpha = if (enabled) 1f else 0.35f), style = MaterialTheme.typography.titleMedium)
-        }
+        // P2-4：浅色主题主色底上白字对比不足，字色走 onPrimarySurface（深夜维持白字）。
+        Text(text = text, color = spec.chipText.copy(alpha = if (enabled) 1f else 0.35f), style = MaterialTheme.typography.titleMedium)
     }
 }
 
@@ -340,13 +352,21 @@ private fun ThemeChoiceCard(
     val theme = if (choice == ThemeChoice.FOLLOW_TIME) current else ThemeById.getValue(themeIdOf(choice))
     val cardColor = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f)
     val borderColor = if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = cardColor,
-        border = BorderStroke(width = 1.dp, color = borderColor),
-        onClick = onClick,
-        selected = selected,
-        modifier = modifier.heightIn(min = 86.dp).semantics { role = Role.RadioButton },
+    val shape = RoundedCornerShape(16.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = 86.dp)
+                .pressScale(interactionSource)
+                .clip(shape)
+                .background(cardColor)
+                .border(BorderStroke(width = 1.dp, color = borderColor), shape)
+                .clickable(interactionSource = interactionSource, indication = null, role = Role.RadioButton, onClick = onClick)
+                .semantics {
+                    role = Role.RadioButton
+                    this.selected = selected
+                },
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
@@ -454,12 +474,16 @@ private fun SelectableChip(
     leading: (@Composable () -> Unit)? = null,
 ) {
     val spec = currentThemeSpec()
-    Surface(
-        shape = CHIP_SHAPE,
-        color = if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f),
-        onClick = onClick,
-        selected = selected,
-        modifier = modifier.heightIn(min = ControlMinHeight),
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = ControlMinHeight)
+                .pressScale(interactionSource)
+                .clip(CHIP_SHAPE)
+                .background(if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f))
+                .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
+                .semantics { this.selected = selected },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
@@ -25,13 +24,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberReduceMotion
 import kotlinx.coroutines.Job
@@ -47,9 +46,6 @@ const val RING_STROKE_FRACTION = 0.055f
 
 /** 进度弧起点：正上方（12 点方向）。 */
 private const val START_ANGLE_DEGREES = -90f
-
-/** 按压缩放比例：轻按即有回弹，温柔不打扰。 */
-private const val PRESS_SCALE = 0.97f
 
 /** 认领阈值：切向扫过超过此角度（度）才把手势认领为「拖环」，纵向滚动优先（2.2.0）。 */
 private const val CLAIM_THRESHOLD_DEGREES = 8f
@@ -109,17 +105,6 @@ fun ProgressRing(
             ).value
         }
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale =
-        if (reduceMotion) {
-            1f
-        } else {
-            animateFloatAsState(
-                targetValue = if (pressed) PRESS_SCALE else 1f,
-                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-                label = "ringPressScale",
-            ).value
-        }
 
     val tapModifier =
         if (onRingTap != null) {
@@ -201,10 +186,7 @@ fun ProgressRing(
             modifier
                 .then(dragModifier)
                 .then(tapModifier)
-                .graphicsLayer {
-                    scaleX = pressScale
-                    scaleY = pressScale
-                }
+                .pressScale(interactionSource)
                 .drawWithCache {
                     // 几何与渐变在缓存段一次构建（2.6.0 绘制审计）：弹簧逐帧只重铺弧，不重建笔刷。
                     // 缓存段 receiver 是 CacheDrawScope：center 需按 size 自算（DrawScope 成员不可见）。
