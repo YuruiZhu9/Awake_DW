@@ -178,3 +178,11 @@
 - **周记录列表**（`WeekRecordList`）取代柱状图：七行发丝行，仓储 bars 倒序翻阅、今天在最上；左列日期称呼（今天主色/昨天/M月D日 subColor），右列毫升数；行间只压 0.22α 发丝线，无柱、无目标线、无选中读数——与今日时间线同一排版语言。
 - **本月日历三档降噪**（§18 五档修订）：0 未饮（轨道色 0.30）、1 有记录（主色 0.35）、2 达标（主色 0.90，字走 onPrimarySurface）；今天主色描边不变；图例三块「少□■多」。
 - 保留：今日 hero + 细轨珍珠、发丝事实格（近七日合计/达标为文本事实）、今日记录时间线。全页不再出现任何图表形态。
+
+## 24. 2.8.0 按压语言与状态过渡（2026-10-22）
+
+- **按压语言全 app 一种**：可点击组件的按压反馈统一为 `core:designsystem` 的 `Modifier.pressScale(interactionSource)`——缩至 `MotionTokens.PRESS_SCALE = 0.97f`、spring（damping 0.5 / StiffnessMedium）回弹、`indication = null` 不出水波纹；减少动态恒 1f 直显。主按钮（LogButton / 引导 PrimaryButton）与环（ProgressRing）自 2.2.0 起的既有手感原样收敛为本实现。
+- **次级触点同语言**：快捷量胶囊、提醒间隔 chips、主题色卡（设置页 + 引导页）、设置主题入口、步进按钮一律走共享按压缩放，水波纹退役；触感（HapticFeedbackConstants）与无障碍路径不变。
+- **列表状态过渡**：今日时间线容器用 `animateContentSize`（`DURATION_FEEDBACK_MS` 240ms + EasingStandard；减少动态 snap 直变）承载删除与展开/收起的尺寸变化——行不跳变。
+- **保持瞬时**：低频选中态（主题卡边框/底色/勾）不补间；底栏选中 spring（1.9.0）、三通道 240ms（2.6.0）、数字滚动 500ms、时间线逐条 40ms 错峰各守其位，不得互相挪用。
+- 未来新增可点击组件默认接入 `pressScale`；需要不同按压回答时先改本节再改代码。

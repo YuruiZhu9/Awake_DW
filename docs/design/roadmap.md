@@ -4,6 +4,13 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.8.0 · 按压语言统一 + 状态过渡补齐（2026-10-22 实施）
+
+- 计划：`docs/superpowers/plans/2026-10-22-v280-press-language-plan.md`。以 Emil Kowalski 设计工程标尺对交互响应细节做审计后的收尾版：既定手感语言铺满全部可点击组件 + 状态变化不再跳变；不开新方向。
+- **按压语言全 app 一种**（基线 §24）：designsystem 新增共享 `Modifier.pressScale`（`MotionTokens.PRESS_SCALE = 0.97`、spring damping 0.5 / StiffnessMedium、无水波纹、减少动态直显）；收敛 LogButton / ProgressRing / 引导主按钮三处重复实现（rules §二.2 触发点，手感逐位不变）；接入快捷量胶囊、间隔 chips、主题色卡（设置 + 引导）、设置主题入口、步进按钮——水波纹退役，触感与无障碍语义不变。
+- **时间线离场宽限**：今日时间线删除与收起经 240ms（三通道同拍）收束动画退场，行不跳变；实现为展示层镜像（shownRecords / shownExpanded）按 id 求离场集合；减少动态直删；离场行停用长按纠错。
+- 发布：`versionCode 52 / versionName 2.8.0`；APK 随发布提交入 `dist/`；dist 治理按 rules §八.4 清理 2.6.0 / 2.7.0 历史包（保留 1.0.0 / 2.0.0 / 2.5.0 里程碑）。
+
 ## 2.7.0 · 视觉回归基线版（2026-10-14 实施）
 
 - 计划：`docs/superpowers/plans/2026-10-14-v270-visual-baseline-plan.md`。范围：P1「稳定截图对照」——统计 / 设置两页八主题基线随仓入库；真机闸门职责不变。
