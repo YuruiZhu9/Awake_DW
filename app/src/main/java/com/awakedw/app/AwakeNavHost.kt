@@ -12,7 +12,9 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +64,8 @@ import androidx.navigation.compose.rememberNavController
 import com.awakedw.core.common.AppClock
 import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ThemeSpec
+import com.awakedw.core.designsystem.animation.NoIndication
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.motionDurationMillis
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -304,50 +309,58 @@ private fun AwakeBottomBar(
     ) {
         Column {
             BottomBarTrim(spec = spec)
-            NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
-                BOTTOM_TABS.forEach { tab ->
-                    NavigationBarItem(
-                        selected = currentRoute == tab.destination.route,
-                        onClick = { onSelect(tab.destination) },
-                        icon = {
-                            // 选中图标 spring 弹入并停在一档轻强调上（1.9.0）；减少动态静默。
-                            val selectedTab = currentRoute == tab.destination.route
-                            val reduce = rememberReduceMotion()
-                            val iconScale =
-                                if (reduce) {
-                                    1f
-                                } else {
-                                    animateFloatAsState(
-                                        targetValue = if (selectedTab) TAB_SELECTED_ICON_SCALE else 1f,
-                                        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-                                        label = "tabIconScale",
-                                    ).value
-                                }
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.label,
-                                modifier =
-                                    Modifier.graphicsLayer {
-                                        scaleX = iconScale
-                                        scaleY = iconScale
-                                    },
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = tab.label,
-                                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                            )
-                        },
-                        colors =
-                            NavigationBarItemDefaults.colors(
-                                selectedIconColor = spec.primary,
-                                selectedTextColor = spec.primary,
-                                unselectedIconColor = spec.greetingSubColor,
-                                unselectedTextColor = spec.greetingSubColor,
-                                indicatorColor = Color.Transparent,
-                            ),
-                    )
+            // 水波纹退役（§24）：底栏按压交给图标缩放回弹，库存涟漪经 NoIndication 关停。
+            CompositionLocalProvider(LocalIndication provides NoIndication) {
+                NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
+                    BOTTOM_TABS.forEach { tab ->
+                        val tabInteraction = remember { MutableInteractionSource() }
+                        NavigationBarItem(
+                            selected = currentRoute == tab.destination.route,
+                            onClick = { onSelect(tab.destination) },
+                            interactionSource = tabInteraction,
+                            icon = {
+                                // 选中图标 spring 弹入并停在一档轻强调上（1.9.0）；减少动态静默。
+                                // 按压再叠共享缩放（2.9.0）：按下即答，与全 app 同一语言。
+                                val selectedTab = currentRoute == tab.destination.route
+                                val reduce = rememberReduceMotion()
+                                val iconScale =
+                                    if (reduce) {
+                                        1f
+                                    } else {
+                                        animateFloatAsState(
+                                            targetValue = if (selectedTab) TAB_SELECTED_ICON_SCALE else 1f,
+                                            animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
+                                            label = "tabIconScale",
+                                        ).value
+                                    }
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.label,
+                                    modifier =
+                                        Modifier
+                                            .pressScale(tabInteraction)
+                                            .graphicsLayer {
+                                                scaleX = iconScale
+                                                scaleY = iconScale
+                                            },
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tab.label,
+                                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                                )
+                            },
+                            colors =
+                                NavigationBarItemDefaults.colors(
+                                    selectedIconColor = spec.primary,
+                                    selectedTextColor = spec.primary,
+                                    unselectedIconColor = spec.greetingSubColor,
+                                    unselectedTextColor = spec.greetingSubColor,
+                                    indicatorColor = Color.Transparent,
+                                ),
+                        )
+                    }
                 }
             }
         }

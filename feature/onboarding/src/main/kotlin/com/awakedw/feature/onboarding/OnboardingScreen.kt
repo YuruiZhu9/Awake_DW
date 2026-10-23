@@ -4,12 +4,16 @@ import android.Manifest
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -64,6 +68,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeById
 import com.awakedw.core.designsystem.ThemeSpec
@@ -75,6 +80,7 @@ import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
 import com.awakedw.core.designsystem.lolita.drawBow
 import com.awakedw.core.designsystem.lolita.themeArtworkOf
+import com.awakedw.core.designsystem.motionDurationMillis
 import com.awakedw.core.designsystem.onPrimarySurface
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
@@ -83,6 +89,9 @@ import com.awakedw.core.designsystem.ring.ProgressRing
 import com.awakedw.core.designsystem.themeIdOf
 import com.awakedw.core.designsystem.themeLabelOf
 import com.awakedw.core.model.ThemeChoice
+
+/** 步进淡切的出私节奏：出比入快（入走共享 240ms 反馈拍）。 */
+private const val STEP_EXIT_MS = 170
 
 /** 大水滴插画尺寸：宽为底部圆的直径，高约 1.35 倍留出顶部尖端。 */
 private val DROPLET_SIZE = DpSize(170.dp, 230.dp)
@@ -134,52 +143,68 @@ fun OnboardingScreen(
             density = ParticleDensity.QUIET,
         )
 
-        when (state.step) {
-            OnboardingStep.THEME ->
-                ThemeStep(
-                    selected = state.themeChoice,
-                    onSelect = viewModel::selectTheme,
-                    onContinue = viewModel::continueToWhitelist,
-                )
-            OnboardingStep.WHITELIST ->
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Spacer(Modifier.weight(0.8f))
-                    DropletIllustration(reduceMotion = reduceMotion)
-                    Spacer(Modifier.height(28.dp))
-                    Text(
-                        text = "让提醒按时到达",
-                        color = spec.greetingColor,
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center,
+        // 步进淡切（2.9.0 过渡补完）：首次使用的两步之间不再硬切——入 240ms / 出 170ms
+        // （出比入快），两步都是满屏内容、原地淡切无位移；减少动态直切。
+        AnimatedContent(
+            targetState = state.step,
+            transitionSpec = {
+                val enter =
+                    tween<Float>(
+                        durationMillis = motionDurationMillis(MotionTokens.DURATION_FEEDBACK_MS, reduceMotion),
+                        easing = MotionTokens.EasingStandard,
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = "建议将 Awake_DW 加入电池优化白名单，提醒会更稳定。也可以先跳过。",
-                        color = spec.greetingSubColor,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
+                val exit = tween<Float>(motionDurationMillis(STEP_EXIT_MS, reduceMotion), easing = MotionTokens.EasingStandard)
+                fadeIn(enter) togetherWith fadeOut(exit)
+            },
+            label = "onboardingStep",
+        ) { step ->
+            when (step) {
+                OnboardingStep.THEME ->
+                    ThemeStep(
+                        selected = state.themeChoice,
+                        onSelect = viewModel::selectTheme,
+                        onContinue = viewModel::continueToWhitelist,
                     )
-                    Spacer(Modifier.weight(1f))
-                    PrimaryButton(
-                        text = "打开设置",
-                        onTap = {
-                            if (needsNotificationPermission(context)) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                startWhitelistJump(context, viewModel)
-                            }
-                        },
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    SkipButton(onTap = viewModel::complete)
-                    Spacer(Modifier.height(40.dp))
-                }
+                OnboardingStep.WHITELIST ->
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Spacer(Modifier.weight(0.8f))
+                        DropletIllustration(reduceMotion = reduceMotion)
+                        Spacer(Modifier.height(28.dp))
+                        Text(
+                            text = "让提醒按时到达",
+                            color = spec.greetingColor,
+                            style = MaterialTheme.typography.headlineMedium,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = "建议将 Awake_DW 加入电池优化白名单，提醒会更稳定。也可以先跳过。",
+                            color = spec.greetingSubColor,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        PrimaryButton(
+                            text = "打开设置",
+                            onTap = {
+                                if (needsNotificationPermission(context)) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    startWhitelistJump(context, viewModel)
+                                }
+                            },
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        SkipButton(onTap = viewModel::complete)
+                        Spacer(Modifier.height(40.dp))
+                    }
+            }
         }
     }
 }

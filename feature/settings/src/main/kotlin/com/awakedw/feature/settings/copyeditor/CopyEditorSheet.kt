@@ -1,6 +1,13 @@
 package com.awakedw.feature.settings.copyeditor
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -42,8 +49,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.awakedw.core.designsystem.ControlMinHeight
+import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.currentThemeSpec
+import com.awakedw.core.designsystem.motionDurationMillis
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.feature.settings.COPY_MAX_CHARS
@@ -62,6 +72,9 @@ internal const val COPY_SCOPE_SUBTITLE = "用于首页问候与提醒通知"
 
 /** 页脚：反向说明打卡确认与猫咪回应不在这份库里。 */
 internal const val COPY_SCOPE_FOOTER = "打卡后的确认语和猫咪回应用的是内置短句，不在这里编辑。"
+
+/** 收起收场的组件私有节奏：出比入快（入走共享 240ms 反馈拍）。 */
+private const val COLLAPSE_EXIT_MS = 170
 
 /** 分组内的操作说明：长按是隐藏手势，必须写出来。 */
 internal const val COPY_ITEM_HINT = "点一下改，长按删除"
@@ -209,10 +222,16 @@ private data class PendingDelete(
     val text: String,
 )
 
-/** 单个折叠分组：组头（时段名 + 句数 + 箭头）＋ 展开时的「＋ 新增一句」（置顶）与句子列表。 */
+/**
+ * 单个折叠分组：组头（时段名 + 句数 + 箭头）＋ 展开时的「＋ 新增一句」（置顶）与句子列表。
+ *
+ * 展开/收起有方向感的过渡（2.9.0 过渡补完）：内容 expandVertically+fadeIn 进、
+ * shrinkVertically+fadeOut 出——出比入快；箭头随动插值，减少动态直切直显。
+ * 组头与「＋新增」indication 置空：卡内全部行同一安静口径，按压回应交给状态本身。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun CopyGroup(
+internal fun CopyGroup(
     label: String,
     items: List<String>,
     onEdit: (Int) -> Unit,
@@ -220,13 +239,27 @@ private fun CopyGroup(
     onDelete: (Int) -> Unit,
 ) {
     val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val expandMs = motionDurationMillis(MotionTokens.DURATION_FEEDBACK_MS, reduceMotion)
+    val collapseMs = motionDurationMillis(COLLAPSE_EXIT_MS, reduceMotion)
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 0f else -90f,
+        animationSpec = tween(expandMs, easing = MotionTokens.EasingStandard),
+        label = "copyGroupChevron",
+    )
 
     Surface(shape = GROUP_SHAPE, color = spec.chipText.copy(alpha = 0.08f), modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().heightIn(min = ControlMinHeight).clickable(onClick = { expanded = !expanded }),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ControlMinHeight)
+                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                            expanded = !expanded
+                        },
             ) {
                 Text(text = label, color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.padding(start = 6.dp))
@@ -240,44 +273,58 @@ private fun CopyGroup(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = if (expanded) "收起" else "展开",
                     tint = spec.chipText,
-                    modifier = Modifier.rotate(if (expanded) 0f else -90f),
+                    modifier = Modifier.rotate(chevronRotation),
                 )
             }
-            if (expanded) {
-                Spacer(Modifier.padding(top = 4.dp))
-                // §3.4：「＋ 新增一句」置每组展开区顶部，新增路径永远一步可达。
-                // 触控高度走 ControlMinHeight：此前只有 10dp 内边距，实际可点高度约 36dp。
-                Text(
-                    text = "＋ 新增一句",
-                    color = spec.primary,
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onAdd)
-                            .heightIn(min = ControlMinHeight)
-                            .wrapContentHeight(Alignment.CenterVertically)
-                            .padding(vertical = 10.dp),
-                )
-                if (items.isEmpty()) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter =
+                    fadeIn(tween(expandMs, easing = MotionTokens.EasingStandard)) +
+                        expandVertically(tween(expandMs, easing = MotionTokens.EasingStandard)),
+                exit =
+                    fadeOut(tween(collapseMs, easing = MotionTokens.EasingStandard)) +
+                        shrinkVertically(tween(collapseMs, easing = MotionTokens.EasingStandard)),
+            ) {
+                Column {
+                    Spacer(Modifier.padding(top = 4.dp))
+                    // §3.4：「＋ 新增一句」置每组展开区顶部，新增路径永远一步可达。
+                    // 触控高度走 ControlMinHeight：此前只有 10dp 内边距，实际可点高度约 36dp。
                     Text(
-                        text = "还没有内容，添加一句吧",
-                        color = spec.greetingSubColor,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "＋ 新增一句",
+                        color = spec.primary,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = onAdd,
+                                )
+                                .heightIn(min = ControlMinHeight)
+                                .wrapContentHeight(Alignment.CenterVertically)
+                                .padding(vertical = 10.dp),
                     )
-                } else {
-                    Text(
-                        text = COPY_ITEM_HINT,
-                        color = spec.greetingSubColor,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 4.dp),
-                    )
-                    items.forEachIndexed { index, text ->
-                        CopyItemRow(
-                            text = text,
-                            onClick = { onEdit(index) },
-                            onLongClick = { onDelete(index) },
+                    if (items.isEmpty()) {
+                        Text(
+                            text = "还没有内容，添加一句吧",
+                            color = spec.greetingSubColor,
+                            style = MaterialTheme.typography.bodySmall,
                         )
+                    } else {
+                        Text(
+                            text = COPY_ITEM_HINT,
+                            color = spec.greetingSubColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                        items.forEachIndexed { index, text ->
+                            CopyItemRow(
+                                text = text,
+                                onClick = { onEdit(index) },
+                                onLongClick = { onDelete(index) },
+                            )
+                        }
                     }
                 }
             }
