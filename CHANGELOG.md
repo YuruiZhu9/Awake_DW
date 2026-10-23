@@ -2,6 +2,30 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v2.9.0] - 2026-10-22 · versionCode 53
+
+**过渡补完版**：Emil 标尺第二圈审计（状态切换维度）——底栏水波纹收编、文案分组展开/收起从硬切变过渡、引导步进淡切。观感变化集中在「状态切换有方向感」；布局与业务零变化。
+
+### Added
+- **`NoIndication`**（`core:designsystem`）：no-op `IndicationNodeFactory` 原语，供不暴露 indication 形参的 M3 组件经 `LocalIndication` 局部覆写关停库存涟漪。
+- **文案分组过渡**：展开/收起 `AnimatedVisibility`（入 240ms 展开+淡入 / 出 170ms 收束+淡出，出比入快），箭头 ±90° 随动插值（此前瞬转）；`CopyGroupTransitionTest` 钉住「离场过渡拍内内容仍在树上、拍毕消失」。
+- **引导步进淡切**：主题步 ↔ 白名单步 `AnimatedContent` 原地淡切（入 240 / 出 170），首次使用不再整页硬切。
+
+### Changed
+- **底栏收编（§24 收口）**：`NavigationBarItem` 水波纹退役（`LocalIndication provides NoIndication`），逐签 `interactionSource` 接共享按压缩放——按压 = 图标 0.97 回弹；选中态 1.9.0 的 1.08 spring 弹入不变。
+- **文案卡内口径统一**：分组头与「＋ 新增一句」indication 置空，与卡内句子行同一安静回答。
+
+### Unchanged
+- 业务写入、持久化键、导航图、权限、素材、三通道分工全部原样；统计/设置**不**叠分节入场（页签转场已是页面级入场）；设置步进器数值与主题卡选中态保持瞬时（§25 不补间清单）。
+
+### Verification
+- `CopyGroupTransitionTest` 2 例：动效开启下收起的离场拍断言 + 减少动态直切。
+- 全仓库 `ktlintCheck build` 全绿；视觉基线（静止态）零漂移。
+- 减少动态：底栏按压本就恒 1f；分组与步进 `motionDurationMillis(…, 0)` 直切直显。
+
+### Known limitations（如实披露）
+- 底栏按压无波纹属于 §24 先例的延伸（1.6.0「底栏如画布」方向的收口）；触控目标、选择语义、无障碍路径不变。
+
 ## [v2.8.0] - 2026-10-22 · versionCode 52
 
 **按压语言统一版**：把 2.2.0 起确立的安静按压语言收敛为共享实现并铺满全部可点击组件，补上时间线删除／收起的离场过渡。以 Emil Kowalski 设计工程标尺做的一轮微交互收尾审计；观感变化集中在「按下去的回应」与「行离场不跳变」。
