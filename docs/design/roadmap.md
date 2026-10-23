@@ -4,6 +4,14 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 
 
+## 2.9.0 · 过渡补完（2026-10-22 实施）
+
+- 计划：`docs/superpowers/plans/2026-10-22-v290-transition-completion-plan.md`。Emil 标尺第二圈审计（状态切换维度）的收尾版；基线增补 §25。
+- **底栏收编**：`NoIndication` 关停 NavigationBarItem 库存涟漪，逐签 interactionSource 接共享按压缩放（按压 = 图标 0.97 回弹，选中 1.08 弹入不变）——「水波纹退役」全 app 收口。
+- **状态切换统一节奏**：入 240 / 出 170（出比入快，与页签转场同构）。文案库分组展开/收起 AnimatedVisibility + 箭头插值（此前硬切 + 瞬转），组头/新增 indication 置空；引导两步 AnimatedContent 原地淡切（此前硬切）。
+- 减少动态三处全直切；测试 `CopyGroupTransitionTest`（离场过渡拍内内容仍在、拍毕消失；减少动态直切）。
+- 发布：`versionCode 53 / versionName 2.9.0`；APK 随发布提交入 `dist/`，归档后清理 2.8.0 历史包。
+
 ## 2.8.0 · 按压语言统一 + 状态过渡补齐（2026-10-22 实施）
 
 - 计划：`docs/superpowers/plans/2026-10-22-v280-press-language-plan.md`。以 Emil Kowalski 设计工程标尺对交互响应细节做审计后的收尾版：既定手感语言铺满全部可点击组件 + 状态变化不再跳变；不开新方向。

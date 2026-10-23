@@ -186,3 +186,11 @@
 - **列表状态过渡**：今日时间线容器用 `animateContentSize`（`DURATION_FEEDBACK_MS` 240ms + EasingStandard；减少动态 snap 直变）承载删除与展开/收起的尺寸变化——行不跳变。
 - **保持瞬时**：低频选中态（主题卡边框/底色/勾）不补间；底栏选中 spring（1.9.0）、三通道 240ms（2.6.0）、数字滚动 500ms、时间线逐条 40ms 错峰各守其位，不得互相挪用。
 - 未来新增可点击组件默认接入 `pressScale`；需要不同按压回答时先改本节再改代码。
+
+## 25. 2.9.0 过渡补完（2026-10-22）
+
+- **底栏收编**：`NavigationBarItem` 经 designsystem 的 `NoIndication`（no-op `IndicationNodeFactory`，`LocalIndication` 局部覆写）关停库存涟漪；逐签 `interactionSource` 接共享按压缩放——按压 = 图标 0.97 回弹，选中态 1.9.0 的 1.08 spring 弹入不变。§24「水波纹退役」至此全 app 无死角。
+- **状态切换统一节奏**：展开类过渡入 240ms（`DURATION_FEEDBACK_MS`，三通道同拍）/ 出 170ms——出比入快（Emil 不对称节奏，与页签转场 240/170 同构）；170 目前为组件私有常量（文案分组 `COLLAPSE_EXIT_MS`、引导步进 `STEP_EXIT_MS`），第三处出现时收敛进 MotionTokens。
+- **文案分组**：展开/收起 `AnimatedVisibility`（expandVertically+fadeIn / shrinkVertically+fadeOut）+ 箭头 `animateFloatAsState` 插值；分组头与「＋ 新增一句」indication 置空，卡内全部行同一安静口径。
+- **引导步进**：两步间 `AnimatedContent` 原地淡切（两步均满屏、无位移）。
+- **不补间清单**：统计/设置分节不再叠分节入场（页签转场已是页面级入场，不叠两层）；设置步进器数值保持瞬时（快速连点优先）；主题卡选中态保持瞬时（§24 已立）。
