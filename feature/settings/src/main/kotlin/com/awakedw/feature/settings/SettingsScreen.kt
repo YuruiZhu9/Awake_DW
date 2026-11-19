@@ -6,48 +6,55 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.PagePadding
 import com.awakedw.core.designsystem.ReadingField
-import com.awakedw.core.designsystem.SurfaceCornerRadius
+import com.awakedw.core.designsystem.animation.pressScale
 import com.awakedw.core.designsystem.components.EditorialHeader
-import com.awakedw.core.designsystem.components.PaperPanel
+import com.awakedw.core.designsystem.components.EditorialSectionLabel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
-import com.awakedw.core.designsystem.lolita.artworkPanelOpacity
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.feature.settings.components.IntervalChipsRow
@@ -57,10 +64,17 @@ import com.awakedw.feature.settings.components.ToggleRow
 import com.awakedw.feature.settings.components.WindowRangeSlider
 import com.awakedw.feature.settings.copyeditor.CopyLibrarySection
 
-private val CARD_SHAPE: Shape = RoundedCornerShape(SurfaceCornerRadius)
-
 /** 本页漂浮粒子的随机种子：与首页/统计页各不相同，保证各屏粒子排布有别。 */
 private const val SETTINGS_PARTICLE_SEED = 13L
+
+/** 分节间距：与统计页同一版面骨架——去卡片后的呼吸来自间距，而不是盒子。 */
+private val SETTINGS_SECTION_GAP = 20.dp
+
+/** 分节内行距：发丝线两侧留一指宽，行与行不挤在一起。 */
+private val SETTINGS_ROW_GAP = 12.dp
+
+/** 页底呼吸：滚动到底时最后一行不贴系统导航栏。 */
+private val SETTINGS_BOTTOM_BREATHING = 32.dp
 
 /**
  * 「我的」页（设计规格 §3.4）：分区卡 + 白名单引导入口——
@@ -68,6 +82,10 @@ private const val SETTINGS_PARTICLE_SEED = 13L
  * 外观（主题单选 chips）、声音（音效开关，任务 12）、心意文案库（早/午/晚折叠编辑器）。
  * 背景为全局渐变底座 + 漂浮粒子（规格 §2.2，与其他各屏同一份主题呼吸）。
  * 所有变更经 [SettingsViewModel] 即时持久化，无保存键。
+ *
+ * 2.10.0 编辑部化（视觉基线 §26）：页面不再使用 `PaperPanel` 四连卡，改为
+ * 「`EditorialSectionLabel` 微标签 + 右延发丝线 + 内容直接落在纸面」——
+ * 与统计页自 1.5.0 起确认的版面语言同一套。业务、控件行为与持久化键零改动。
  *
  * [onOpenWhitelistGuide] 为「让提醒更稳定」整行点击的出口：
  * 路由跳转由导航壳（集成任务）接线，本层不感知 NavHost。
@@ -118,13 +136,13 @@ fun SettingsScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = PagePadding),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(start = PagePadding, end = PagePadding, bottom = SETTINGS_BOTTOM_BREATHING),
+            verticalArrangement = Arrangement.spacedBy(SETTINGS_SECTION_GAP),
         ) {
             Spacer(Modifier.height(8.dp))
             EditorialHeader("我的", "修改后自动保存", Icons.Rounded.Settings)
 
-            SettingsCard(title = "饮水目标", subtitle = null) {
+            SettingsSection(title = "饮水目标") {
                 // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
                 StepperRow(
                     label = "每日目标量",
@@ -135,6 +153,7 @@ fun SettingsScreen(
                     onIncrement = { viewModel.stepGoalMl(+SettingsValidation.ML_STEP) },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                SettingsDivider()
                 StepperRow(
                     label = "一杯容量",
                     valueText = "${settings.cupMl}ml",
@@ -146,18 +165,20 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsCard(title = "喝水提醒", subtitle = null) {
+            SettingsSection(title = "提醒") {
                 ReminderStatusRow(
                     statusLabel = state.reminderStatusLabel,
                     armed = state.reminderArmed,
                     testSent = state.testReminderSent,
                     onTest = { tryTestReminder(viewModel) },
                 )
+                SettingsDivider()
                 ToggleRow(
                     label = "喝水提醒",
                     checked = settings.remindersEnabled,
                     onCheckedChange = viewModel::setRemindersEnabled,
                 )
+                SettingsDivider()
                 WindowRangeSlider(
                     startMin = settings.windowStartMin,
                     endMin = settings.windowEndMin,
@@ -167,8 +188,9 @@ fun SettingsScreen(
                 IntervalChipsRow(selectedMin = settings.intervalMin, onSelect = viewModel::setIntervalMin)
             }
 
-            SettingsCard(title = "外观与声音", subtitle = null) {
+            SettingsSection(title = "外观与声音") {
                 ThemePickerEntry(selected = settings.themeChoice, onSelect = viewModel::setThemeChoice)
+                SettingsDivider()
                 ToggleRow(
                     label = "音效",
                     supporting = "系统静音时不播放",
@@ -177,43 +199,46 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsCard(title = null, subtitle = null) {
-                CopyLibrarySection(
-                    library = state.library,
-                    onUpsert = viewModel::upsertCopy,
-                    onAdd = viewModel::addCopy,
-                    onDelete = viewModel::deleteCopy,
-                    onReset = viewModel::resetCopyLibrary,
-                )
+            CopyLibrarySection(
+                library = state.library,
+                onUpsert = viewModel::upsertCopy,
+                onAdd = viewModel::addCopy,
+                onDelete = viewModel::deleteCopy,
+                onReset = viewModel::resetCopyLibrary,
+            )
+
+            SettingsSection(title = "提醒稳定性") {
+                GuideEntryRow(onOpenWhitelistGuide = onOpenWhitelistGuide)
             }
-
-            GuideEntryRow(onOpenWhitelistGuide = onOpenWhitelistGuide)
-
-            Spacer(Modifier.height(24.dp))
         }
     }
 }
 
-/** 分区卡容器：chipBg 圆角面板 + 标题/副标题（[title] 为 null 时仅作容器，如文案库分区自带头部）。
- * 质感（§10.4）：2dp 柔阴影 + 主题色 8% 细描边，替纯平面色块。
+/**
+ * 分节骨架：微标签 + 右延发丝线，内容直接落在纸面上。
+ * 与统计页共用 [EditorialSectionLabel]（2.10.0 从统计页私有实现提升）。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun SettingsCard(
-    title: String?,
-    subtitle: String?,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+private fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
-    PaperPanel(modifier = modifier, title = title) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            if (subtitle != null) Text(subtitle, color = currentThemeSpec().greetingSubColor, style = MaterialTheme.typography.bodySmall)
-            content()
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(SETTINGS_ROW_GAP)) {
+        EditorialSectionLabel(title)
+        content()
     }
 }
 
-/** 提醒透明化状态行（§11.3/11.4）：状态圆点 + 文案 + 「测试提醒」即时验证入口。 */
+/** 分区内的行间发丝线：代替卡片内边距，让同一分区仍读得成一组。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun SettingsDivider() {
+    val spec = currentThemeSpec()
+    Box(Modifier.fillMaxWidth().height(1.dp).background(spec.laceColor.copy(alpha = 0.22f)))
+}
+
+/** 提醒透明化状态行（§11.3/11.4）：状态圆点 + 文案 + 「测试提醒」即时验证入口（去盒）。 */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun ReminderStatusRow(
@@ -225,34 +250,38 @@ private fun ReminderStatusRow(
 ) {
     val spec = currentThemeSpec()
     val view = LocalView.current
-    Surface(shape = RoundedCornerShape(14.dp), color = spec.ringTrack.copy(alpha = 0.16f), modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(6.dp).background(if (armed) spec.primary else spec.greetingSubColor, CircleShape))
-                Text(
-                    statusLabel,
-                    color = spec.greetingColor,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                )
-                androidx.compose.material3.TextButton(onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                    onTest()
-                }) { Text("测试提醒", color = spec.greetingColor, style = MaterialTheme.typography.labelMedium) }
-            }
+    Row(
+        modifier = modifier.fillMaxWidth().heightIn(min = ControlMinHeight),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(6.dp).background(if (armed) spec.primary else spec.greetingSubColor, CircleShape))
+        Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+            Text(statusLabel, color = spec.greetingColor, style = MaterialTheme.typography.bodySmall)
             if (testSent) {
                 Text(
                     "提醒已发出，请查看通知栏",
                     color = spec.greetingSubColor,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
+        }
+        TextButton(
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                onTest()
+            },
+            modifier = Modifier.heightIn(min = ControlMinHeight).testTag("settings-test-reminder"),
+        ) {
+            Text("测试提醒", color = spec.greetingColor, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
 
-/** 白名单引导入口（§3.4）：整行点击项，跳转由导航壳接线。 */
+/**
+ * 白名单引导入口（§3.4）：整行点击项，跳转由导航壳接线。
+ * 2.10.0 去卡：不再是一张独立 Surface，而是「提醒稳定性」分节下的一行；
+ * 按压走共享 `pressScale`（§24），触控高度守住 `ControlMinHeight`。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 private fun GuideEntryRow(
@@ -260,28 +289,37 @@ private fun GuideEntryRow(
     modifier: Modifier = Modifier,
 ) {
     val spec = currentThemeSpec()
-    Surface(
-        shape = CARD_SHAPE,
-        color = spec.chipBg.copy(alpha = artworkPanelOpacity(spec.id, 0.64f)),
-        onClick = onOpenWhitelistGuide,
-        modifier = modifier.fillMaxWidth(),
-        shadowElevation = 1.dp,
-        border = BorderStroke(width = 1.dp, color = spec.laceColor.copy(alpha = 0.42f)),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "让提醒更稳定", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = "打开系统设置，允许后台提醒",
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.labelSmall,
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .pressScale(interactionSource)
+                .clip(RoundedCornerShape(14.dp))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    role = Role.Button,
+                    onClick = onOpenWhitelistGuide,
                 )
-            }
-            Text(text = "›", color = spec.greetingSubColor, style = MaterialTheme.typography.headlineSmall)
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 4.dp, vertical = 12.dp)
+                .testTag("settings-guide-entry"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "让提醒更稳定", color = spec.greetingColor, style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "打开系统设置，允许后台提醒",
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelSmall,
+            )
         }
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = spec.greetingSubColor,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }

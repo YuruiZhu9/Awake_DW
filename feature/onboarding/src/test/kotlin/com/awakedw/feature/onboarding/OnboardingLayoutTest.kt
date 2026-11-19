@@ -1,10 +1,16 @@
 package com.awakedw.feature.onboarding
 
 import android.os.Looper
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.model.ThemeChoice
@@ -16,6 +22,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -100,15 +107,54 @@ class OnboardingLayoutTest {
         assertEquals("onboarding_done 应落库一次", 1, prefs.markOnboardingCount)
     }
 
+    /**
+     * 2.13.0 大字回归：2× 下主题步高于视口时仍可滚动到主/次出口，
+     * 主按钮不横向越屏、高度不被压到触控下限以下——引导再长也不能把人困住。
+     */
+    @Test
+    fun `两倍字体下主题步可滚动到出口且不越屏`() {
+        showOnboarding(fontScale = 2f)
+
+        // 与首页大字测试同一手法：直接调用 ScrollBy 语义动作，不用 performScrollTo
+        // （它会等滚动静默，而水滴呼吸是无限动画、帧钟手动推进时静默永不到来）。
+        val scrollBy =
+            rule
+                .onNode(hasScrollAction())
+                .fetchSemanticsNode()
+                .config[SemanticsActions.ScrollBy]
+                ?.action
+        assertNotNull("引导页内容应可垂直滚动", scrollBy)
+        repeat(3) {
+            scrollBy!!(0f, 10_000f)
+            advanceClock()
+        }
+
+        val rootWidth = rule.onRoot().fetchSemanticsNode().size.width.toFloat()
+        val minPx = with(rule.density) { ControlMinHeight.toPx() }
+        val primary =
+            rule
+                .onNodeWithText("就这个，继续")
+                .assertIsDisplayed()
+                .fetchSemanticsNode()
+                .boundsInRoot
+        assertTrue("主按钮右边界越出 360dp 屏：$primary", primary.right <= rootWidth)
+        assertTrue("主按钮高度 ${primary.height}px 低于下限 ${minPx}px", primary.height >= minPx)
+        rule.onNodeWithText("先用默认主题").assertIsDisplayed()
+    }
+
     private fun showOnboarding(
         prefs: FakePrefsRepository = FakePrefsRepository(),
         onComplete: () -> Unit = {},
+        fontScale: Float = 1f,
     ) {
         val viewModel = OnboardingViewModel(prefs, onComplete)
         rule.mainClock.autoAdvance = false
         rule.setContent {
             AwakeTheme(ThemeId.EMERALD) {
-                OnboardingScreen(viewModel = viewModel)
+                val current = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(current.density, fontScale)) {
+                    OnboardingScreen(viewModel = viewModel)
+                }
             }
         }
         advanceClock()

@@ -1,9 +1,13 @@
 package com.awakedw.feature.home.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -11,9 +15,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -30,7 +36,7 @@ import java.time.LocalDateTime
 /** The compact spacing contract used by the 2.0 editorial home composition. */
 val EDITORIAL_HOME_TOP_PADDING = 22.dp
 val EDITORIAL_HERO_GAP = 18.dp
-val EDITORIAL_MASTHEAD_ESTIMATE = 52.dp
+val EDITORIAL_MASTHEAD_ESTIMATE = 60.dp
 
 /** 刊头→英雄行：与 SplashMorph 交棒落点估算里的 +10dp 对齐（2.0.3 一屏收敛）。 */
 val EDITORIAL_MASTHEAD_TO_HERO_GAP = 10.dp
@@ -64,28 +70,105 @@ internal fun editorialGoalLine(
         "每日目标 ${goalMl}ml · 还差 ${goalMl - totalMl}ml"
     }
 
-/** Left-aligned editorial masthead: date as a刊头, greeting as the page's opening line. */
+/** 页码 folio：每日一页，页序用月内日期；只做版面家具，不进读屏主叙事。 */
+internal fun editorialFolio(dateTime: LocalDateTime): String = "%02d".format(dateTime.dayOfMonth)
+
+/** 页脚页码文案：与 folio 同值，保持书上「第 NN 页」的读法。 */
+internal fun editorialPageLine(folio: String): String = "第 $folio 页"
+
+/**
+ * Left-aligned editorial masthead: date + folio as the page header, a full-width hairline,
+ * greeting as the page's opening line.
+ *
+ * 版式开销：日期行与问候之间只加 4dp + 1dp 线 + 7dp——约 12dp，仍守住
+ * 360dp × 520dp 大字体一屏读完的既有门禁。
+ */
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun EditorialHomeMasthead(
     customGreeting: String?,
     modifier: Modifier = Modifier,
+    now: LocalDateTime = rememberUiNow(),
 ) {
-    // 界面时间走 designsystem 的统一读数口（2.7.0）：默认真实时钟，视觉基线测试可注入固定值。
-    val now = rememberUiNow()
     val spec = currentThemeSpec()
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = editorialDateLabel(now),
-            color = spec.greetingSubColor,
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.8.sp),
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = editorialDateLabel(now),
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.8.sp),
+                modifier = Modifier.alignByBaseline(),
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = editorialFolio(now),
+                color = spec.greetingSubColor.copy(alpha = 0.85f),
+                style =
+                    MaterialTheme.typography.titleSmall.copy(
+                        fontFamily = FontFamily.Serif,
+                        fontStyle = FontStyle.Italic,
+                    ),
+                modifier = Modifier.alignByBaseline().testTag("home-folio"),
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(spec.greetingSubColor.copy(alpha = 0.40f)),
         )
+        Spacer(Modifier.height(7.dp))
         Text(
             text = customGreeting ?: greetingFor(com.awakedw.core.common.TimeSlots.slotOfHour(now.hour)),
             color = spec.greetingColor,
             style = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Serif),
             textAlign = TextAlign.Start,
         )
+    }
+}
+
+/** 页脚：一条发丝线 +「AWAKE · 每日一页 / 第 NN 页」，是纸的收口，不是状态栏。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+internal fun EditorialPageFooter(
+    folio: String,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    Column(modifier = modifier.fillMaxWidth().testTag("home-footer")) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(spec.greetingSubColor.copy(alpha = 0.30f)),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "AWAKE · 每日一页",
+                color = spec.greetingSubColor.copy(alpha = 0.72f),
+                style =
+                    MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        lineHeight = 12.sp,
+                        letterSpacing = 1.6.sp,
+                    ),
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = editorialPageLine(folio),
+                color = spec.greetingSubColor.copy(alpha = 0.72f),
+                style =
+                    MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        lineHeight = 12.sp,
+                        letterSpacing = 1.6.sp,
+                    ),
+            )
+        }
     }
 }
 
@@ -116,6 +199,8 @@ internal fun EditorialHeroValue(
                 },
             color = spec.ringValueText,
             style = MaterialTheme.typography.displayLarge.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
+            // 英雄数字的几何回归锚点：光环等环内装饰不得把权重列挤成 0 宽。
+            modifier = Modifier.testTag("home-hero-number"),
         )
         Text(
             text = editorialGoalLine(totalMl, goalMl),
@@ -132,15 +217,17 @@ internal fun CompactRingCenterContent(
     progress: Float,
     centerNote: RingNote?,
     dragPreviewMl: Int? = null,
+    showDragHint: Boolean = false,
     spec: ThemeSpec = currentThemeSpec(),
 ) {
     if (dragPreviewMl != null) {
         // 拖环预览临时态（2.2.0 环即把手）：拖动中环心跟手陈述事实，不落库；松手由提交/取消收场。
+        // 窗环（Phase 1）把字号收到 titleMedium：88dp 圆牌在大字体下也完整容得下。
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "+${dragPreviewMl}ml",
                 color = spec.ringValueText,
-                style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
             )
             Spacer(Modifier.width(1.dp))
             Text(
@@ -154,11 +241,12 @@ internal fun CompactRingCenterContent(
             Text(
                 text = "${(progress.coerceIn(0f, 1f) * 100).toInt()}%",
                 color = spec.ringValueText,
-                style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
             )
             Spacer(Modifier.width(1.dp))
             Text(
-                text = "今日进度",
+                // 空态才有这一次轻提示：告诉使用者环也能拖（2.10.0）；有记录后回到「今日进度」。
+                text = if (showDragHint) "可拖动记录" else "今日进度",
                 color = spec.greetingSubColor,
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
             )

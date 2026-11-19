@@ -6,11 +6,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import com.awakedw.core.designsystem.AwakeTheme
 import com.awakedw.core.model.ThemeId
 import com.awakedw.core.model.WeekBar
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,5 +67,46 @@ class StatsWeekSummaryLayoutTest {
 
         rule.onNodeWithContentDescription("近七日合计 7.2 L").performScrollTo().assertIsDisplayed()
         rule.onNodeWithContentDescription("近七日达标 3/7 天").assertIsDisplayed()
+    }
+
+    /** 2.13.0 大字回归：2× 下统计页可滚动到「今日记录」，分节标签不横向越屏。 */
+    @Test
+    fun `两倍字体下整页可滚动到今日记录且不横向越屏`() {
+        Settings.Global.putFloat(
+            RuntimeEnvironment.getApplication().contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            0f,
+        )
+        val state =
+            StatsUiState(
+                badges = StatsBadges(0, 0, "—"),
+                bars = emptyList(),
+                goalMl = 1600,
+                weekTotalMl = 0,
+                weekMetDays = 0,
+            )
+        rule.setContent {
+            AwakeTheme(ThemeId.EMERALD) {
+                val current = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(current.density, fontScale = 2f)) {
+                    StatsContent(state)
+                }
+            }
+        }
+
+        val rootWidth = rule.onRoot().fetchSemanticsNode().size.width.toFloat()
+        val lastLabel =
+            rule
+                .onNodeWithText("今日记录 · 0 次")
+                .performScrollTo()
+                .assertIsDisplayed()
+                .fetchSemanticsNode()
+                .boundsInRoot
+        assertTrue(
+            "「今日记录」分节标签右边界越出 360dp 屏：$lastLabel",
+            lastLabel.right <= rootWidth,
+        )
+        // 顶部事实格在 2× 下仍可读，不因大字丢内容。
+        rule.onNodeWithContentDescription("近七日合计 0 ml").performScrollTo().assertIsDisplayed()
     }
 }

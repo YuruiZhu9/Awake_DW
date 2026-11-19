@@ -1,6 +1,6 @@
 # 后续设计与开发指导
 
-后续开发必须先阅读：`rules.md`、`docs/design/visual-baseline.md`、`docs/design/roadmap.md`、对应规格与 plan。
+后续开发必须先阅读：`rules.md`、`docs/design/visual-baseline.md`、`docs/design/roadmap.md`、`docs/design/continuous-iteration-plan.md`、对应规格与 plan。
 
 当前设计基线为 alpha12 + alpha13 场景化增补（`visual-baseline.md` §13/§14，「深夜信纸，会呼吸」），并继承用户确认的 0.4.0 首页摘要等宽居中规则、0.5.0 的文字反馈三通道与语料分层规则（§11）、0.5.1/0.6.0 的引文与语料纪律（§12/§14）。发生冲突时，用户新确认的需求优先，业务遵循历史功能规格，视觉遵循当前基线；旧版本隐藏猫提示等规则仅作历史记录。
 

@@ -8,14 +8,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.AwakeTheme
+import com.awakedw.core.designsystem.lolita.ArtworkCrop
 import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.core.designsystem.ring.RingLens
 import com.awakedw.core.model.ThemeId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -27,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * 环即把手的手势仲裁（2.2.0，Robolectric 触摸注入）：
@@ -38,6 +43,54 @@ import org.robolectric.annotation.Config
 class ProgressRingDragGestureTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun `环点按语义带动作说明_读屏知道这一下会记一杯`() {
+        composeRule.setContent {
+            AwakeTheme(ThemeId.EMERALD) {
+                ProgressRing(
+                    progress = 0.2f,
+                    modifier = Modifier.size(200.dp).testTag(RING_TAG),
+                    onRingTap = {},
+                    onRingDrag = {},
+                    onRingDragEnd = {},
+                ) {}
+            }
+        }
+
+        // 环心文案只陈述进度（如「20% 今日进度」）；点按动作说明必须补上「会发生什么」。
+        val clickAction = composeRule.onNodeWithTag(RING_TAG).fetchSemanticsNode().config[SemanticsActions.OnClick]
+        assertEquals("记一杯", clickAction.label)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `环内窗景不改变点按语义与轻点行为`() {
+        var taps = 0
+        composeRule.setContent {
+            AwakeTheme(ThemeId.EMERALD) {
+                ProgressRing(
+                    progress = 0.2f,
+                    modifier = Modifier.size(200.dp).testTag(RING_TAG),
+                    onRingTap = { taps++ },
+                    onRingDrag = {},
+                    onRingDragEnd = {},
+                    lens =
+                        RingLens(
+                            image = ImageBitmap(width = 8, height = 8),
+                            crop = ArtworkCrop(focusX = 0.1f, focusY = 0.9f, zoom = 2f),
+                        ),
+                ) {}
+            }
+        }
+
+        val clickAction = composeRule.onNodeWithTag(RING_TAG).fetchSemanticsNode().config[SemanticsActions.OnClick]
+        assertEquals("窗环只换画法，不换动作说明", "记一杯", clickAction.label)
+
+        composeRule.onNodeWithTag(RING_TAG).performTouchInput { click() }
+        composeRule.waitForIdle()
+        assertEquals(1, taps)
+    }
 
     @Test
     fun `沿环切向拖拽认领为拖环回传正扫过角并取消点按`() {

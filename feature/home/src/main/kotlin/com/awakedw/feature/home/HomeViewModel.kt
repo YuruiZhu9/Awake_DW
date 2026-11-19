@@ -56,6 +56,14 @@ const val REPEAT_HINT_TEXT = "刚刚记过了"
 const val REVERT_ACK_PREFIX = "已撤回 · "
 
 /**
+ * 打卡后的撤回窗口（2.11.0）：给刚按下的一杯留 10s 反悔期。
+ *
+ * 窗口内主按钮尾端从「+{cupMl}ml」换成「撤回」，一击即收回最后一杯、不弹确认——
+ * 这是对「刚发生的一次误触」的纠错，不是对历史记录的删除；后者仍走统计页的确认流程。
+ */
+const val UNDO_WINDOW_MS = 10_000L
+
+/**
  * 环心那一行临时文案：打卡引文（可带落款），或重复提示／撤回回执这类操作说明（无落款）。
  *
  * 打卡引文与操作提示共用同一个位置是有意的——它们都发生在使用者刚看着的环心；
@@ -89,6 +97,13 @@ data class HomeUiState(
     val celebrating: Boolean = false,
     val catMood: CatMood = CatMood.IDLE,
     val catLine: String? = null,
+    /**
+     * 撤回窗口（2.11.0）：刚成笔的 10s 内为 true，主按钮尾端显示「撤回」。
+     * 窗口只活在 ViewModel 里——旋转保留、进程死亡丢失，不新增持久化键。
+     */
+    val undoAvailable: Boolean = false,
+    /** 窗口内待撤回的那一杯量，仅用于无障碍播报「撤回上一杯，{n}ml」。 */
+    val undoAmountMl: Int? = null,
 )
 
 /**
@@ -108,6 +123,7 @@ class HomeViewModel(
     private val catLineHoldMs: Long = CAT_LINE_HOLD_MS,
     private val praiseHoldMs: Long = PRAISE_HOLD_MS,
     private val repeatHintHoldMs: Long = REPEAT_HINT_HOLD_MS,
+    private val undoWindowMs: Long = UNDO_WINDOW_MS,
 ) : ViewModel() {
     /** Dagger 注入入口：生产以缺省时长委托主构造器（JSR-330 不识别 Kotlin 缺省参数）。 */
     @Inject
@@ -129,6 +145,7 @@ class HomeViewModel(
         CAT_LINE_HOLD_MS,
         PRAISE_HOLD_MS,
         REPEAT_HINT_HOLD_MS,
+        UNDO_WINDOW_MS,
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -146,6 +163,9 @@ class HomeViewModel(
 
     /** 猫序列代次（气泡 + 心情）：摸猫/新打卡换代使旧猫序列的收场失效；独立于 [feedbackEpoch]。 */
     private var catEpoch = 0
+
+    /** 撤回窗口代次：新成笔/撤回使旧窗口到期动作失效，避免窗口互踩。 */
+    private var undoEpoch = 0
 
     init {
         _uiState.update { it.copy(catMood = resolveCatMood(justCelebrated = false, nowHour = currentHour())) }
@@ -205,18 +225,64 @@ class HomeViewModel(
     }
 
     /**
-     * 撤回今日最后一杯（首页「最近一杯」长按）：
+     * 撤回今日最后一杯（2.11.0 打卡纠错闭环，主按钮尾端「撤回」）：
      * 删除后由仓储变更流驱动进度、事实条与统计页同步重算，本层不做本地推算。
      * 成功后走环心确认通道回一句「已撤回 · {n}ml」——删除是破坏性动作，
      * 不能让数字默默变小而没有任何交代。
+     *
+     * 同时收回那一杯引发的其余反馈：窗口立即关闭、猫语与达标横幅收场、
+     * 旧防抖窗作废（允许马上补记正确的量）。庆祝标记不回滚（见 DeleteWaterRecordUseCase）。
      */
     fun revertLatestCup() {
         viewModelScope.launch {
             val removed = deleteWater.revertLatestToday()
             if (removed != null) {
+                closeUndoWindow()
+                feedbackEpoch += 1
+                catEpoch += 1
+                lastAcceptedAt = clock.nowEpochMs() - logDebounceMs
+                _uiState.update {
+                    it.copy(
+                        celebrating = false,
+                        catLine = null,
+                        catMood = resolveCatMood(justCelebrated = false, nowHour = currentHour()),
+                    )
+                }
                 showCenterNote(RingNote("$REVERT_ACK_PREFIX${removed.amountMl}ml"), praiseHoldMs)
             }
         }
+    }
+
+    /**
+     * 尾端「撤回」动作的入口：只消费当前窗口，一次窗口最多撤回一次。
+     *
+     * 同步收窗先于删除协程启动——快速双击时第二次读到 `undoAvailable == false` 直接返回，
+     * 不会把再上一杯也删掉。[revertLatestCup] 本身保持可直接调用（用例/未来入口），
+     * 不受窗口约束。
+     */
+    fun undoLatestCup() {
+        if (!_uiState.value.undoAvailable) return
+        closeUndoWindow()
+        revertLatestCup()
+    }
+
+    /** 成笔后开一个 [undoWindowMs] 的撤回窗：再次成笔会换代重开，窗口只对「最新一杯」负责。 */
+    private fun openUndoWindow(amountMl: Int) {
+        undoEpoch += 1
+        val epoch = undoEpoch
+        _uiState.update { it.copy(undoAvailable = true, undoAmountMl = amountMl) }
+        viewModelScope.launch {
+            delay(undoWindowMs)
+            if (undoEpoch == epoch) {
+                _uiState.update { it.copy(undoAvailable = false, undoAmountMl = null) }
+            }
+        }
+    }
+
+    /** 撤回成功后立即收窗；递增代次让挂起的到期动作失效。 */
+    private fun closeUndoWindow() {
+        undoEpoch += 1
+        _uiState.update { it.copy(undoAvailable = false, undoAmountMl = null) }
     }
 
     /** 前沿防抖闸门（规格 §4.1）：首触立即成笔；窗口内的后续触发合并忽略，但给一句明确回显。 */
@@ -249,6 +315,8 @@ class HomeViewModel(
 
         // 打卡成功触发一次轻量猫反馈：HAPPY 一次 + 抽一句猫语，回应每次成笔。
         if (result != null) {
+            // 纠错窗口与成笔同拍开启：使用者刚看到的「+Nml」位置变成「撤回」。
+            openUndoWindow(result.record.amountMl)
             // 声音三触发点之一（任务 12）：成笔确认即随机一声掉落音；当日首次达标再追一段旋律。
             // fire-and-forget，与动画解耦——不等环心确认/庆祝的任何一拍。
             sound.play(DROP_EVENTS.random())

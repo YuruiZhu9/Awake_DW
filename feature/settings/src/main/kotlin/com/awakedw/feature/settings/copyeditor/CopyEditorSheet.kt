@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
@@ -51,6 +52,7 @@ import androidx.compose.ui.window.Dialog
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.MotionTokens
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
+import com.awakedw.core.designsystem.components.EditorialSectionLabel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.motionDurationMillis
 import com.awakedw.core.designsystem.rememberReduceMotion
@@ -120,16 +122,17 @@ internal fun CopyLibrarySection(
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
 
     Column(modifier = modifier.fillMaxWidth()) {
+        // 2.10.0 编辑部化：分区标题与统计/设置其他分节共用同一枚微标签 + 发丝线；
+        // 「恢复默认」是分节级动作，放在说明行右端，不和标题抢层级。
+        EditorialSectionLabel("心意文案库")
+        Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "心意文案库", color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
-                // P3-6：删除/编辑说明一句放在分区头部，不再每条句子尾随常驻「长按删除」小字。
-                Text(
-                    text = COPY_SCOPE_SUBTITLE,
-                    color = spec.greetingSubColor,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
+            Text(
+                text = COPY_SCOPE_SUBTITLE,
+                color = spec.greetingSubColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.weight(1f),
+            )
             Box(
                 modifier =
                     Modifier
@@ -144,7 +147,7 @@ internal fun CopyLibrarySection(
                 )
             }
         }
-        Spacer(Modifier.padding(top = 6.dp))
+        Spacer(Modifier.height(6.dp))
         GROUPS.forEach { group ->
             val items = library.groupOf(group.slot)
             CopyGroup(

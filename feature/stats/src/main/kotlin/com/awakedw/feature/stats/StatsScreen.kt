@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,6 +43,7 @@ import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
 import com.awakedw.core.designsystem.components.EditorialHeader
+import com.awakedw.core.designsystem.components.EditorialSectionLabel
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.particles.FloatingParticles
@@ -98,7 +98,7 @@ internal fun StatsContent(
             Text(
                 "今日饮水",
                 color = spec.greetingSubColor,
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = SECTION_LABEL_SPACING.sp),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HERO_LABEL_SPACING.sp),
             )
             Row(
                 Modifier.fillMaxWidth(),
@@ -150,7 +150,7 @@ internal fun StatsContent(
                 StatsFact("近七日达标", StatsMath.weekMetDaysLabel(state.bars.map { it.totalMl }, state.goalMl), Modifier.weight(1f))
             }
             // —— 近七日：周记录列表（2.5.0 去图表化）——每天一行发丝行，今天在最上 ——
-            StatsSectionLabel("近七日")
+            EditorialSectionLabel("近七日")
             WeekRecordList(
                 bars = state.bars,
                 todayKey = state.todayKey,
@@ -158,7 +158,7 @@ internal fun StatsContent(
             )
             // —— 本月（2.1.0 引入，2.5.0 三档降噪）：日历即记录 ——
             if (state.monthCells.isNotEmpty()) {
-                StatsSectionLabel(state.monthLabel)
+                EditorialSectionLabel(state.monthLabel)
                 MonthHeatmap(
                     cells = state.monthCells,
                     goalMl = state.goalMl,
@@ -167,7 +167,7 @@ internal fun StatsContent(
                 )
             }
             // —— 今日记录：发丝行，无卡片 ——
-            StatsSectionLabel("今日记录 · ${state.timeline.size} 次")
+            EditorialSectionLabel("今日记录 · ${state.timeline.size} 次")
             TodayTimeline(
                 records = state.timeline,
                 onRequestDelete = { record -> pendingDelete = record },
@@ -195,27 +195,8 @@ internal fun StatsContent(
 /** 分节间距（1.5.0）：去卡片后区块靠更大的纵向留白分节——呼吸感来自间距而非框。 */
 private val SECTION_GAP = 22.dp
 
-/** 分节微标签的字距：小、疏、静，Nike 式层级耳语。 */
-private const val SECTION_LABEL_SPACING = 2.5f
-
-/** 分节微标签 + 右延发丝线：唯一保留的「线」，也是这一页的版面骨架。 */
-@Suppress("ktlint:standard:function-naming")
-@Composable
-private fun StatsSectionLabel(text: String) {
-    val spec = currentThemeSpec()
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = text,
-            color = spec.greetingSubColor,
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = SECTION_LABEL_SPACING.sp),
-        )
-        Spacer(Modifier.width(10.dp))
-        Box(Modifier.weight(1f).height(1.dp).background(spec.laceColor.copy(alpha = 0.30f)))
-    }
-}
+/** Hero 微标签字距：与分节标签同一档耳语。 */
+private const val HERO_LABEL_SPACING = 2.5f
 
 /** 细轨粗细与进度头珠点半径（0.9.2）：线上一颗小珍珠，替代 M3 进度条自带的终点圆点。 */
 private val TRACK_HEIGHT = 3.dp

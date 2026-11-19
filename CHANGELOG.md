@@ -2,6 +2,128 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [Unreleased] - 2026-11-17 · 首页纸面化（大改版 Phase 1）
+
+**大改（待发布）**：首页从「主题壁纸 + Material 控件」改为「一张铺在主题场景上的纸」——纸面、书口、角花水印、窗环、压印主按钮、撕票快捷量与编辑页框。统计/设置页面本阶段不动；业务、持久化键、导航、权限零改动。
+
+### Added
+- **`PaperTokens` / `EditorialSheet`**（`core:designsystem/paper`）：纸面横向 alpha 呼吸带（版心 97.5% → 页边 88%，左右各 26dp）、10dp 桌面、程序化纤维噪点、纸边压痕、右缘 18dp 书口、左侧订口、右上角花水印 19%（径向遮罩淡出）；全部只进 draw 相、静态缓存，无位图上传/网络/模糊。
+- **`ArtworkCrop` / `editorialCropsOf`**：同一张主题图按角色取不同角；八主题窗环/水印角花表，纯函数源矩形夹回图内。
+- **`RingLens` + `ProgressRing` 可选窗景**：环内 2.1–2.3× 放大的角花、60 格刻度、88dp 纸面圆牌；`veilAlpha`/`medallionAlpha` 由首页按引文/拖环状态淡变。默认 `lens = null` 时外观与旧环逐位一致。
+- **页眉 folio 与页脚**：日期行右侧两位页码 + 通栏发丝线；页脚常驻纸底「AWAKE · 每日一页 / 第 NN 页」，不随内容滚动，内容列预留底部让行。
+- **测试**：`EditorialPageChromeTest`（folio/页脚、520dp×1.3 页脚屏内、撕票 ≥48dp、窗环 132dp）、`ProgressRingDragGestureTest` 窗环语义用例、`EditorialHomeLayoutTest` folio/页脚/裁切越界用例、`HomeScreenRenderDiagnosticTest` 真实素材诊断渲染。
+
+### Fixed
+- **英雄行布局回归**：`CelebrationHalo` 原用 `fillMaxSize` 把环容器撑满整行，权重列（英雄数字）被挤成 0 宽；改为按环径 `size(diameter)` 约束，数字与环恢复并排。新增 `home-hero-number` 几何断言。
+- **减少动态下页脚错位**：`FadeUpOnce` 的无动画分支原直接 `content()`、丢掉调用方 modifier；改为 `Box(modifier)` 承接，页脚在减少动态下仍贴纸底。新增减少动态版式回归用例。
+
+### Changed
+- **主按钮**（`LogButton`）：渐变小胶囊 → 58dp 压印长条（近直角、上缘内高光、底部内阴影、左侧印章）；尾端杯量/撤回位置、10s 撤回、48dp 触控与 TalkBack 语义不变。
+- **快捷量**（`QuickSipsRow`）：胶囊 chip → 页边撕票（虚线顶边 + 竖分隔，衬线毫升数）；毫升换算、点按语义与触觉不变，单枚仍 ≥48dp。
+- **环心**（`CompactRingCenterContent`）：百分比/拖环预览字号收至 `titleMedium`，让 88dp 圆牌在大字体下完整容纳。
+- **首页图层**：`ReadingField` 退役，纸面承担阅读对比度；粒子仍在纸下，只在纸外与纸边呼吸。
+
+### Unchanged
+- 打卡三通道位置与文案、撤回窗口、防抖、庆祝标记、持久化键、导航、权限、主题素材、统计/设置页面零改动。
+
+### Verification
+- `:feature:home:testDebugUnitTest` 全绿；统计 13 张、设置 12 张视觉基线 `AWAKE_VISUAL_BASELINE=check` 通过。
+- 全仓库 `ktlintCheck build` 全绿（1266 任务）。
+- EMERALD/NIGHT 真实素材诊断渲染（411dp）目检：纸边呼吸、水印、窗环、压印按钮、撕票、页脚层级成立；留档 `docs/design/mockups/editorial-home-emerald-render.png` / `editorial-home-night-render.png`（整页：含猫栏与真实背景，不含底栏）。
+
+### Known limitations（如实披露）
+- 真机未走查：八主题纸边/水印对比度、窗环角花是否可辨、1.3×/2×、TalkBack、减少动态、底栏衔接。
+- 首页像素基线仍受 Robolectric 环境限制；像素验收以真机为准。
+- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+
+## [Unreleased] - 2026-11-17 · 无障碍与大字回归（保养版）
+
+**保养（待发布）**：全量触点、大字体、减少动态与 TalkBack 审计；唯一行为修正是环区点按的读屏动作说明。视觉、布局、业务、持久化、导航、权限零改动。
+
+### Added
+- **设置页 2× 大字回归**：360dp × fontScale 2.0 整页滚动到「提醒稳定性」，行级动作右边界不越屏、可点高度不低于 48dp。
+- **统计页 2× 大字回归**：整页滚动到「今日记录」，分节标签不横向越屏，顶部事实格仍可读。
+- **引导页 2× 大字回归**：主题步滚动到主/次出口，主按钮不越屏、不低于触控下限。
+- **环点按语义断言**：`ProgressRingDragGestureTest` 钉住 `onClickLabel`。
+
+### Changed
+- **`ProgressRing`**：点按语义补 `onClickLabel = "记一杯"`——环心文案只陈述进度，读屏聚焦环时能听到按下会发生什么。视觉零变化。
+
+### Audit（无缺陷项）
+- 28 处 `clickable` / `combinedClickable` / `pointerInput` 触点全部 ≥48dp。
+- 所有动画源（开屏、背景呼吸、粒子、Bokeh/AGSL、猫、光袋、环微光/蝴蝶结、拖环/提示、Burst、主题插值、底栏、转场、文案分组、引导步进、水滴）均有 `reduceMotion` 分支。
+
+### Verification
+- `:core:designsystem`、`:feature:home`、`:feature:settings`、`:feature:stats`、`:feature:onboarding` 的 `testDebugUnitTest` 全绿。
+- 统计 13 张、设置 12 张视觉基线 `AWAKE_VISUAL_BASELINE=check` 通过（无观感变化）。
+- 全仓库 `ktlintCheck build` 全绿（1266 任务）；`git diff --check` 通过。
+
+### Known limitations（如实披露）
+- 真机未走查：TalkBack 环播报、三页 2× 滚动、减少动态全页复核。
+- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+- 开屏「任意点击跳过」仍是隐藏手势；开屏约 1.2s 自动交棒且减少动态直接跳过，本版不新增可见提示。
+
+## [Unreleased] - 2026-11-17 · 打卡后 10s 撤回上一杯
+
+**纠错闭环（待发布）**：主按钮尾端在成笔后的 10 秒内把「+{cupMl}ml」换成「撤回」，一击收回刚记的一杯、不弹确认；历史记录删除仍走统计页的确认弹窗。业务、持久化键、导航、权限与通知动作零改动。
+
+### Added
+- **撤回窗口**（`HomeUiState.undoAvailable` / `undoAmountMl`，`UNDO_WINDOW_MS = 10_000`）：成笔后开启，再次成笔重开，防抖重复不延长；窗口只活在 ViewModel（旋转保留、进程死亡丢失），不新增持久化键。
+- **主按钮尾端撤回**（`LogButton`）：10s 内尾端「+{cupMl}ml」换成「1dp 发丝分隔 + 撤回」；独立按压底、可点高度 ≥48dp、`contentDescription = "撤回上一杯，{n}ml"`；240ms Crossfade，减少动态归零。
+- **`LogButtonUndoTest`**：两态切换、语义回调、真实触摸不穿透、48dp、2× 字体屏内，共 5 例。
+
+### Changed
+- **撤回联动**：`undoLatestCup()` 同步收窗后调用 `revertLatestCup()`，成功后收起猫语气泡与达标横幅，猫心情落回当前时段；旧防抖窗作废（允许马上补记正确的量），环心回执「已撤回 · {n}ml」；庆祝标记不回滚。窗口只消费一次——快速双击不会删到再上一杯。
+- **`HomeViewModelTest`**：新增 7 例覆盖窗口时效、重开、防抖不重置、撤回即收、同刻补记、双击只消费一次、三通道收场。
+
+### Unchanged
+- 统计页历史记录删除仍为 `AwakeConfirmDialog` 确认；通知动作「记一杯」不带首页撤回窗口；环/快捷量/主按钮的记录语义、持久化、导航、权限、语料零改动。
+
+### Verification
+- `:feature:home:testDebugUnitTest` 全绿（`HomeViewModelTest` 27 例 + `LogButtonUndoTest` 5 例，含既有拖环/布局/视觉 review）。
+- 隔离诊断渲染（EMERALD 浅色 / GOTHIC 深色 / 2× 字体）目检：发丝分隔与「撤回」清晰，动作完整落在胶囊内，2× 下点击区覆盖完整文案。
+- 统计 13 张、设置 12 张视觉基线 `AWAKE_VISUAL_BASELINE=check` 逐模块通过（本次未改两页）。
+- 全仓库 `ktlintCheck build` 全绿（1266 任务；新增触摸/双击用例后增量复验通过）。
+- `git diff --check` 通过。
+
+### Known limitations（如实披露）
+- 真机未走查：八主题尾端对比度（白色圣职/深夜青黛）、10s 到期退回的节奏、1.3×/2× 字体、TalkBack、撤回后三通道收场。
+- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+- 通知动作记录的杯不进入首页撤回窗口；统计页删除仍保留确认。
+
+## [Unreleased] - 2026-11-16 · 设置页编辑部化 + 空态拖环提示
+
+**视觉与手势补完（待发布）**：设置页撤掉 `PaperPanel` 四连卡，改用统计页自 1.5.0 起确认的「分节微标签 + 右延发丝线 + 内容浮在纸面」语言；首页空态给一次「环可拖动」的静态提示与轻演示。业务、持久化键、导航、权限与设置默认值零改动。
+
+### Added
+- **`EditorialSectionLabel`**（`core:designsystem`）：统计页私有分节标签提升为共享件，支持可选 trailing 分节动作；统计页视觉基线零漂移。
+- **`SettingsEditorialLayoutTest`**：四分区微标签可达 + 「测试提醒」「让提醒更稳定」实际可点高度 ≥ 48dp。
+- **空态拖环提示**（`ProgressRing.showDragHint` + 首页）：今天还没有记录时，环心小字显示「可拖动记录」；静置 600ms 后沿环端画 26° 虚线弧 + 珠点前移回位（1100ms 正弦包络，同一首页实例内只播一次），首杯/点按/拖环后收回。只进 draw 相，不改变真实进度，不新增持久化键。
+- **`RingDragHintTest`**：designsystem 钉住包络起止/峰值/对称/夹紧；home 钉住空态露出与首杯后收回、已有记录不显示。
+
+### Changed
+- **设置页去卡片**：退掉四张 `PaperPanel` 页面卡；饮水目标 / 提醒 / 外观与声音 / 提醒稳定性统一为共享分节骨架，分区内以 1dp 发丝线分行。
+- **提醒状态行去盒**：状态点 + 文案 + 「测试提醒」直接成行。
+- **提醒稳定性入口去卡**：整行入口接共享 `pressScale`，归入「提醒稳定性」分节。
+- **步进器按钮**：补一道 1dp 发丝描边，暗色主题下去卡片后仍能读出可点范围。
+- **文案库分区头**：标题改用共享微标签；说明与「恢复默认」移到标题下一行。
+- **环心文案**：空态由「今日进度」临时变为「可拖动记录」；有记录后恢复原文案。减少动态不播放珠点移动，只留静态提示。
+
+### Unchanged
+- 业务写入、持久化键、导航、权限、主题素材、设置默认值/校验、通知调度、文案语料、三通道反馈全部原样；环区点按仍立即记一杯，快捷量与主按钮继续作为单指替代路径。
+
+### Verification
+- `SettingsEditorialLayoutTest` 通过；既有设置页行为/触控/过渡测试全绿。
+- `RingDragHintTest`（designsystem + home）通过；`:feature:home:testDebugUnitTest` 全绿。
+- 设置页 12 张视觉基线重拍；`AWAKE_VISUAL_BASELINE=check` 逐模块通过；统计页 13 张基线零漂移。
+- 1.3× 字体下 132dp 环心「可拖动记录」单行不折行（诊断图目检）。
+- 全仓库 `ktlintCheck build` 全绿（2m31s，1266 任务）。
+
+### Known limitations（如实披露）
+- 真机尚未走查：设置页八主题对比度、1.3×/2× 字体滚动末段、减少动态与底栏遮挡；空态提示在 132dp 真实环上的可见度与克制感。
+- 未提升 versionCode/versionName，未出 Release APK；待使用者确认视觉方向后再走发布流程。
+- 首页像素基线仍受本机 Robolectric 环境限制；本轮以语义/数学测试 + 1.3× 诊断图目检兜底。
+
 ## [v2.9.0] - 2026-10-22 · versionCode 53
 
 **过渡补完版**：Emil 标尺第二圈审计（状态切换维度）——底栏水波纹收编、文案分组展开/收起从硬切变过渡、引导步进淡切。观感变化集中在「状态切换有方向感」；布局与业务零变化。

@@ -128,6 +128,12 @@ private fun StepButton(
                 .size(STEPPER_BUTTON_SIZE)
                 .clip(STEP_BUTTON_SHAPE)
                 .background(spec.ringTrack.copy(alpha = if (enabled) 0.45f else 0.16f))
+                // 去卡片后按钮直接落在纸面：暗色主题需要一道发丝边把可点范围描出来。
+                .border(
+                    width = 1.dp,
+                    color = spec.laceColor.copy(alpha = if (enabled) 0.32f else 0.16f),
+                    shape = STEP_BUTTON_SHAPE,
+                )
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,

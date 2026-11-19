@@ -5,6 +5,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,7 +29,9 @@ fun FadeUpOnce(
     content: @Composable () -> Unit,
 ) {
     if (rememberReduceMotion()) {
-        content()
+        // 减少动态路径也要承接调用方的 modifier（如 BoxScope.align）：
+        // 直接 content() 会丢掉对齐/留白，页脚等元素会掉到父容器左上角。
+        Box(modifier = modifier) { content() }
         return
     }
 

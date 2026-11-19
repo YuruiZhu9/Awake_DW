@@ -17,7 +17,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -399,6 +402,143 @@ class HomeViewModelTest {
 
             assertEquals(2, h.viewModel.uiState.value.cupCount)
             assertEquals("10:30", h.viewModel.uiState.value.lastDrinkLabel)
+        }
+
+    @Test
+    fun `打卡成功后撤回窗口在十秒内有效`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            val opened = h.viewModel.uiState.value
+            assertTrue(opened.undoAvailable)
+            assertEquals(250, opened.undoAmountMl)
+
+            // 9.999s 仍在窗口内——回执读完之前，反悔入口不该先消失。
+            advanceTimeBy(UNDO_WINDOW_MS - 1)
+            runCurrent()
+            assertTrue(h.viewModel.uiState.value.undoAvailable)
+
+            advanceTimeBy(1)
+            runCurrent()
+            assertFalse(h.viewModel.uiState.value.undoAvailable)
+            assertNull(h.viewModel.uiState.value.undoAmountMl)
+        }
+
+    @Test
+    fun `第二次成笔重开撤回窗口且目标换成最新一杯`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            advanceTimeBy(UNDO_WINDOW_MS - 2_000)
+            runCurrent()
+
+            h.clock.ms += CUP_SPACING_MS
+            h.viewModel.quickLog(380)
+            runCurrent()
+            assertEquals(380, h.viewModel.uiState.value.undoAmountMl)
+
+            // 旧窗口的到期时刻已过，新窗口从第二杯重新计时。
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertTrue(h.viewModel.uiState.value.undoAvailable)
+
+            advanceTimeBy(UNDO_WINDOW_MS - 2_000)
+            runCurrent()
+            assertFalse(h.viewModel.uiState.value.undoAvailable)
+        }
+
+    @Test
+    fun `防抖重复触发不重开撤回窗口`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            advanceTimeBy(UNDO_WINDOW_MS - 2_000)
+            runCurrent()
+
+            // 假钟未动：同刻再点落在防抖窗内，只给「刚刚记过了」，不延长撤回窗口。
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(1, h.water.addCount)
+            assertEquals(RingNote(REPEAT_HINT_TEXT), h.viewModel.uiState.value.centerNote)
+            assertTrue(h.viewModel.uiState.value.undoAvailable)
+
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertFalse(h.viewModel.uiState.value.undoAvailable)
+        }
+
+    @Test
+    fun `撤回后窗口立即收起且同刻可马上补记`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+
+            h.viewModel.undoLatestCup()
+            runCurrent()
+            assertFalse(h.viewModel.uiState.value.undoAvailable)
+            assertNull(h.viewModel.uiState.value.undoAmountMl)
+            assertEquals(0, h.viewModel.uiState.value.totalMl)
+            assertEquals(RingNote("${REVERT_ACK_PREFIX}250ml"), h.viewModel.uiState.value.centerNote)
+
+            // 撤回是纠错：旧防抖窗作废，同刻补记必须立即成笔。
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(2, h.water.addCount)
+            assertEquals(250, h.viewModel.uiState.value.totalMl)
+            assertTrue(h.viewModel.uiState.value.undoAvailable)
+        }
+
+    @Test
+    fun `同一撤回窗口只消费一次_双击不会删到再上一杯`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            h.viewModel.tapLogButton()
+            runCurrent()
+            h.clock.ms += CUP_SPACING_MS
+            h.viewModel.tapLogButton()
+            runCurrent()
+            assertEquals(500, h.viewModel.uiState.value.totalMl)
+
+            h.viewModel.undoLatestCup()
+            runCurrent()
+            assertEquals(250, h.viewModel.uiState.value.totalMl)
+            assertFalse(h.viewModel.uiState.value.undoAvailable)
+
+            // 窗口已消费：第二次点击不得把再上一杯也删掉。
+            h.viewModel.undoLatestCup()
+            runCurrent()
+            assertEquals(250, h.viewModel.uiState.value.totalMl)
+            assertEquals(2, h.water.addCount)
+        }
+
+    @Test
+    fun `撤回成功收回猫语与达标横幅`() =
+        runTest {
+            val h = harness(testScheduler)
+
+            repeat(7) {
+                h.clock.ms += CUP_SPACING_MS
+                h.viewModel.tapLogButton()
+                runCurrent()
+            }
+            assertTrue(h.viewModel.uiState.value.celebrating)
+            assertNotEquals(null, h.viewModel.uiState.value.catLine)
+
+            // 达标那一杯被收回：横幅与猫语都失去依据，必须同时收场；庆祝标记不回滚。
+            h.viewModel.revertLatestCup()
+            runCurrent()
+            assertFalse(h.viewModel.uiState.value.celebrating)
+            assertNull(h.viewModel.uiState.value.catLine)
+            assertEquals(1_500, h.viewModel.uiState.value.totalMl)
         }
 
     private companion object {

@@ -8,6 +8,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -46,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -56,6 +58,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -78,19 +81,24 @@ import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
 import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.designsystem.MotionTokens
-import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.FadeUpOnce
 import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
+import com.awakedw.core.designsystem.art.rememberAssetImageOrN
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.drawThemeOrnament
+import com.awakedw.core.designsystem.lolita.themeArtworkOf
+import com.awakedw.core.designsystem.paper.EditorialSheet
+import com.awakedw.core.designsystem.paper.editorialCropsOf
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
+import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.core.designsystem.ring.ProgressRing
+import com.awakedw.core.designsystem.ring.RingLens
 import com.awakedw.core.model.CatMood
 import com.awakedw.feature.home.components.CatBubble
 import com.awakedw.feature.home.components.CompactRingCenterContent
@@ -100,8 +108,10 @@ import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
 import com.awakedw.feature.home.components.EDITORIAL_MASTHEAD_TO_HERO_GAP
 import com.awakedw.feature.home.components.EditorialHeroValue
 import com.awakedw.feature.home.components.EditorialHomeMasthead
+import com.awakedw.feature.home.components.EditorialPageFooter
 import com.awakedw.feature.home.components.HomeQuickAmounts
 import com.awakedw.feature.home.components.LogButton
+import com.awakedw.feature.home.components.editorialFolio
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 132.dp
@@ -143,8 +153,8 @@ private val CAT_FIGURE_SIZE = 64.dp
 /** 无回应纸饰在回应列里的最小高度：只是一道缝线，不再按整栏高撑开。 */
 private val IDLE_ACCENT_MIN_HEIGHT = 24.dp
 
-/** Small end spacing; the mascot row itself provides the required breathing room. */
-private val CONTENT_TAIL_BREATHING = 20.dp
+/** 页脚常驻纸底（8dp 上收 + 约 24dp 页脚高度），内容列预留这段滚动余量。 */
+private val CONTENT_TAIL_BREATHING = 34.dp
 
 /**
  * 达标横幅文案（视觉规格 §4.2 第 6 步）。只表达「今天够了」，
@@ -187,6 +197,24 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val spec = currentThemeSpec()
     val view = LocalView.current
+    // 页眉 folio 与页脚共用同一次界面时间读数；窗环/水印共用同一张主题主图（缓存命中）。
+    val now = rememberUiNow()
+    val editorialArtwork = rememberAssetImageOrN(themeArtworkOf(spec.id).asset)
+
+    // 空态拖环提示（2.10.0）：只在今天还没有记录时出现，点按/拖环/记录后即收场。
+    // 不新增持久化键——冷启动重置为可见，有记录时恒不显示；提示只是一次轻演示，不是 onboarding。
+    var dragHintVisible by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(state.totalMl, state.ringDragMl, state.centerNote) {
+        if (state.totalMl > 0 || state.ringDragMl != null || state.centerNote != null) {
+            dragHintVisible = false
+        }
+    }
+    val showDragHint =
+        dragHintVisible &&
+            state.totalMl == 0 &&
+            state.ringDragMl == null &&
+            state.centerNote == null &&
+            !state.celebrating
 
     // 达标庆祝瞬间的一次轻震（§10.3）：与横幅浮现同拍，克制不喧哗。
     LaunchedEffect(state.celebrating) {
@@ -196,14 +224,16 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
-        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
-        // 轻量装饰层：渐变之上、内容之下；只提供主题氛围，不表达“今日内容”。
+        // 轻量装饰层：渐变之上、纸面之下；只在纸外与纸边呼吸，不压正文。
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
             showFlowers = false,
             density = ParticleDensity.QUIET,
         )
+        // 纸面层（大改版 Phase 1）：主题场景降为桌面/窗外，读、写、按都发生在纸上。
+        // ReadingField 在首页退役——纸本身承担了阅读面的对比度，不再需要洗白层。
+        EditorialSheet(modifier = Modifier.matchParentSize())
 
         Column(
             modifier =
@@ -217,6 +247,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             FadeUpOnce {
                 EditorialHomeMasthead(
                     customGreeting = state.greeting,
+                    now = now,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -239,10 +270,12 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         celebrating = state.celebrating,
                         onRingTap = viewModel::tapRing,
                         dragPreviewMl = state.ringDragMl,
+                        showDragHint = showDragHint,
                         onRingDrag = viewModel::ringDragPreview,
                         onRingDragEnd = viewModel::ringDragCommit,
                         diameter = HOME_RING_DIAMETER,
                         compact = true,
+                        lensImage = editorialArtwork,
                         modifier = Modifier.testTag("home-progress-ring"),
                     )
                 }
@@ -257,6 +290,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 LogButton(
                     onTap = viewModel::tapLogButton,
                     cupMl = state.cupMl,
+                    undoVisible = state.undoAvailable,
+                    undoAmountMl = state.undoAmountMl,
+                    onUndo = viewModel::undoLatestCup,
                     modifier = Modifier.fillMaxWidth().testTag("home-primary-action"),
                 )
             }
@@ -280,6 +316,19 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth().testTag("home-cat-rail"),
                 )
             }
+        }
+        // 页脚常驻纸底：像书的页码，不随内容滚动；内容列以底部留白让行。
+        FadeUpOnce(
+            delayMillis = 140,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = 8.dp),
+        ) {
+            EditorialPageFooter(
+                folio = editorialFolio(now),
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -450,34 +499,71 @@ private fun RingBlock(
     celebrating: Boolean,
     onRingTap: (Offset?) -> Unit,
     dragPreviewMl: Int? = null,
+    showDragHint: Boolean = false,
     onRingDrag: ((Float) -> Unit)? = null,
     onRingDragEnd: ((Float) -> Unit)? = null,
     diameter: androidx.compose.ui.unit.Dp = HOME_RING_DIAMETER,
     compact: Boolean = false,
+    lensImage: ImageBitmap? = null,
     modifier: Modifier = Modifier,
 ) {
     var ringCenter by remember { mutableStateOf<Offset?>(null) }
     val reduceMotion = rememberReduceMotion()
+    val spec = currentThemeSpec()
+    // 窗环（Phase 1）：默认露出角花与纸圆牌；引文/拖环预览出现时圆牌收、遮罩升，
+    // 让文字仍落在接近纸底的面上。减少动态时直接切换。
+    val noteActive = centerNote != null || dragPreviewMl != null
+    val lensMedallionAlpha by
+        animateFloatAsState(
+            targetValue = if (noteActive) 0f else 1f,
+            animationSpec = tween(if (reduceMotion) 0 else MotionTokens.DURATION_FEEDBACK_MS),
+            label = "ringLensMedallion",
+        )
+    val lensVeilAlpha by
+        animateFloatAsState(
+            targetValue = if (noteActive) 0.82f else 0.20f,
+            animationSpec = tween(if (reduceMotion) 0 else MotionTokens.DURATION_FEEDBACK_MS),
+            label = "ringLensVeil",
+        )
+    val lens =
+        lensImage?.let { image ->
+            RingLens(
+                image = image,
+                crop = editorialCropsOf(spec.id).lens,
+                veilAlpha = lensVeilAlpha,
+                medallionAlpha = lensMedallionAlpha,
+            )
+        }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (progress >= 1f) {
             BreathingGlow(reduceMotion = reduceMotion, diameter = diameter)
         }
-        CelebrationHalo(visible = celebrating, reduceMotion = reduceMotion)
+        // 光环必须按环径约束：先前 fillMaxSize 会把环容器撑满整行，
+        // 权重列（英雄数字）被挤成 0 宽，整条英雄带随之被拉高。
+        CelebrationHalo(visible = celebrating, reduceMotion = reduceMotion, diameter = diameter)
         ProgressRing(
             progress = progress,
             modifier =
                 Modifier
                     .size(diameter)
+                    .testTag("home-ring-dial")
                     .onGloballyPositioned { coordinates ->
                         ringCenter = Offset(coordinates.size.width / 2f, coordinates.size.height / 2f)
                     },
             onRingTap = { onRingTap(ringCenter) },
             onRingDrag = onRingDrag,
             onRingDragEnd = onRingDragEnd,
+            showDragHint = showDragHint,
+            lens = lens,
         ) {
             if (compact) {
-                CompactRingCenterContent(progress = progress, centerNote = centerNote, dragPreviewMl = dragPreviewMl)
+                CompactRingCenterContent(
+                    progress = progress,
+                    centerNote = centerNote,
+                    dragPreviewMl = dragPreviewMl,
+                    showDragHint = showDragHint,
+                )
             } else {
                 RingCenterContent(totalMl = totalMl, reduceMotion = reduceMotion, centerNote = centerNote)
             }
@@ -502,6 +588,7 @@ private fun RingBlock(
 private fun CelebrationHalo(
     visible: Boolean,
     reduceMotion: Boolean,
+    diameter: androidx.compose.ui.unit.Dp = HOME_RING_DIAMETER,
 ) {
     val spec = currentThemeSpec()
     val progress = remember { mutableFloatStateOf(0f) }
@@ -521,7 +608,7 @@ private fun CelebrationHalo(
     }
     Box(
         modifier =
-            Modifier.fillMaxSize().drawWithCache {
+            Modifier.size(diameter).drawWithCache {
                 if (!visible || reduceMotion) return@drawWithCache onDrawBehind { }
                 val maxRadius = size.minDimension * HALO_MAX_SPAN
                 val center = Offset(size.width / 2f, size.height / 2f)
