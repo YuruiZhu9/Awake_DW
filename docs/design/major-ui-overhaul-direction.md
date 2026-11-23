@@ -1,6 +1,6 @@
 # 大改版方向稿：从「主题壁纸」到「一张信纸」（2026-11-17）
 
-> 状态：**A · 纸面器物化已选定（2026-11-17）；Phase 1 首页已落地（代码侧完成，待真机验收）**。
+> 状态：**A · 纸面器物化已选定（2026-11-17）；Phase 1 首页、Phase 2 统计/设置均已落地（代码侧完成，待真机验收）**。
 > 样张：`docs/design/mockups/style-tile-a-paper.png`（纸面基准）、`style-tile-b-art-integration.png`（背景图结合）、`style-tile-b-stats-plate.png`（统计卷首）；真实主题素材与色值，非最终实现。
 > 约束：`rules.md` / `AGENTS.md` / `visual-baseline.md` 仍是硬边界；不改业务、持久化键、导航、权限；不做 3D、网络素材、高斯模糊、游戏化。
 > 一句话：**大改不是换颜色或换间距，而是换「页面的构成语法」——纸从背景变成主体，控件从 Material 变成纸面器物，版心从「居中一列」变成编辑部网格。**
@@ -121,7 +121,29 @@ A 分三步，每步一个候选版本，不一次性重写全部页面：
 2. **纸面呼吸改用横向渐变**：大半径径向渐变在真实页面比例下左右边永远走不到 88% 的色标（诊断渲染实测），改为左右各 26dp 从 88% 渐回 97.5%，版心实底不变。
 3. **水印固定在纸右上角**，窗环角花按主题另取一角（`editorialCropsOf` 八主题表）；同一张图在一页里出现两次但不重复。真实素材存在时诊断渲染直接读 `app/src/main/assets`，不引入测试副本。
 
-已落地：`PaperTokens` / `EditorialSheet` / `ArtworkCrop` / `RingLens` / `ProgressRing` 可选窗景与 60 格刻度 / 压印主按钮 / 撕票快捷量 / 页眉 folio + 通栏线 + 页脚；首页退役 `ReadingField`。隔离诊断渲染留档：`docs/design/mockups/editorial-home-emerald-render.png`、`editorial-home-night-render.png`（整页：含猫栏与真实背景，不含底栏；非像素基线）。统计/设置的纸面与器物化仍属 Phase 2。
+已落地：`PaperTokens` / `EditorialSheet` / `ArtworkCrop` / `RingLens` / `ProgressRing` 可选窗景与 60 格刻度 / 压印主按钮 / 撕票快捷量 / 页眉 folio + 通栏线 + 页脚；首页退役 `ReadingField`。隔离诊断渲染留档：`docs/design/mockups/editorial-home-emerald-render.png`、`editorial-home-night-render.png`（整页：含猫栏与真实背景，不含底栏；非像素基线）。
+
+### 3.5 Phase 2 落地记录：统计/设置（2026-11-19）
+
+首页的纸面与页框已扩展到统计/设置，设置页的日常操作换成器物控件。计划与门禁见
+`docs/superpowers/plans/2026-11-19-editorial-stats-settings-phase2-plan.md`。
+
+1. **共享页框**：日期/folio/页眉/页脚从首页私有实现下沉为 `core:designsystem` 的
+   `EditorialPageHeader` / `EditorialPageFooter`，首页、统计、设置三页共用一份；首页视觉不变，
+   统计/设置获得与首页同一条「日期 → 发丝线 → 衬线标题」的页眉。
+2. **统计卷首**：`ArtworkPlate` 以 104dp、约 3:1 的横裁把主题素材的角花/画框带装进 1dp 图版，
+   图注「卷首 · {月}」，不新增素材；八主题在 `EditorialCrops.plate` 各取一角（左上蝴蝶结、
+   右上吊灯、左上珍珠、右上甜点架等）。实测横裁中心会落在素材留白处，故卷首取角而不取中。
+3. **统计页**：纸面层接入后退役 `ReadingField`；英雄数字改衬线，与首页同一字族；页脚
+   「AWAKE · 记录本 / 第 NN 页」。信息层级与 2.5.0 去图表化结论不变，未做双栏跨页。
+4. **设置器物**：打字机键帽步进（48dp、压印边）、压印凹槽 + 铜钮开关（保留 `Role.Switch`）、
+   清醒时段刻度尺（RangeSlider 行为不变）、间隔印章票（48dp、选中盖印）、主题入口/色卡与
+   文案分组收成纸面票根。业务、默认值、校验、调度、持久化键零改动。
+5. **视觉基线**：统计 14 张、设置 13 张重拍（新增各一张页脚 `colophon`）；`AWAKE_VISUAL_BASELINE=check`
+   逐模块串行通过。真机待验收：八主题纸面/卷首对比度、键帽与开关手感、1.3×/2×、TalkBack、减少动态。
+
+统计页「记录跨页」双栏重排未在本阶段实施：它会改变信息层级，需要单独确认与一屏/滚动门禁，
+留待 2.15.0 统计记录本纵深一起评估。
 
 ## 4. 做法（不是直接改代码）
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
@@ -92,6 +93,9 @@ class StatsVisualReviewTest {
         capture(view, "large-week")
         rule.onNodeWithText("今日记录 · 5 次").performScrollTo().assertIsDisplayed()
         capture(view, "large-records")
+        // 页脚是纸页的收口（Phase 2）：滚动到底留下视觉证据。
+        rule.onNodeWithTag("stats-footer").performScrollTo().assertIsDisplayed()
+        capture(view, "colophon")
     }
 
     /**

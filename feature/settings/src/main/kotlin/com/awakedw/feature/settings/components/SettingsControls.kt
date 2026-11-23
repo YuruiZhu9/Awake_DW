@@ -1,5 +1,7 @@
 package com.awakedw.feature.settings.components
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -15,11 +17,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,9 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,12 +41,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -53,6 +57,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.ThemeById
@@ -63,6 +68,7 @@ import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.ThemeLaceOverlay
 import com.awakedw.core.designsystem.lolita.themeArtworkOf
 import com.awakedw.core.designsystem.onPrimarySurface
+import com.awakedw.core.designsystem.rememberReduceMotion
 import com.awakedw.core.designsystem.themeIdOf
 import com.awakedw.core.designsystem.themeLabelOf
 import com.awakedw.core.model.ThemeChoice
@@ -70,17 +76,22 @@ import com.awakedw.core.model.ThemeId
 import com.awakedw.feature.settings.SettingsValidation
 import java.util.Locale
 
-/** 步进器圆形小按钮直径。 */
+/** 步进器键帽直径。 */
 private val STEPPER_BUTTON_SIZE = 48.dp
 
-/** 间隔档位 chip 的最小宽度（P1-6）：不再 weight 均分，宽度自适应且不低于此值保住「120」等三位数。 */
+/** 间隔档位印章票的最小宽度（P1-6）：宽度自适应且不低于此值，保住「120」等三位数。 */
 private val INTERVAL_CHIP_MIN_WIDTH = 56.dp
 
-/** 步进器小按钮形状：全圆。 */
-private val STEP_BUTTON_SHAPE: Shape = RoundedCornerShape(14.dp)
+/** 打字机键帽：近直角、压印边。 */
+private val STEP_BUTTON_SHAPE: Shape = RoundedCornerShape(5.dp)
 
-/** 选择 chips 的胶囊圆角：全圆。 */
-private val CHIP_SHAPE: Shape = RoundedCornerShape(percent = 50)
+/** 印章票：纸面票根的近直角。 */
+private val CHIP_SHAPE: Shape = RoundedCornerShape(3.dp)
+
+/** 压印开关的槽宽/槽高/钮径。 */
+private val TOGGLE_WIDTH = 52.dp
+private val TOGGLE_HEIGHT = 30.dp
+private val TOGGLE_KNOB = 22.dp
 
 /**
  * 「目标」区步进器行（§3.4）：标签 + 「− 数值 ＋」。
@@ -127,13 +138,33 @@ private fun StepButton(
                 .pressScale(interactionSource)
                 .size(STEPPER_BUTTON_SIZE)
                 .clip(STEP_BUTTON_SHAPE)
-                .background(spec.ringTrack.copy(alpha = if (enabled) 0.45f else 0.16f))
-                // 去卡片后按钮直接落在纸面：暗色主题需要一道发丝边把可点范围描出来。
-                .border(
-                    width = 1.dp,
-                    color = spec.laceColor.copy(alpha = if (enabled) 0.32f else 0.16f),
-                    shape = STEP_BUTTON_SHAPE,
-                )
+                .background(spec.chipBg.copy(alpha = if (enabled) 0.60f else 0.22f))
+                // 打字机键帽：顶缘一线高光、底缘压暗、1dp 压印边——按下时靠 pressScale 落键。
+                .drawWithCache {
+                    val edge = 1.dp.toPx()
+                    val borderColor = spec.laceColor.copy(alpha = if (enabled) 0.38f else 0.15f)
+                    val topLight = Color.White.copy(alpha = if (spec.isDark) 0.10f else 0.42f)
+                    val bottomShade =
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = if (spec.isDark) 0.28f else 0.09f),
+                                ),
+                            startY = size.height * 0.55f,
+                            endY = size.height,
+                        )
+                    onDrawBehind {
+                        drawRect(brush = bottomShade)
+                        drawLine(
+                            color = topLight,
+                            start = Offset(edge * 2f, edge),
+                            end = Offset(size.width - edge * 2f, edge),
+                            strokeWidth = edge,
+                        )
+                        drawRect(color = borderColor, style = Stroke(width = edge))
+                    }
+                }
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -143,16 +174,21 @@ private fun StepButton(
                 )
                 .semantics { contentDescription = description },
     ) {
-        // P2-4：浅色主题主色底上白字对比不足，字色走 onPrimarySurface（深夜维持白字）。
-        Text(text = text, color = spec.chipText.copy(alpha = if (enabled) 1f else 0.35f), style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = text,
+            color = spec.chipText.copy(alpha = if (enabled) 1f else 0.35f),
+            style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Serif),
+        )
     }
 }
 
 /**
- * 开关行（§3.4）：标签（可选副文案 [supporting]）+ Switch。切换即持久化，无保存键。
+ * 开关行（§3.4）：标签（可选副文案 [supporting]）+ 压印铜扣。切换即持久化，无保存键。
  * 副文案收在标签下方的小字（greetingSubColor），如「音效 · 水滴与八音盒；系统静音时自动安静」。
+ *
+ * 2.14.0 器物化：M3 Switch 换成压印槽 + 铜钮；语义仍是 Role.Switch / ToggleableState，
+ * 48dp 触控由外层 Box 承担，行为与读屏不变。
  */
-
 @Suppress("ktlint:standard:function-naming")
 @Composable
 internal fun ToggleRow(
@@ -178,17 +214,92 @@ internal fun ToggleRow(
                 )
             }
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors =
-                SwitchDefaults.colors(
-                    checkedThumbColor = onPrimarySurface(spec),
-                    checkedTrackColor = spec.primary,
-                    uncheckedThumbColor = spec.chipText,
-                    uncheckedTrackColor = spec.chipText.copy(alpha = 0.20f),
+        EngravedSwitch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+/**
+ * 压印开关：一条凹槽里滑动的铜钮。凹槽用顶部内阴影与 1dp 压印边表现「刻进纸里」，
+ * 铜钮带顶缘高光；减少动态时直接落位。整块 52×30dp 外再包 48dp 触控高度。
+ */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun EngravedSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spec = currentThemeSpec()
+    val reduceMotion = rememberReduceMotion()
+    val targetOffset = if (checked) TOGGLE_WIDTH - TOGGLE_KNOB - 3.dp else 3.dp
+    val knobOffset =
+        if (reduceMotion) {
+            targetOffset
+        } else {
+            animateDpAsState(
+                targetValue = targetOffset,
+                animationSpec = tween(durationMillis = 180),
+                label = "engravedSwitchKnob",
+            ).value
+        }
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = ControlMinHeight)
+                .toggleable(
+                    value = checked,
+                    interactionSource = interactionSource,
+                    indication = null,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
                 ),
-        )
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(width = TOGGLE_WIDTH, height = TOGGLE_HEIGHT)
+                    .clip(RoundedCornerShape(TOGGLE_HEIGHT / 2))
+                    .background(spec.ringTrack.copy(alpha = 0.38f))
+                    .drawWithCache {
+                        val edge = 1.dp.toPx()
+                        val grooveShade =
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Black.copy(alpha = if (spec.isDark) 0.30f else 0.10f), Color.Transparent),
+                                startY = 0f,
+                                endY = size.height * 0.65f,
+                            )
+                        val borderColor = spec.laceColor.copy(alpha = 0.36f)
+                        onDrawBehind {
+                            drawRect(brush = grooveShade)
+                            drawRect(color = borderColor, style = Stroke(width = edge))
+                        }
+                    },
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterStart)
+                        .offset(x = knobOffset)
+                        .size(TOGGLE_KNOB)
+                        .clip(CircleShape)
+                        .background(if (checked) spec.primary else spec.chipBg)
+                        .drawWithCache {
+                            val edge = 1.dp.toPx()
+                            val borderColor = spec.laceColor.copy(alpha = if (checked) 0.60f else 0.45f)
+                            val topLight = Color.White.copy(alpha = if (checked) 0.28f else 0.34f)
+                            onDrawBehind {
+                                drawCircle(
+                                    color = topLight,
+                                    radius = size.minDimension * 0.30f,
+                                    center = Offset(size.width / 2f, size.height * 0.30f),
+                                )
+                                drawCircle(color = borderColor, radius = size.minDimension / 2f - edge / 2f, style = Stroke(width = edge))
+                            }
+                        },
+            )
+        }
     }
 }
 
@@ -226,6 +337,8 @@ internal fun WindowRangeSlider(
                 Text(formatWindowTime(range.endInclusive.toInt()), color = spec.greetingColor, style = MaterialTheme.typography.titleMedium)
             }
         }
+        // 刻度尺：整点短刻、每两小时长刻；滑杆仍是 M3 RangeSlider（拖拽/键盘/读屏不变）。
+        ReminderRulerTicks(modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
         RangeSlider(
             value = range,
             onValueChange = { next ->
@@ -262,13 +375,31 @@ internal fun WindowRangeSlider(
                     )
                 }
             },
-            colors =
-                SliderDefaults.colors(
-                    activeTrackColor = spec.primary,
-                    inactiveTrackColor = spec.chipText.copy(alpha = 0.20f),
-                    thumbColor = spec.primary,
-                ),
         )
+    }
+}
+
+/** 清醒时段刻度尺：整点一刻，每两小时略长；只进 draw 相，不参与触控。 */
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun ReminderRulerTicks(modifier: Modifier = Modifier) {
+    val spec = currentThemeSpec()
+    Canvas(modifier.height(10.dp)) {
+        val span = (SettingsValidation.WINDOW_MAX - SettingsValidation.WINDOW_MIN).toFloat()
+        val stroke = 0.8.dp.toPx()
+        var minute = SettingsValidation.WINDOW_MIN
+        while (minute <= SettingsValidation.WINDOW_MAX) {
+            val x = (minute - SettingsValidation.WINDOW_MIN) / span * size.width
+            val major = minute % 120 == 0
+            val tickHeight = if (major) 7.dp.toPx() else 4.dp.toPx()
+            drawLine(
+                color = spec.greetingSubColor.copy(alpha = if (major) 0.28f else 0.14f),
+                start = Offset(x, size.height - tickHeight),
+                end = Offset(x, size.height),
+                strokeWidth = stroke,
+            )
+            minute += 60
+        }
     }
 }
 
@@ -358,7 +489,8 @@ private fun ThemeChoiceCard(
     val theme = if (choice == ThemeChoice.FOLLOW_TIME) current else ThemeById.getValue(themeIdOf(choice))
     val cardColor = if (selected) current.chipBg else current.chipBg.copy(alpha = 0.36f)
     val borderColor = if (selected) current.chipText.copy(alpha = 0.72f) else current.laceColor.copy(alpha = 0.42f)
-    val shape = RoundedCornerShape(16.dp)
+    // 器物化：主题卡也收成纸面票根，不再是大圆角卡片。
+    val shape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier =
@@ -428,7 +560,7 @@ private fun ThemeSwatch(
     theme: ThemeSpec,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(9.dp)
+    val shape = RoundedCornerShape(2.dp)
     Box(
         modifier =
             modifier
@@ -487,7 +619,34 @@ private fun SelectableChip(
                 .heightIn(min = ControlMinHeight)
                 .pressScale(interactionSource)
                 .clip(CHIP_SHAPE)
-                .background(if (selected) spec.primary else spec.chipText.copy(alpha = 0.10f))
+                .background(if (selected) spec.primary else Color.Transparent)
+                // 印章票：外框 + 内缩一圈的细框；选中时主色盖印，未选中时只是纸上的票根。
+                .drawWithCache {
+                    val edge = 1.dp.toPx()
+                    val outer =
+                        if (selected) {
+                            onPrimarySurface(spec).copy(alpha = 0.42f)
+                        } else {
+                            spec.greetingSubColor.copy(alpha = 0.32f)
+                        }
+                    val inner =
+                        if (selected) {
+                            onPrimarySurface(spec).copy(alpha = 0.30f)
+                        } else {
+                            spec.greetingSubColor.copy(alpha = 0.14f)
+                        }
+                    val inset = 2.5.dp.toPx()
+                    val innerStroke = 0.7.dp.toPx()
+                    onDrawBehind {
+                        drawRect(color = outer, style = Stroke(width = edge))
+                        drawRect(
+                            color = inner,
+                            topLeft = Offset(inset, inset),
+                            size = Size(size.width - inset * 2f, size.height - inset * 2f),
+                            style = Stroke(width = innerStroke),
+                        )
+                    }
+                }
                 .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
                 .semantics { this.selected = selected },
     ) {
@@ -504,7 +663,7 @@ private fun SelectableChip(
                 text = label,
                 // P2-4：选中 chip 主色底上的字色走 onPrimarySurface（深夜维持白字）。
                 color = if (selected) onPrimarySurface(spec) else spec.chipText,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Serif),
                 maxLines = 1,
             )
         }

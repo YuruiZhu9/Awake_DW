@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -132,6 +133,9 @@ class SettingsVisualReviewTest {
 
         // 页脚澄清文案库与打卡确认/猫语的分工。
         rule.onNodeWithText(COPY_SCOPE_FOOTER).performScrollTo().assertIsDisplayed()
+        // 设置页也是纸页：滚动到底留一张页脚收口的视觉证据。
+        rule.onNodeWithTag("settings-footer").performScrollTo().assertIsDisplayed()
+        capture(view, "colophon")
     }
 
     /**

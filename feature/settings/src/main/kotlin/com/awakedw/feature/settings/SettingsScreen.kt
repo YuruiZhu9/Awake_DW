@@ -7,6 +7,7 @@ import android.view.HapticFeedbackConstants
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +28,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,15 +47,18 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.awakedw.core.designsystem.ControlMinHeight
 import com.awakedw.core.designsystem.GradientBackdrop
-import com.awakedw.core.designsystem.PagePadding
-import com.awakedw.core.designsystem.ReadingField
+import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.designsystem.animation.pressScale
-import com.awakedw.core.designsystem.components.EditorialHeader
+import com.awakedw.core.designsystem.components.EditorialPageFooter
+import com.awakedw.core.designsystem.components.EditorialPageHeader
 import com.awakedw.core.designsystem.components.EditorialSectionLabel
+import com.awakedw.core.designsystem.components.editorialFolio
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
+import com.awakedw.core.designsystem.paper.EditorialSheet
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
+import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.feature.settings.components.IntervalChipsRow
 import com.awakedw.feature.settings.components.StepperRow
 import com.awakedw.feature.settings.components.ThemePickerEntry
@@ -86,6 +88,10 @@ private val SETTINGS_BOTTOM_BREATHING = 32.dp
  * 2.10.0 编辑部化（视觉基线 §26）：页面不再使用 `PaperPanel` 四连卡，改为
  * 「`EditorialSectionLabel` 微标签 + 右延发丝线 + 内容直接落在纸面」——
  * 与统计页自 1.5.0 起确认的版面语言同一套。业务、控件行为与持久化键零改动。
+ *
+ * 2.14.0 纸面化（大改版 Phase 2）：接入 `EditorialSheet` 与共享页眉/页脚；
+ * 步进、开关、时段滑杆、间隔档位换成键帽/铜扣/刻度尺/印章票。行为、默认值、
+ * 校验、提醒调度与持久化键不变。
  *
  * [onOpenWhitelistGuide] 为「让提醒更稳定」整行点击的出口：
  * 路由跳转由导航壳（集成任务）接线，本层不感知 NavHost。
@@ -121,7 +127,6 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         GradientBackdrop(spec = spec, modifier = Modifier.matchParentSize())
         LolitaBackdrop(spec = spec, modifier = Modifier.matchParentSize())
-        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             colors = spec.particleColors,
             modifier = Modifier.matchParentSize(),
@@ -130,17 +135,20 @@ fun SettingsScreen(
             showFlowers = false,
             density = ParticleDensity.QUIET,
         )
+        // 纸面层（大改版 Phase 2）：设置从「壁纸上的表单」变成一页器物清单。
+        EditorialSheet(modifier = Modifier.matchParentSize())
 
+        val now = rememberUiNow()
         Column(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(start = PagePadding, end = PagePadding, bottom = SETTINGS_BOTTOM_BREATHING),
+                    .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = SETTINGS_BOTTOM_BREATHING),
             verticalArrangement = Arrangement.spacedBy(SETTINGS_SECTION_GAP),
         ) {
             Spacer(Modifier.height(8.dp))
-            EditorialHeader("我的", "修改后自动保存", Icons.Rounded.Settings)
+            EditorialPageHeader(title = "我的", subtitle = "修改后自动保存", now = now)
 
             SettingsSection(title = "饮水目标") {
                 // 两个步进器各自独占整行（并排在窄屏会把标签/数值/按钮挤到换行错位）。
@@ -210,6 +218,12 @@ fun SettingsScreen(
             SettingsSection(title = "提醒稳定性") {
                 GuideEntryRow(onOpenWhitelistGuide = onOpenWhitelistGuide)
             }
+
+            EditorialPageFooter(
+                folio = editorialFolio(now),
+                imprint = "AWAKE · 设置",
+                modifier = Modifier.fillMaxWidth().testTag("settings-footer"),
+            )
         }
     }
 }
@@ -265,12 +279,27 @@ private fun ReminderStatusRow(
                 )
             }
         }
-        TextButton(
-            onClick = {
-                view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                onTest()
-            },
-            modifier = Modifier.heightIn(min = ControlMinHeight).testTag("settings-test-reminder"),
+        val interactionSource = remember { MutableInteractionSource() }
+        Box(
+            modifier =
+                Modifier
+                    .heightIn(min = ControlMinHeight)
+                    .pressScale(interactionSource)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(spec.ringTrack.copy(alpha = 0.18f))
+                    .border(1.dp, spec.laceColor.copy(alpha = 0.32f), RoundedCornerShape(3.dp))
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        role = Role.Button,
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                            onTest()
+                        },
+                    )
+                    .padding(horizontal = 12.dp)
+                    .testTag("settings-test-reminder"),
+            contentAlignment = Alignment.Center,
         ) {
             Text("测试提醒", color = spec.greetingColor, style = MaterialTheme.typography.labelMedium)
         }

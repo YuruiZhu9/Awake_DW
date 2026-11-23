@@ -8,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -60,11 +61,11 @@ import com.awakedw.core.domain.contracts.CopyLibrary
 import com.awakedw.core.model.TimeSlot
 import com.awakedw.feature.settings.COPY_MAX_CHARS
 
-/** 文案分组胶囊圆角。 */
-private val GROUP_SHAPE: Shape = RoundedCornerShape(18.dp)
+/** 文案分组票根圆角。 */
+private val GROUP_SHAPE: Shape = RoundedCornerShape(3.dp)
 
 /** 编辑对话框卡片圆角。 */
-private val DIALOG_SHAPE: Shape = RoundedCornerShape(24.dp)
+private val DIALOG_SHAPE: Shape = RoundedCornerShape(4.dp)
 
 /** 超过这个字数就在编辑框里提示一句：首页问候会多占一两行（不做截断）。 */
 private const val GREETING_COMFORT_CHARS = 20
@@ -252,7 +253,12 @@ internal fun CopyGroup(
         label = "copyGroupChevron",
     )
 
-    Surface(shape = GROUP_SHAPE, color = spec.chipText.copy(alpha = 0.08f), modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        shape = GROUP_SHAPE,
+        color = spec.chipText.copy(alpha = 0.06f),
+        border = BorderStroke(1.dp, spec.laceColor.copy(alpha = 0.30f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

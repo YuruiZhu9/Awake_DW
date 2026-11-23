@@ -27,10 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.awakedw.core.designsystem.ThemeSpec
 import com.awakedw.core.designsystem.animation.rememberRollingInt
+import com.awakedw.core.designsystem.components.editorialDateLabel
+import com.awakedw.core.designsystem.components.editorialFolio
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.feature.home.RingNote
-import java.time.DayOfWeek
 import java.time.LocalDateTime
 
 /** The compact spacing contract used by the 2.0 editorial home composition. */
@@ -44,21 +45,6 @@ val EDITORIAL_MASTHEAD_TO_HERO_GAP = 10.dp
 /** 英雄行→主按钮：保持被几何断言守护的贴身节奏（0..18dp 区间）。 */
 val EDITORIAL_HERO_TO_ACTION_GAP = 10.dp
 
-/** Stable Chinese weekday labels for the date masthead. */
-internal fun editorialDateLabel(dateTime: LocalDateTime): String {
-    val weekday =
-        when (dateTime.dayOfWeek) {
-            DayOfWeek.MONDAY -> "星期一"
-            DayOfWeek.TUESDAY -> "星期二"
-            DayOfWeek.WEDNESDAY -> "星期三"
-            DayOfWeek.THURSDAY -> "星期四"
-            DayOfWeek.FRIDAY -> "星期五"
-            DayOfWeek.SATURDAY -> "星期六"
-            DayOfWeek.SUNDAY -> "星期日"
-        }
-    return "${dateTime.monthValue}月${dateTime.dayOfMonth}日 · $weekday"
-}
-
 /** Factual goal line beneath the hero value; it never implies a reward or streak. */
 internal fun editorialGoalLine(
     totalMl: Int,
@@ -69,12 +55,6 @@ internal fun editorialGoalLine(
     } else {
         "每日目标 ${goalMl}ml · 还差 ${goalMl - totalMl}ml"
     }
-
-/** 页码 folio：每日一页，页序用月内日期；只做版面家具，不进读屏主叙事。 */
-internal fun editorialFolio(dateTime: LocalDateTime): String = "%02d".format(dateTime.dayOfMonth)
-
-/** 页脚页码文案：与 folio 同值，保持书上「第 NN 页」的读法。 */
-internal fun editorialPageLine(folio: String): String = "第 $folio 页"
 
 /**
  * Left-aligned editorial masthead: date + folio as the page header, a full-width hairline,
@@ -125,50 +105,6 @@ internal fun EditorialHomeMasthead(
             style = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Serif),
             textAlign = TextAlign.Start,
         )
-    }
-}
-
-/** 页脚：一条发丝线 +「AWAKE · 每日一页 / 第 NN 页」，是纸的收口，不是状态栏。 */
-@Suppress("ktlint:standard:function-naming")
-@Composable
-internal fun EditorialPageFooter(
-    folio: String,
-    modifier: Modifier = Modifier,
-) {
-    val spec = currentThemeSpec()
-    Column(modifier = modifier.fillMaxWidth().testTag("home-footer")) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(spec.greetingSubColor.copy(alpha = 0.30f)),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "AWAKE · 每日一页",
-                color = spec.greetingSubColor.copy(alpha = 0.72f),
-                style =
-                    MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        lineHeight = 12.sp,
-                        letterSpacing = 1.6.sp,
-                    ),
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = editorialPageLine(folio),
-                color = spec.greetingSubColor.copy(alpha = 0.72f),
-                style =
-                    MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        lineHeight = 12.sp,
-                        letterSpacing = 1.6.sp,
-                    ),
-            )
-        }
     }
 }
 

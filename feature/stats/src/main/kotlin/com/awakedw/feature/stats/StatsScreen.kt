@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,26 +27,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.awakedw.core.designsystem.GradientBackdrop
+import com.awakedw.core.designsystem.HomeHorizontalPadding
 import com.awakedw.core.designsystem.MotionTokens
-import com.awakedw.core.designsystem.PagePadding
-import com.awakedw.core.designsystem.ReadingField
 import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.components.AwakeConfirmDialog
-import com.awakedw.core.designsystem.components.EditorialHeader
+import com.awakedw.core.designsystem.components.EditorialPageFooter
+import com.awakedw.core.designsystem.components.EditorialPageHeader
 import com.awakedw.core.designsystem.components.EditorialSectionLabel
+import com.awakedw.core.designsystem.components.editorialFolio
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
+import com.awakedw.core.designsystem.paper.ArtworkPlate
+import com.awakedw.core.designsystem.paper.EditorialSheet
+import com.awakedw.core.designsystem.paper.editorialCropsOf
 import com.awakedw.core.designsystem.particles.FloatingParticles
 import com.awakedw.core.designsystem.particles.ParticleDensity
 import com.awakedw.core.designsystem.rememberReduceMotion
+import com.awakedw.core.designsystem.rememberUiNow
 import com.awakedw.core.model.WaterRecord
 import com.awakedw.feature.stats.components.MonthHeatmap
 import com.awakedw.feature.stats.components.TodayTimeline
@@ -59,6 +65,10 @@ import com.awakedw.feature.stats.components.WeekRecordList
  * 全页只有记录的形态——今日 hero 与细轨、文本事实格、周记录列表（发丝行）、
  * 本月日历（三档：未饮/有记录/达标）与今日记录时间线。柱状图、分布条与年度信纸已撤除，
  * 周统计与月统计足够（使用者确认）。分节标题走微字距小标签。
+ *
+ * 2.14.0 纸面化（大改版 Phase 2）：接入 `EditorialSheet` 与共享页框，版心 28dp；
+ * 页眉 folio、卷首 `ArtworkPlate` 与页脚「AWAKE · 记录本」；英雄数字改衬线。
+ * 记录信息层级不变，业务/持久化/导航/权限零改动。
  */
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -75,11 +85,11 @@ internal fun StatsContent(
     onDeleteRecord: (Long) -> Unit = {},
 ) {
     val spec = currentThemeSpec()
+    val now = rememberUiNow()
     var pendingDelete by remember { mutableStateOf<WaterRecord?>(null) }
     Box(Modifier.fillMaxSize()) {
         GradientBackdrop(spec, Modifier.matchParentSize())
         LolitaBackdrop(spec, Modifier.matchParentSize())
-        ReadingField(spec = spec, modifier = Modifier.matchParentSize())
         FloatingParticles(
             spec.particleColors,
             Modifier.matchParentSize(),
@@ -88,12 +98,23 @@ internal fun StatsContent(
             showStars = false,
             density = ParticleDensity.QUIET,
         )
+        // 纸面层（大改版 Phase 2）：统计从「壁纸上的列表」变成一张可翻阅的记录页。
+        // ReadingField 退役——纸本身承担阅读面对比度。
+        EditorialSheet(modifier = Modifier.matchParentSize())
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = PagePadding),
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = HomeHorizontalPadding, end = HomeHorizontalPadding, bottom = STATS_BOTTOM_BREATHING),
             verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
         ) {
             Spacer(Modifier.height(8.dp))
-            EditorialHeader("统计", "今天的饮水与近七日变化", Icons.Rounded.BarChart)
+            EditorialPageHeader(title = "统计", subtitle = "今天的饮水与近七日变化", now = now)
+            ArtworkPlate(
+                crop = editorialCropsOf(spec.id).plate,
+                caption = "卷首 · ${state.monthLabel.ifBlank { "记录" }}",
+                modifier = Modifier.fillMaxWidth(),
+            )
             // —— 今日饮水：hero 段（微标签悬在大数字上，Nike 式层级）——
             Text(
                 "今日饮水",
@@ -109,7 +130,7 @@ internal fun StatsContent(
                 Text(
                     rememberRollingInt(targetValue = state.badges.totalMl, label = "statsTotalMl").toString(),
                     color = spec.greetingColor,
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.displaySmall.copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold),
                 )
                 Text(
                     "ml",
@@ -173,7 +194,12 @@ internal fun StatsContent(
                 onRequestDelete = { record -> pendingDelete = record },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(12.dp))
+            EditorialPageFooter(
+                folio = editorialFolio(now),
+                imprint = "AWAKE · 记录本",
+                modifier = Modifier.fillMaxWidth().testTag("stats-footer"),
+            )
+            Spacer(Modifier.height(4.dp))
         }
     }
 
@@ -194,6 +220,9 @@ internal fun StatsContent(
 
 /** 分节间距（1.5.0）：去卡片后区块靠更大的纵向留白分节——呼吸感来自间距而非框。 */
 private val SECTION_GAP = 22.dp
+
+/** 页底呼吸：滚动到底时页脚不贴系统导航栏。 */
+private val STATS_BOTTOM_BREATHING = 32.dp
 
 /** Hero 微标签字距：与分节标签同一档耳语。 */
 private const val HERO_LABEL_SPACING = 2.5f

@@ -20,20 +20,44 @@ data class ArtworkCrop(
 }
 
 /**
- * 裁切源矩形（纯函数，便于 JVM 测试）：以焦点为中心取原图短边的 1/[zoom] 正方形，
+ * 正方形裁切源矩形（窗环/水印）：以焦点为中心取原图短边的 1/[zoom] 正方形，
  * 并夹回图内，保证任何焦点/倍率都不会越界。返回像素坐标。
  */
 fun artworkSourceRect(
     imageWidth: Int,
     imageHeight: Int,
     crop: ArtworkCrop,
+): Rect = artworkSourceRect(imageWidth, imageHeight, crop, aspectRatio = 1f)
+
+/**
+ * 任意宽高比的裁切源矩形（统计页卷首是横裁）：先按原图与目标宽高比取最大内接矩形，
+ * 再按 [crop.zoom] 缩小并以焦点为中心，最后夹回图内。`aspectRatio` 是目标宽/高；
+ * 取 1f 时与正方形重载逐位一致。
+ */
+fun artworkSourceRect(
+    imageWidth: Int,
+    imageHeight: Int,
+    crop: ArtworkCrop,
+    aspectRatio: Float,
 ): Rect {
+    require(aspectRatio > 0f) { "aspectRatio must be positive" }
     val width = imageWidth.coerceAtLeast(1)
     val height = imageHeight.coerceAtLeast(1)
-    val side = (minOf(width, height) / crop.zoom).coerceIn(1f, minOf(width, height).toFloat())
+    val imageAspect = width.toFloat() / height
+    val maxWidth: Float
+    val maxHeight: Float
+    if (imageAspect >= aspectRatio) {
+        maxHeight = height.toFloat()
+        maxWidth = maxHeight * aspectRatio
+    } else {
+        maxWidth = width.toFloat()
+        maxHeight = maxWidth / aspectRatio
+    }
+    val cropWidth = (maxWidth / crop.zoom).coerceIn(1f, maxWidth)
+    val cropHeight = (maxHeight / crop.zoom).coerceIn(1f, maxHeight)
     val centerX = crop.focusX.coerceIn(0f, 1f) * width
     val centerY = crop.focusY.coerceIn(0f, 1f) * height
-    val left = (centerX - side / 2f).coerceIn(0f, width - side)
-    val top = (centerY - side / 2f).coerceIn(0f, height - side)
-    return Rect(left, top, left + side, top + side)
+    val left = (centerX - cropWidth / 2f).coerceIn(0f, width - cropWidth)
+    val top = (centerY - cropHeight / 2f).coerceIn(0f, height - cropHeight)
+    return Rect(left, top, left + cropWidth, top + cropHeight)
 }

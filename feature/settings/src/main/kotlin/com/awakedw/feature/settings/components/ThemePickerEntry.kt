@@ -62,15 +62,16 @@ internal fun ThemePickerEntry(
     val selectedArtwork = if (selected == ThemeChoice.FOLLOW_TIME) null else themeArtworkOf(selectedSpec.id)
     val selectedImage = selectedArtwork?.let { rememberAssetImageOrN(it.asset, retainPreviousImage = false) }
     var open by rememberSaveable { mutableStateOf(false) }
-    val entryShape = RoundedCornerShape(16.dp)
+    // 器物化：入口收成纸面票根，与步进键帽、印章票同一套近直角。
+    val entryShape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier =
             Modifier
                 .pressScale(interactionSource)
                 .clip(entryShape)
-                .background(spec.ringTrack.copy(alpha = 0.18f))
-                .border(BorderStroke(1.dp, spec.laceColor.copy(alpha = 0.45f)), entryShape)
+                .background(spec.chipBg.copy(alpha = 0.36f))
+                .border(BorderStroke(1.dp, spec.laceColor.copy(alpha = 0.42f)), entryShape)
                 .clickable(interactionSource = interactionSource, indication = null, role = Role.Button) { open = true },
     ) {
         Row(
@@ -78,7 +79,7 @@ internal fun ThemePickerEntry(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            val swatchShape = RoundedCornerShape(12.dp)
+            val swatchShape = RoundedCornerShape(2.dp)
             Box(
                 Modifier
                     .size(42.dp)

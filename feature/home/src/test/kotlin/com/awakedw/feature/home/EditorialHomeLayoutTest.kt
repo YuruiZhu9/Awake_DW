@@ -1,11 +1,11 @@
 package com.awakedw.feature.home
 
+import com.awakedw.core.designsystem.components.editorialDateLabel
+import com.awakedw.core.designsystem.components.editorialFolio
+import com.awakedw.core.designsystem.components.editorialPageLine
 import com.awakedw.core.designsystem.lolita.ArtworkCrop
 import com.awakedw.core.designsystem.lolita.artworkSourceRect
-import com.awakedw.feature.home.components.editorialDateLabel
-import com.awakedw.feature.home.components.editorialFolio
 import com.awakedw.feature.home.components.editorialGoalLine
-import com.awakedw.feature.home.components.editorialPageLine
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDateTime
@@ -51,5 +51,20 @@ class EditorialHomeLayoutTest {
         assertEquals(0f, wide.left, 0.001f)
         assertEquals(832f, wide.width, 0.001f)
         assertEquals(1472f, wide.bottom, 0.001f)
+    }
+
+    @Test
+    fun `wide artwork crop keeps the plate aspect and stays inside the image`() {
+        // 统计卷首的横裁：目标约 3:1，任何倍率下源矩形都保持该宽高比。
+        val rect = artworkSourceRect(832, 1472, ArtworkCrop(focusX = 0.5f, focusY = 0.42f, zoom = 1.55f), aspectRatio = 3f)
+        assertEquals(3f, rect.width / rect.height, 0.01f)
+        assertEquals(true, rect.left >= 0f && rect.top >= 0f)
+        assertEquals(true, rect.right <= 832f && rect.bottom <= 1472f)
+
+        // 焦点压到角上也不越界，且宽高比不因夹紧而破坏。
+        val corner = artworkSourceRect(832, 1472, ArtworkCrop(focusX = 1f, focusY = 1f, zoom = 1.2f), aspectRatio = 3f)
+        assertEquals(3f, corner.width / corner.height, 0.01f)
+        assertEquals(832f, corner.right, 0.001f)
+        assertEquals(1472f, corner.bottom, 0.001f)
     }
 }

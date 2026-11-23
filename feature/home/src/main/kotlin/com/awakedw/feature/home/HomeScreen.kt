@@ -87,6 +87,8 @@ import com.awakedw.core.designsystem.animation.rememberRollingInt
 import com.awakedw.core.designsystem.art.CatFigure
 import com.awakedw.core.designsystem.art.LightPocket
 import com.awakedw.core.designsystem.art.rememberAssetImageOrN
+import com.awakedw.core.designsystem.components.EditorialPageFooter
+import com.awakedw.core.designsystem.components.editorialFolio
 import com.awakedw.core.designsystem.currentThemeSpec
 import com.awakedw.core.designsystem.lolita.LolitaBackdrop
 import com.awakedw.core.designsystem.lolita.drawThemeOrnament
@@ -108,10 +110,8 @@ import com.awakedw.feature.home.components.EDITORIAL_HOME_TOP_PADDING
 import com.awakedw.feature.home.components.EDITORIAL_MASTHEAD_TO_HERO_GAP
 import com.awakedw.feature.home.components.EditorialHeroValue
 import com.awakedw.feature.home.components.EditorialHomeMasthead
-import com.awakedw.feature.home.components.EditorialPageFooter
 import com.awakedw.feature.home.components.HomeQuickAmounts
 import com.awakedw.feature.home.components.LogButton
-import com.awakedw.feature.home.components.editorialFolio
 
 /** 首页进度环直径：开屏形序段（SplashMorph）以它为涟漪终态半径，改值需与开屏同步观感。 */
 val HOME_RING_DIAMETER = 132.dp
@@ -327,7 +327,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         ) {
             EditorialPageFooter(
                 folio = editorialFolio(now),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("home-footer"),
             )
         }
     }
