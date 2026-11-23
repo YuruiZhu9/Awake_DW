@@ -2,7 +2,39 @@
 
 所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [Unreleased] - 2026-11-17 · 首页纸面化（大改版 Phase 1）
+## [v2.14.0] - 2026-11-23 · versionCode 54 · 统计/设置纸面化与器物控件（大改版 Phase 2）
+
+**本次发布包含 2.10.0–2.14.0 Phase 1 的累计改动**（设置页编辑部化、空态拖环提示、10s 撤回、无障碍与大字回归、首页纸面化、统计/设置纸面化）。以下按交付批次保留记录。
+
+**大改（已发布）**：统计/设置接入与首页同一张纸、同一套页框；统计新增卷首插图，设置页的步进、开关、时段与间隔换成纸面器物。业务、持久化键、导航、权限零改动。
+
+### Added
+- **共享页框**（`EditorialPageFrame`）：`editorialDateLabel` / `editorialFolio` / `editorialPageLine` / `EditorialPageHeader` / `EditorialPageFooter` 从首页私有实现下沉至 `core:designsystem`。三页统一「日期行 + 斜体 folio + 通栏发丝线 + 衬线标题」；首页改用共享件，视觉不变。
+- **`ArtworkPlate` 卷首**（`core:designsystem/paper`）：104dp、约 3:1 横裁、1dp 图版框 + 内侧高光 + 图注「卷首 · {月}」；八主题 `EditorialCrops.plate` 各取角花带（晨雾左上蝴蝶结、黄昏右上吊灯、深夜左上珍珠、薄荷右上甜点架等），不新增素材。
+- **`artworkSourceRect` 任意宽高比重载**：`aspectRatio = 1f` 时与旧正方形实现逐位一致，窗环/水印不受影响。
+- **统计页**：`EditorialSheet` 纸面层、页眉 folio、卷首与页脚「AWAKE · 记录本」；英雄数字改衬线；退役 `ReadingField`。
+- **设置页**：`EditorialSheet` 纸面层、页眉 folio、页脚「AWAKE · 设置」；步进器改 48dp 打字机键帽、开关改压印凹槽 + 铜钮、时段滑杆加刻度尺、间隔档位改 48dp 印章票；主题入口/色卡、文案分组、测试提醒同步收成纸面票根。
+- **测试**：`StatsEditorialPageTest`（页眉/卷首/页脚在场、卷首收在版心内）、`SettingsObjectControlsTest`（开关保留 Switch 语义并即时落库、键帽/印章票 ≥48dp、页脚可滚到）、`ArtworkCrop` 横裁宽高比与越界用例；视觉基线新增统计/设置各一张 `colophon`。
+
+### Changed
+- **设置页器物化**：M3 Switch → `EngravedSwitch`（52×30dp 凹槽 + 22dp 铜钮，外层 48dp 触控；保留 `Role.Switch` / ToggleableState；减少动态直落位）；`RangeSlider` 本体与拖拽/键盘/读屏不变，仅在其上方加 10dp 刻度带；印章票保留 `selected` 语义与 56dp 最小宽度。
+- **文案分组**：18dp 大圆角卡收为 3dp 票根 + 1dp 边框；编辑对话框圆角 24dp → 4dp。折叠/增删/确认行为不变。
+- **视觉基线**：统计 14 张、设置 13 张全部重拍。
+
+### Unchanged
+- 统计信息层级（未做双栏记录跨页，留待 2.15.0）、设置项顺序/默认值/校验/提醒调度、打卡三通道、撤回窗口、业务、持久化键、导航、权限、主题素材。
+
+### Verification
+- `:feature:home`、`:feature:stats`、`:feature:settings` 的 `testDebugUnitTest` 全绿。
+- 统计 14 张、设置 13 张视觉基线 `AWAKE_VISUAL_BASELINE=check` 逐模块串行通过。
+- 全仓库 `ktlintCheck build` 全绿；`git diff --check` 通过。
+
+### Known limitations（如实披露）
+- 真机未走查：八主题纸面/卷首对比度、键帽与铜钮手感、1.3×/2×、TalkBack 开关语义、减少动态。
+- 发布包在未注入 `AWAKE_*` 签名环境变量时按既有配置回退 debug 签名（与 2.9.0 及更早 dist 包同一证书），仅个人分发；不是应用商店签名包。
+- versionCode/versionName 已提升至 54 / 2.14.0；Release APK 与 SHA-256 见 `dist/Awake_DW-v2.14.0-*`。
+
+## [v2.14.0 · Phase 1] - 2026-11-17 · 首页纸面化（并入本次发布）
 
 **大改（待发布）**：首页从「主题壁纸 + Material 控件」改为「一张铺在主题场景上的纸」——纸面、书口、角花水印、窗环、压印主按钮、撕票快捷量与编辑页框。统计/设置页面本阶段不动；业务、持久化键、导航、权限零改动。
 
@@ -34,9 +66,9 @@
 ### Known limitations（如实披露）
 - 真机未走查：八主题纸边/水印对比度、窗环角花是否可辨、1.3×/2×、TalkBack、减少动态、底栏衔接。
 - 首页像素基线仍受 Robolectric 环境限制；像素验收以真机为准。
-- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+- 发布时随 2.14.0 一并提升至 versionCode 54 / versionName 2.14.0；Release APK 见 `dist/`。
 
-## [Unreleased] - 2026-11-17 · 无障碍与大字回归（保养版）
+## [v2.13.0] - 2026-11-17 · 无障碍与大字回归（并入本次发布）
 
 **保养（待发布）**：全量触点、大字体、减少动态与 TalkBack 审计；唯一行为修正是环区点按的读屏动作说明。视觉、布局、业务、持久化、导航、权限零改动。
 
@@ -60,10 +92,10 @@
 
 ### Known limitations（如实披露）
 - 真机未走查：TalkBack 环播报、三页 2× 滚动、减少动态全页复核。
-- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+- 发布时随 2.14.0 一并提升至 versionCode 54 / versionName 2.14.0。
 - 开屏「任意点击跳过」仍是隐藏手势；开屏约 1.2s 自动交棒且减少动态直接跳过，本版不新增可见提示。
 
-## [Unreleased] - 2026-11-17 · 打卡后 10s 撤回上一杯
+## [v2.11.0] - 2026-11-17 · 打卡后 10s 撤回上一杯（并入本次发布）
 
 **纠错闭环（待发布）**：主按钮尾端在成笔后的 10 秒内把「+{cupMl}ml」换成「撤回」，一击收回刚记的一杯、不弹确认；历史记录删除仍走统计页的确认弹窗。业务、持久化键、导航、权限与通知动作零改动。
 
@@ -88,10 +120,10 @@
 
 ### Known limitations（如实披露）
 - 真机未走查：八主题尾端对比度（白色圣职/深夜青黛）、10s 到期退回的节奏、1.3×/2× 字体、TalkBack、撤回后三通道收场。
-- 未提升 versionCode/versionName（仍为 53 / 2.9.0），未生成 Release APK、未更新 `dist/`。
+- 发布时随 2.14.0 一并提升至 versionCode 54 / versionName 2.14.0。
 - 通知动作记录的杯不进入首页撤回窗口；统计页删除仍保留确认。
 
-## [Unreleased] - 2026-11-16 · 设置页编辑部化 + 空态拖环提示
+## [v2.10.0] - 2026-11-16 · 设置页编辑部化 + 空态拖环提示（并入本次发布）
 
 **视觉与手势补完（待发布）**：设置页撤掉 `PaperPanel` 四连卡，改用统计页自 1.5.0 起确认的「分节微标签 + 右延发丝线 + 内容浮在纸面」语言；首页空态给一次「环可拖动」的静态提示与轻演示。业务、持久化键、导航、权限与设置默认值零改动。
 
@@ -121,7 +153,7 @@
 
 ### Known limitations（如实披露）
 - 真机尚未走查：设置页八主题对比度、1.3×/2× 字体滚动末段、减少动态与底栏遮挡；空态提示在 132dp 真实环上的可见度与克制感。
-- 未提升 versionCode/versionName，未出 Release APK；待使用者确认视觉方向后再走发布流程。
+- 发布时随 2.14.0 一并提升至 versionCode 54 / versionName 2.14.0。
 - 首页像素基线仍受本机 Robolectric 环境限制；本轮以语义/数学测试 + 1.3× 诊断图目检兜底。
 
 ## [v2.9.0] - 2026-10-22 · versionCode 53

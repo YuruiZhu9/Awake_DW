@@ -4,16 +4,16 @@
 > **2026-09-16 收敛**：0.6 提案三轨道已全部落地（轨道一 0.6.0 / 轨道二 0.7.x–0.8.0 / 轨道三 0.9.0）；主线进入 **1.0.0 收口**——唯一验收依据为 `docs/superpowers/checklists/v1.0-acceptance.md`，走查闭环即升 1.0.0。此后的版本号按发布递进，无 alpha 后缀（rules §八.5）。
 > **2026-11-17 持续迭代机制**：节奏、滚动待办、质量门禁、验收闭环与反停滞规则见 `docs/design/continuous-iteration-plan.md`。本文件是版本时间线，持续计划是操作层；两者冲突时，以使用者新确认的方向优先。
 
-## 2.14.0 · 首页纸面化：大改版 Phase 1（2026-11-17 代码侧完成，待真机验收）
+## 2.14.0 · 纸面化大改版：首页（Phase 1）与统计/设置（Phase 2）（2026-11-23 发布 versionCode 54，待真机验收）
 
-- 计划：`docs/superpowers/plans/2026-11-17-editorial-home-phase1-plan.md`；方向稿 `docs/design/major-ui-overhaul-direction.md` §2 A / §3.4。
-- **纸面层**：新增共享 `EditorialSheet` + `PaperTokens`（D+：版心 97.5% / 页边 88% / 水印 19%）；纸左右各 10dp 桌面 + 26dp 横向呼吸带，主题场景第一次从纸边透出；程序化纤维噪点、纸边压痕、右缘 18dp 书口、左侧订口、右上角花水印全部只进 draw 相。
+- 计划：`docs/superpowers/plans/2026-11-17-editorial-home-phase1-plan.md`、`docs/superpowers/plans/2026-11-19-editorial-stats-settings-phase2-plan.md`；方向稿 `docs/design/major-ui-overhaul-direction.md` §2 A / §3.4 / §3.5。
+- **纸面层（Phase 1 首页）**：新增共享 `EditorialSheet` + `PaperTokens`（D+：版心 97.5% / 页边 88% / 水印 19%）；纸左右各 10dp 桌面 + 26dp 横向呼吸带，主题场景第一次从纸边透出；程序化纤维噪点、纸边压痕、右缘 18dp 书口、左侧订口、右上角花水印全部只进 draw 相。统计/设置随后接入同一纸面层并退役 `ReadingField`。
 - **窗环**：`ProgressRing` 增加可选 `RingLens`——环内垫 2.1–2.3× 放大的主题角花、60 格刻度与 88dp 纸面圆牌；引文/拖环预览出现时圆牌收、遮罩升；点按/拖拽/语义逐位不变（默认 `lens = null` 时旧环零变化）。
-- **器物控件**：主按钮改 58dp 压印长条（近直角、上缘内高光、底部内阴影、左侧印章），保留 2.11.0 尾端撤回；快捷量改页边撕票（虚线顶边 + 竖分隔），触控仍 ≥48dp。
-- **页框**：页眉日期行右侧 folio + 通栏发丝线；页脚常驻纸底「AWAKE · 每日一页 / 第 NN 页」，内容列预留底部让行；首页退役 `ReadingField`，纸面承担阅读对比度。
+- **器物控件**：首页主按钮改 58dp 压印长条（近直角、上缘内高光、底部内阴影、左侧印章），保留 2.11.0 尾端撤回；快捷量改页边撕票（虚线顶边 + 竖分隔）。设置页步进器改 48dp 打字机键帽、开关改压印凹槽 + 铜钮（保留 `Role.Switch`）、时段滑杆加刻度尺、间隔档位改 48dp 印章票；触控全部 ≥48dp。
+- **页框与卷首**：日期/folio/页眉/页脚下沉为共享 `EditorialPageHeader` / `EditorialPageFooter`，三页同一条「日期 → 发丝线 → 衬线标题」；首页页脚常驻纸底，统计/设置页脚在滚动到底。统计页新增 `ArtworkPlate` 卷首——104dp、约 3:1 横裁、1dp 图版框、八主题各取角花带。
 - **顺手修复的两处布局缺陷**：庆祝光环 `fillMaxSize` 撑满英雄行、把数字挤成 0 宽（改为按环径约束）；`FadeUpOnce` 减少动态分支丢 modifier、页脚掉到左上角（改为 `Box(modifier)` 承接）。
-- **边界**：业务、持久化键、导航、权限、主题素材、统计/设置页面零改动；未提升版本号、未生成 Release APK。
-- **验收**：`EditorialPageChromeTest` / `EditorialHomeLayoutTest` / `ProgressRingDragGestureTest` 新增用例全绿，`feature:home` 全套通过；统计 13 + 设置 12 张基线 `AWAKE_VISUAL_BASELINE=check` 通过；`ktlintCheck build` 全绿（1266 任务）；EMERALD/NIGHT 真实素材诊断渲染目检。真机待验收：八主题纸边/水印对比度、窗环角花可辨性、1.3×/2×、TalkBack、减少动态、底栏衔接。
+- **边界**：业务、持久化键、导航、权限、主题素材零改动；统计信息层级与设置项顺序/默认值/校验/调度不变；未提升版本号、未生成 Release APK。
+- **验收**：`EditorialPageChromeTest` / `EditorialHomeLayoutTest` / `ProgressRingDragGestureTest` / `StatsEditorialPageTest` / `SettingsObjectControlsTest` 新增用例全绿，`feature:home`、`feature:stats`、`feature:settings` 全套通过；统计 14 + 设置 13 张基线 `AWAKE_VISUAL_BASELINE=check` 逐模块串行通过；`ktlintCheck build` 全绿；EMERALD/NIGHT 真实素材诊断渲染目检。发布记录：`docs/superpowers/checklists/v2.14.0-release-qa.md`（versionCode 54 / 2.14.0，APK + SHA-256）。真机待验收：八主题纸边/水印与卷首对比度、窗环角花可辨性、键帽/铜钮手感、1.3×/2×、TalkBack、减少动态、底栏衔接。
 
 ## 2.13.0 · 无障碍与大字回归（2026-11-17 代码侧完成，前移保养版）
 
